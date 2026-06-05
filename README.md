@@ -10,6 +10,7 @@ Some Agent skills
 
 ## Current skills
 
+- `engineering/property-based-testing/` — property-based testing patterns for serialization pairs, parsers, validators, normalizers, pure functions, and data structures.
 - `productivity/first-principles/` — interactive first-principles thinking grill for decomposing problems from fundamentals.
 - `productivity/distilling-skills/` — workflow for finding, evaluating, and combining agent skills into a best-of-breed version.
 
