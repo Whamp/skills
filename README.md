@@ -1,6 +1,6 @@
 # skills
 
-Public collection of agent skills written by Will Hampson.
+Some Agent skills
 
 ## Structure
 
