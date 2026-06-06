@@ -11,6 +11,7 @@ Some Agent skills
 ## Current skills
 
 - `engineering/docs-to-types/` — converts grill-with-docs context, ADRs, and approved domain decisions into typed architecture.
+- `engineering/dynamic-workflow-patterns/` — teaches agents when and how to use Pi dynamic workflows, including fan-out, adversarial verification, tournaments, and loop-until-done patterns.
 - `engineering/property-based-testing/` — property-based testing patterns for serialization pairs, parsers, validators, normalizers, pure functions, and data structures.
 - `productivity/first-principles/` — interactive first-principles thinking grill for decomposing problems from fundamentals.
 - `productivity/distilling-skills/` — workflow for finding, evaluating, and combining agent skills into a best-of-breed version.
