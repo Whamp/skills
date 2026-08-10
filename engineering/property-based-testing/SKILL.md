@@ -1,87 +1,80 @@
 ---
 name: property-based-testing
-description: Use when writing tests for serialization pairs, parsers, validators, normalizers, pure functions, or data structures — or when reviewing code where property-based testing would catch edge cases that example tests miss
+description: Property-based testing. Use for tests and reviews involving broad structured domains, parsers and codecs, canonicalizers and validators, compact postcondition oracles, differential models, stateful APIs and protocols, or concurrent schedules.
 ---
 
-# Property-Based Testing
+# Property-based testing
 
-Generate inputs randomly, verify properties hold for all of them. Finds edge cases example tests miss.
+A property test searches a quantified domain for a counterexample and shrinks failures. A green run is evidence over the searched cases, not proof over every value.
 
-## Detection Triggers
+## Choose the branch
 
-Invoke when you see:
+- **Write or design properties** — run the process below.
+- **Review existing property tests** — load [reviewing property tests](references/reviewing-property-tests.md) and the matching framework adapter.
+- **Investigate a failure** — load [triaging counterexamples](references/triaging-counterexamples.md) and the matching framework adapter.
 
-| Pattern | Property | Priority |
-|---------|----------|----------|
-| encode/decode, serialize/deserialize | Roundtrip | HIGH |
-| Pure functions (no I/O) | Multiple | HIGH |
-| State machines, stateful objects | Model-based invariants | HIGH |
-| Validators (`is_valid`, `validate`) | Valid after normalize | MEDIUM |
-| Sorting, ordering, comparators | Idempotence + ordering | MEDIUM |
-| Normalization (`normalize`, `sanitize`) | Idempotence | MEDIUM |
-| Parsers (URL, config, protocol) | Roundtrip or no-crash | MEDIUM |
-| Async code with async callbacks | Race conditions via scheduler | MEDIUM |
-| Algebraic types (monoids, sets) | Algebraic laws | MEDIUM |
-| Data migration, ETL | Invariant preservation | MEDIUM |
-| Builder/factory patterns | Output invariants | LOW |
+## Process
 
-## Property Catalog
+### 1. Establish leverage
 
-| Property | Formula | When to Use |
-|----------|---------|-------------|
-| **Roundtrip** | `decode(encode(x)) == x` | Serialization, conversion pairs |
-| **Idempotence** | `f(f(x)) == f(x)` | Normalization, formatting, sorting |
-| **Invariant** | Property holds before/after | Any transformation |
-| **Commutativity** | `f(a, b) == f(b, a)` | Binary/set operations |
-| **Associativity** | `f(f(a,b), c) == f(a, f(b,c))` | Combining operations, monoids |
-| **Identity** | `f(x, identity) == x` | Neutral element |
-| **Inversion** | `g(f(x)) == x` | encrypt/decrypt, compress/decompress |
-| **Monotonicity** | `x <= y` implies `f(x) <= f(y)` | Scoring, ranking |
-| **Metamorphic** | Relate `f(x)` to `f(transform(x))` | Output hard to verify |
-| **Oracle** | `new_impl(x) == reference(x)` | Optimization, refactoring |
-| **No Exception** | No crash on valid input | Baseline (weakest) |
+Use property-based testing when a broad or structured domain, operation sequence, or schedule can challenge a compact oracle. Prefer example tests when the meaningful cases are a small explicit table, the only oracle would duplicate the implementation, or effects cannot be isolated within the test budget.
 
-**Strength**: No Exception < Type Preservation < Invariant < Idempotence < Roundtrip
+Write the candidate in this form:
 
-## Minimal Example
+> Generate **[domain]** to challenge **[risk]**, checked by **[oracle]**.
 
-```python
-from hypothesis import given, strategies as st
+**Complete when:** all three blanks are concrete. If the oracle blank remains vague, use examples or first clarify the contract.
 
-@given(st.text())
-def test_roundtrip(s):
-    assert decode(encode(s)) == s
+### 2. State the contract
 
-@given(st.text())
-def test_idempotent(s):
-    assert normalize(normalize(s)) == normalize(s)
-```
+Write the property before its test code:
 
-## Task Routing
+> For every `x` in domain `D` satisfying precondition `P`, observing the system produces relation `R` under equivalence `≈`.
 
-- **Writing new tests** -> `references/generating.md`, then `references/strategies.md` for complex inputs
-- **Designing a feature** -> `references/design.md`
-- **Code hard to test** -> `references/refactoring.md`
-- **Reviewing PBT tests** -> `references/reviewing.md`
-- **Interpreting failures** -> `references/interpreting-failures.md`
-- **Library reference** -> `references/libraries.md`
+Ground `D`, `P`, `R`, and `≈` in specifications, public documentation, types, callers, and established tests. Treat names as search leads. Separate supported inputs from invalid inputs when their contracts differ, including the required error or rejection behavior.
 
-## How to Suggest PBT
+**Complete when:** every term in the quantified statement has a source, and unresolved product decisions have been surfaced to the user.
 
-Check for existing PBT usage (see `references/libraries.md` for detection commands). If present, write property tests directly. Otherwise, offer:
+### 3. Choose an oracle
 
-> "This encode/decode pair is a good candidate for property-based testing with a roundtrip property. Want me to use that approach?"
+Load [designing properties](references/designing-properties.md). Choose the simplest observation independent enough to catch a plausible faulty implementation. For each proposed property, name the **counterfeit** implementation or bug class it should reject. Build a portfolio only when distinct risks need distinct observations; property count is not a quality target.
 
-If declined, write example-based tests without further prompting.
+**Complete when:** every property has a grounded contract, an observable oracle, and at least one named counterfeit it should reject.
 
-## When NOT to Use
+### 4. Design the search
 
-- Simple CRUD without transformation logic — UI/presentation logic
-- Integration tests requiring external setup — prototyping with fluid requirements
-- User explicitly requests example-based tests
+Load [generators and shrinking](references/generators-and-shrinking.md) and the adapter for the repository's installed framework:
 
-## Red Flags
+- Python/Hypothesis — [Hypothesis adapter](references/frameworks/hypothesis.md)
+- JavaScript or TypeScript/fast-check — [fast-check adapter](references/frameworks/fast-check.md)
+- Rust/proptest — [proptest adapter](references/frameworks/proptest.md)
+- Go/rapid — [rapid adapter](references/frameworks/rapid.md)
+- Java/jqwik — [jqwik adapter](references/frameworks/jqwik.md)
+- Another ecosystem — [other frameworks](references/frameworks/other-frameworks.md)
 
-- Tautological assertions (`assert f(x) == f(x)`) — reimplementing function logic in test
-- Only testing "no crash" when stronger properties exist
-- Heavy `assume()` instead of constrained strategies — being pushy after user declines
+Use the existing dependency and project test conventions. When no property-testing dependency exists, follow the repository's dependency policy; if adding one is not already authorized, present the leverage sentence before changing the manifest.
+
+For state or operation sequences, also load [stateful and concurrent testing](references/stateful-and-concurrent-testing.md). When ordinary generation cannot reach the risk-bearing cases, load [advanced search](references/advanced-search.md).
+
+**Complete when:** the full supported domain is reachable in principle or each deliberate scope limit is justified by measured cost; dependent inputs are generated jointly; risk-bearing categories are observed; and failures can shrink to replayable cases.
+
+### 5. Prove discrimination
+
+Run the property against the target defect, the pre-fix implementation, or a temporary plausible mutant. A green property against its named counterfeit has not yet earned confidence. Keep mutations local and out of the final change.
+
+**Complete when:** the property set goes red on the target defect and on every named counterfeit that can be safely simulated; record any unproven counterfeit.
+
+### 6. Operate the test
+
+Run the repository's normal test command. Keep the suite's existing settings first, then adjust search effort from measured runtime and observed reach. Preserve exact replay data for failures and use [triaging counterexamples](references/triaging-counterexamples.md) before changing production code.
+
+Keep a durable explicit example when a minimized case communicates a named boundary or regression better than replay metadata alone; retain the general property too.
+
+**Complete when:** the corrected implementation is green, the search fits the intended suite budget, the failure is replayable, and the ordinary example-based tests still pass.
+
+## Product seams
+
+- Test through existing public observations whenever they express the contract.
+- Change a production seam only when the change improves the product design independently of enabling a property.
+- Preserve example tests that document named scenarios; properties add domain search rather than replacing useful examples.
+- Honor an explicit request for example-only tests.
