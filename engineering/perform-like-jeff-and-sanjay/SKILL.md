@@ -83,7 +83,7 @@ Collect evidence for the suspected resource:
 
 Use profiling as codebase reconnaissance: read loops and routines high in the dynamic stack, not only the hottest leaves.
 
-**Flat profile branch:** aggregate validated small gains; inspect high-stack loops and repeated boundary crossings; seek structural or algorithmic changes; examine unnecessary generality, allocations, contention, cache misses, I/O, and code footprint. A flat CPU profile can mean distributed waste or exhausted obvious hotspots.
+**Flat profile branch:** inspect high-stack loops, repeated boundary crossings, allocations, contention, cache misses, I/O, and code size. A flat CPU profile does not identify the cause of a slowdown. Treat possible causes as hypotheses until before-and-after measurements confirm them. Do not use a function's CPU percentage as a hard limit on its latency impact; waiting, contention, and serial dependencies can amplify it.
 
 **Pre-implementation design branch:** when the target does not yet exist, use the Step 2 estimate, workload bounds, and comparable measurements when available. Cite each comparable and its material differences. Mark the expected effect unmeasured. Specify the instrumentation or measurement hook, benchmark, and target-scope measurement that will validate the hypothesis after implementation. Do not claim a speedup.
 
