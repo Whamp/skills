@@ -1,0 +1,6 @@
+interface:
+  display_name: "Omarchy Free Disk Space"
+  short_description: "Safely audit and reclaim Omarchy disk space"
+  default_prompt: "Use $omarchy-free-disk-space to audit disk usage and prepare a safe cleanup plan."
+policy:
+  allow_implicit_invocation: false
