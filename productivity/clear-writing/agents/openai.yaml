@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clear Writing"
+  short_description: "Sharpen prose and remove AI-sounding filler"
+  default_prompt: "Use $clear-writing to revise this prose."
