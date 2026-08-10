@@ -1,0 +1,5 @@
+interface:
+  display_name: "Ban Type Assertions"
+  short_description: "Replace assertions with compiler-verified types"
+policy:
+  allow_implicit_invocation: false
