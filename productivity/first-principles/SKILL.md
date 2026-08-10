@@ -1,6 +1,7 @@
 ---
 name: first-principles
-description: Use when the user explicitly wants first-principles thinking, wants to escape inherited assumptions, or asks to decompose a strategy/product/design/problem from fundamentals. Runs an interactive one-question-at-a-time grill that separates facts, assumptions, constraints, analogies, and unknowns, then rebuilds options from irreducible truths.
+description: Interactive first-principles reasoning that separates facts, constraints, assumptions, analogies, and unknowns before rebuilding options from fundamentals.
+disable-model-invocation: true
 version: 1.0.0
 author: Will Hampson
 license: MIT
