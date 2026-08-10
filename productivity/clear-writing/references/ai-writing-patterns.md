@@ -1,0 +1,475 @@
+# AI Writing Patterns
+
+Use this reference to find and remove prose that sounds machine-generated. Treat patterns as clues, not banned words: keep a word when it names a real thing, and replace it when it inflates weak content.
+
+## Contents
+
+- Regression to the mean
+- Undue emphasis on symbolism, legacy, importance, notability, and media coverage
+- Superficial analysis and promotional language
+- Didactic disclaimers and conclusion boilerplate
+- Negative parallelisms, false ranges, rule-of-three phrasing, and vague attribution
+- Formatting tells: excessive bold, inline headers, emoji, em dashes, title case, and subject lines
+- User-directed tells: over-collaborative framing, stale knowledge disclaimers, refusal boilerplate, and placeholder templates
+
+---
+
+## Regression to the Mean
+
+LLMs (and [artificial neural networks](https://en.wikipedia.org/wiki/Artificial_neural_network "Artificial neural network") in general) use statistical algorithms to guess (infer) what should come next based on a large corpus of training material. It thus tends to [regress to the mean](https://en.wikipedia.org/wiki/Regression_to_the_mean "Regression to the mean"); that is, the result tends toward the most statistically likely result that applies to the widest variety of cases. It can simultaneously be a strength and a "tell" for detecting AI-generated content.
+
+For example, LLMs are usually trained on data from the internet in which famous people are generally described with positive, important-sounding language. Consequently, the LLM tends to omit specific, unusual, nuanced facts (which are statistically rare) and replace them with more generic, positive descriptions (which are statistically common). Thus the highly specific "inventor of the first train-coupling device" might become "a revolutionary titan of industry." It is like shouting louder and louder that a portrait shows a uniquely important person, while the portrait itself is fading from a sharp photograph into a blurry, generic sketch. The subject becomes simultaneously less specific and more exaggerated.
+
+This statistical regression to the mean, a smoothing over of specific facts into generic statements, that could equally apply to many topics, makes AI-generated content easier to detect.
+
+### Undue emphasis on symbolism, legacy, and importance
+
+**Words to watch:** *stands/serves as*, *is a testament/reminder*, *plays a vital/significant/crucial/pivotal role*, *underscores/highlights its importance/significance*, *reflects broader*, *symbolizing its ongoing/enduring/lasting impact*, *key turning point*, *indelible mark*, *deeply rooted*, *profound heritage*, *steadfast dedication*...
+
+LLM writing often puffs up the importance of the subject matter by adding statements about how arbitrary aspects of the topic represent or contribute to a broader topic. There is a distinct and easily identifiable repertoire of ways that it writes these statements.
+
+> The Statistical Institute of Catalonia was officially established in 1989, marking a pivotal moment in the evolution of regional statistics in Spain. [...]
+>
+> The founding of Idescat represented a significant shift toward regional statistical independence, enabling [Catalonia](https://en.wikipedia.org/wiki/Catalonia "Catalonia") to develop a statistical system tailored to its unique socio-economic context. This initiative was part of a broader movement across Spain to decentralize administrative functions and enhance regional governance.
+
+> Kumba has long been an important center for trade and agriculture. [...] The establishment of road networks connecting Kumba to other parts of the Southwest Region, such as Mamfe and Buea, helped solidify its role as a regional hub.
+
+LLMs may include these statements for even the most mundane of subjects like etymology or population data. Sometimes, they add hedging preambles acknowledging that the subject is relatively unimportant or low-profile, before talking about its importance anyway.
+
+**Examples**
+
+> During the [Spanish colonial period](https://en.wikipedia.org/wiki/Spanish_Colonial_Period_(Philippines) "Spanish Colonial Period (Philippines)"), the name *Bakunutan* was hispanized to *Bacnotan*, a modification reflected in official documents preserved in the [National Archives](https://en.wikipedia.org/wiki/National_Archives_of_the_Philippines "National Archives of the Philippines") in Manila. This etymology highlights the enduring legacy of the community's resistance and the transformative power of unity in shaping its identity.
+
+> Though it saw only limited application, it contributes to the broader history of early aviation engineering and reflects the influence of French rotary designs on German manufacturers.
+
+When talking about biology (e.g., when asked to discuss an animal or plant species), LLMs tend to over-emphasize connections to the broader ecosystem or environment, even when those connections are tenuous or generic. LLMs also tend to belabor the species' conservation status and research and preservation efforts, even if the status is unknown and no serious efforts exist.
+
+**Examples**
+
+> It plays a role in the ecosystem and contributes to Hawaii's rich cultural heritage. [...] Preserving this endemic species is vital not only for ecological diversity but also for sustaining the cultural traditions connected to Hawaii's native flora.
+
+> Currently, there is no specific conservation assessment for *Lethrinops lethrinus* by the International Union for Conservation of Nature (IUCN). However, the general health of the Lake Malawi ecosystem is crucial for the survival of this and other endemic species. Factors such as overfishing, pollution, and habitat destruction could potentially impact their populations.
+
+### Undue emphasis on notability, attribution, and media coverage
+
+**Words to watch:** *independent coverage*, *local/regional/national/[country name] media outlets*, *music/business/tech outlets*, *active social media presence*
+
+Similarly, LLMs act as if the best way to prove that a subject is notable is to hit readers over the head with claims of notability, often by listing sources that a subject has been covered in. They may or may not provide additional context as to what those sources have actually said about the subject, and often inaccurately attribute their own [superficial analyses](#superficial-analyses) to the source. This is more common in text from newer AI tools (2025 or later).
+
+Human-written press releases have of course also cited news clippings for decades, but LLMs specifically asked to write a Wikipedia article often echo the exact wording of [Wikipedia's guidelines](https://en.wikipedia.org/wiki/Wikipedia:N "Wikipedia:N"), such as "independent coverage."
+
+**Examples**
+
+> She spoke about AI on CNN, and was featured in Vogue, Wired, Toronto Star, and other media. [...] Her insights have also been featured in *Wired*, *Refinery29*, and other prominent media outlets.
+
+> Her views have been cited in *The New York Times*, *BBC*, *Financial Times*, and *The Hindu*.
+
+> Its significance is documented in archived school event programs and regional press coverage, including the *Mesabi Daily News*, which regularly reviewed performances held there.
+
+On Wikipedia specifically, LLMs often painstakingly emphasize their sources in the body text—even for trivial coverage, uncontroversial facts, or other situations where a human Wikipedia editor would be more likely to either provide an inline citation or no source at all.
+
+**Examples**
+
+> The restaurant has also been mentioned in [ABC News](https://en.wikipedia.org/wiki/ABC_News_(Australia) "ABC News (Australia)") coverage relating to incidents in the surrounding precinct, underscoring its role as a well-known late-night venue in the city [of [Adelaide](https://en.wikipedia.org/wiki/Adelaide "Adelaide")].
+
+> In the United States, university-based incubators and accelerators have expanded alongside these centers; an official Library of Congress review found that 31.5% of SBA [[Small Business Administration](https://en.wikipedia.org/wiki/Small_Business_Administration "Small Business Administration")] Growth Accelerator Fund Competition winners from 2014–2016 were university-based programs.
+
+In articles about people/entities who use social media, LLMs will often note that they "maintain an active social media presence" or something similar. This wording is particularly idiosyncratic to AI text and relatively uncommon on Wikipedia before ~2024.
+
+> The mall maintains a strong digital presence, particularly on Instagram, where it actively shares the latest updates and events. Forum Kochi has consistently demonstrated excellence in digital promotions, with high-quality, engaging, and impactful video content playing a key role in its outreach.
+
+### Superficial analyses
+
+**Words to watch:** *ensuring ...*, *highlighting ...*, *emphasizing ...*, *reflecting ...*, *underscoring ...*, *showcasing ...*, *aligns with...*, *contributing to...*
+
+AI chatbots tend to insert superficial analysis of information, often in relation to its significance, recognition, or impact. This is often done by attaching a [present participle](https://en.wikipedia.org/wiki/Participle#Forms "Participle") ("-ing") phrase at the end of sentences, sometimes with [vague attributions](#vague-attributions-of-opinion) to third parties (see below).
+
+While [many of these words are strong AI tells on their own](https://en.wikipedia.org/wiki/Wikipedia:AIWORDS "Wikipedia:AIWORDS"), an even stronger tell is when the subjects of these verbs are facts, events, or other inanimate things. A person, for example, can highlight or emphasize something, but a fact or event cannot. The "highlighting" or "underscoring" is not something that is actually happening; it is a claim by a disembodied narrator about what something means.
+
+Such comments are usually [synthesis](https://en.wikipedia.org/wiki/Wikipedia:SYNTH "Wikipedia:SYNTH") and/or unattributed opinions in wikivoice. Newer chatbots with [retrieval-augmented generation](https://en.wikipedia.org/wiki/Retrieval-augmented_generation "Retrieval-augmented generation") (for example, an AI chatbot that can search the web) may attach these statements to [named sources](#undue-emphasis-on-notability-attribution-and-media-coverage)—e.g., "Roger Ebert highlighted the lasting influence"—regardless of whether those sources say anything close.
+
+**Examples**
+
+> Douera enjoys close proximity to the capital city, Algiers, further enhancing its significance as a dynamic hub of activity and culture.
+
+> The civil rights movement emerged as a powerful continuation of this struggle, emphasizing the importance of solidarity and collective action in the fight for justice. This historical legacy has influenced contemporary African-American families, shaping their values, community structures, and approaches to political engagement. Economically, the enduring impacts of systemic inequality have led to both challenges and innovations within African-American communities, driving a commitment to empowerment and social change that echoes through generations.
+
+> Its bilingual monument sign, with inscriptions in both English and Spanish, underscores its role in bringing together Latter-day Saints from the United States and Mexico.
+
+> These citations, spanning more than six decades and appearing in recognized academic publications, illustrate Blois' lasting influence in computational linguistics, grammar, and neology.
+
+> It holds a pivotal place in the [East Central Railway Zone](https://en.wikipedia.org/wiki/East_Central_Railway_Zone "East Central Railway Zone") of [Indian Railways](https://en.wikipedia.org/wiki/Indian_Railways "Indian Railways"), serving as a major railway hub with historical significance. The station has [1,676 mm](https://en.wikipedia.org/wiki/5_ft_6_in_gauge_railway "5 ft 6 in gauge railway") (5 ft 6 in) [broad gauge](https://en.wikipedia.org/wiki/Broad_gauge "Broad gauge") along with 8 tracks and 6 platforms. [...] Historically, it has been crucial for linking [Darbhanga](https://en.wikipedia.org/wiki/Darbhanga "Darbhanga") with significant cities like [Delhi](https://en.wikipedia.org/wiki/Delhi "Delhi"), [Patna](https://en.wikipedia.org/wiki/Patna "Patna"), and [Kolkata](https://en.wikipedia.org/wiki/Kolkata "Kolkata"), facilitating the movement of passengers and goods. The station has supported various services, including passenger trains and express trains like the [Satyagrah Express](https://en.wikipedia.org/wiki/Satyagrah_Express "Satyagrah Express") and [Mithila Express](https://en.wikipedia.org/wiki/Mithila_Express "Mithila Express"), contributing to the socio-economic development of the region. [...] Over the years, Darbhanga Junction has seen several upgrades and modernization efforts aimed at improving facilities and operational efficiency, reflecting its continued relevance in the regional and national transportation landscape.
+
+### Promotional and advertisement-like language
+
+**Words to watch:** *continues to captivate*, *groundbreaking* (in the figurative sense), *stunning natural beauty*, *enduring/lasting legacy*, *nestled*, *in the heart of*, *boasts a*...
+
+LLMs have serious problems keeping a neutral tone, especially when writing about something that could be considered "cultural heritage"—in which case they [constantly remind the reader of its importance](#undue-emphasis-on-symbolism-legacy-and-importance).
+
+**Examples**
+
+> Nestled within the breathtaking region of Gonder in Ethiopia, Alamata Raya Kobo stands as a vibrant town with a rich cultural heritage and a significant place within the Amhara region. From its scenic landscapes to its historical landmarks, Alamata Raya Kobo offers visitors a fascinating glimpse into the diverse tapestry of Ethiopia. In this article, we will explore the unique characteristics that make Alamata Raya Kobo a town worth visiting and shed light on its significance within the Amhara region.
+
+> TTDC acts as the gateway to Tamil Nadu's diverse attractions, seamlessly connecting the beginning and end of every traveller's journey. It offers dependable, value-driven experiences that showcase the state's rich history, spiritual heritage, and natural beauty.
+
+In a similar way, LLM chatbots also add promotional/positive-sounding language to text about companies, business, and products, such that it sounds more like the transcript of a TV commercial.
+
+> In general, AEO focuses on improving data consistency and machine readability so that information can be accurately understood by emerging "answer engines." Commonly discussed practices include using structured data formats such as [JSON-LD](https://en.wikipedia.org/wiki/JSON-LD "JSON-LD") and [schema.org](https://en.wikipedia.org/wiki/Schema.org "Schema.org"), maintaining the freshness and accuracy of published information, and aligning digital entities with open web standards like [Wikidata](https://en.wikipedia.org/wiki/Wikidata "Wikidata") and Schema.org.
+
+> The SOLLEI's exterior design communicates a powerful emotional presence, staying true to Cadillac's signature bold proportions. Its low, elongated silhouette is highlighted by a wide stance and an extended coupe door, which enhances accessibility to the spacious rear cabin. Smooth, uninterrupted surfaces and a pronounced A-line accentuate the vehicle's overall length, while a sleek, low tail imparts a sense of refined dynamism. A mid-body line runs seamlessly from the headlamps to the taillights, reinforcing the car's cohesive and elegant design. Traditional door handles have been replaced with discrete buttons, preserving the vehicle's clean and modern profile. In a nod to Cadillac's legacy of bold color choices, the exterior is finished in "Manila Cream"—a distinctive hue originally offered in 1957 and 1958. This heritage color has been thoughtfully revived and hand-painted by Cadillac artisans, showcasing the brand's dedication to craftsmanship and historical reverence.
+
+### Didactic, editorializing disclaimers
+
+**Words to watch:** *it's important/critical/crucial to note/remember/consider*, *may vary*...
+
+LLMs often tell the reader about things "it's important to remember." This frequently takes the form of "disclaimers" to an imagined reader regarding safety or controversial topics, or disambiguating topics that vary in different locales/jurisdictions.
+
+**Examples**
+
+> The emergence of these informal groups reflects a growing recognition of the interconnected nature of urban issues and the potential for ANCs to play a role in shaping citywide policies. However, it's important to note that these caucuses operate outside the formal ANC structure and their influence on policy decisions may vary.
+
+> It is crucial to differentiate the independent AI research company based in Yerevan, Armenia, which is the subject of this report, from these unrelated organizations to prevent confusion.
+
+> It's important to remember that what's free in one country might not be free in another, so always check before you use something.
+
+### Summaries and conclusions
+
+**Words to watch:** *In summary*, *In conclusion*, *Overall*...
+
+When generating longer outputs (such as when told to "write an article"), LLMs often add a section titled "Conclusion" or similar, and will often end a paragraph or section by summarizing and restating its core idea.
+
+**Examples**
+
+> In summary, the educational and training trajectory for nurse scientists typically involves a progression from a master's degree in nursing to a Doctor of Philosophy in Nursing, followed by postdoctoral training in nursing research. This structured pathway ensures that nurse scientists acquire the necessary knowledge and skills to engage in rigorous research and contribute meaningfully to the advancement of nursing science.
+
+### Outline-like conclusions about challenges and future prospects
+
+**Words to watch:** *Despite its... faces several challenges...*, *Despite these challenges*, *Challenges and Legacy*, *Future Outlook*...
+
+Many LLM-generated Wikipedia articles include a "Challenges" section, which typically begins with a sentence like "Despite its [positive/promotional words], [article subject] faces challenges..." and ends with either a vaguely positive assessment of the article subject, or speculation about how ongoing or potential initiatives could benefit the subject. Such paragraphs usually appear at the end of articles with a rigid outline structure, which may also include a separate section for "Future Prospects."
+
+Note: This sign is about the rigid formula, not simply the mention of challenges or challenging.
+
+**Examples**
+
+> Despite its industrial and residential prosperity, Korattur faces challenges typical of urban areas, including[...] With its strategic location and ongoing initiatives, Korattur continues to thrive as an integral part of the Ambattur industrial zone, embodying the synergy between industry and residential living.
+
+> Despite its success, the Panama Canal faces challenges, including[...] Future investments in technology, such as automated navigation systems, and potential further expansions could enhance the canal's efficiency and maintain its relevance in global trade.
+
+> Despite their promising applications, pyroelectric materials face several challenges that must be addressed for broader adoption. One key limitation is[...] Despite these challenges, the versatility of pyroelectric materials positions them as critical components for sustainable energy solutions and next-generation sensor technologies.
+
+> The future of hydrocarbon economies faces several challenges, including[...] This section would speculate on potential developments and the changing landscape of global energy.
+
+> Operating in the current Afghan media environment presents numerous challenges, including[...] Despite these challenges, Amu TV has managed to continue to provide a vital service to the Afghan population​​.
+
+> For example, while the methodology supports transdisciplinary collaboration in principle, applying it effectively in large, heterogeneous teams can be challenging. [...] SCE continues to evolve in response to these challenges.
+
+### Leads treating Wikipedia lists or broad article titles as proper nouns
+
+In AI-generated articles about topics with a title that is not a [proper name](https://en.wikipedia.org/wiki/Proper_name "Proper name"), such as a [list](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Lists "Wikipedia:Manual of Style/Lists"), the first sentence of the lead may introduce and/or define the article's title as if it were a standalone real-world entity. While the [MOS](https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Lead_section#Format_of_the_first_sentence "Wikipedia:Manual of Style/Lead section") does allow such titles to be included at the beginning of the lead "in a natural way"; these AI leads tend not to be so natural.
+
+**Examples**
+
+> "The Effects of Foreign language anxiety on Learning" refers to the feelings of tension, nervousness, and apprehension experienced when learning or using a language other than one's native tongue.
+
+> EuroGames editions is the chronological list of the biennial EuroGames, a European LGBT+ multi-sport event organized by the European Gay and Lesbian Sport Federation (EGLSF).
+
+> The "**List of songs about Mexico**" is a curated compilation of musical works that reference Mexico its culture, geography, or identity as a central theme.
+
+---
+
+## Language and Grammar
+
+### Overused "AI vocabulary" words
+
+**Words to watch:** *align/aligns/aligning with*, *crucial*, *delve/delves/delving* (pre-2025), *emphasizing*, *enduring*, *enhance/enhances/enhancing*, *fostering*, *garnered/garnering*, *highlight/highlighted/highlighting/highlights* (as a verb), *interplay*, *intricate/intricacies*, *key* (as an adjective), *landscape*, *leveraging*, *multifaceted*, *notably*, *nuanced*, *realm*, *robust*, *seamless/seamlessly*, *shed light on*, *showcasing*, *streamline*, *tapestry*, *testament*, *underpin/underpins/underpinning*, *underscore/underscores/underscoring*, *vibrant*, *vital*, ...
+
+Many studies have demonstrated that LLMs overuse certain words – especially compared to pre-2022 text, which is almost certain to be human-written. These "AI vocabulary" words are also ubiquitous in AI-generated encyclopedias, such as [Grokipedia](https://en.wikipedia.org/wiki/Grokipedia "Grokipedia"), and in AI-generated Wikipedia text. They often co-occur in LLM output: where there is one, there are likely others. An edit introducing one or two of these words may not be a big deal, but an edit (post-2022) introducing lots of them, lots of times, is one of the strongest tells for AI use.
+
+The distribution of "AI vocabulary" is slightly different depending on which chatbot or LLM was used, and has changed over time. For instance, the word *delve* was famously overused by ChatGPT until 2025, when its incidence dropped off sharply.
+
+Please keep context in mind. For example, while the word "underscore" is overused in AI text, it can also refer to a literal underline mark, or to [incidental music](https://en.wikipedia.org/wiki/Incidental_music "Incidental music").
+
+**Examples**
+
+> Somali cuisine is an intricate and diverse fusion of a multitude of culinary influences, drawing from the rich tapestry of [Arab](https://en.wikipedia.org/wiki/Arab_cuisine "Arab cuisine"), [Indian](https://en.wikipedia.org/wiki/Indian_cuisine "Indian cuisine"), and [Italian](https://en.wikipedia.org/wiki/Italian_cuisine "Italian cuisine") flavours. This culinary tapestry is a direct result of Somalia's longstanding heritage of vibrant trade and bustling commerce. [...]
+>
+> Additionally, a distinctive feature of Somali culinary tradition is the incorporation of [camel](https://en.wikipedia.org/wiki/Camel "Camel") [meat](https://en.wikipedia.org/wiki/Meat "Meat") and [milk](https://en.wikipedia.org/wiki/Milk "Milk"). They are considered a delicacy and serve as cherished and fundamental elements in the rich tapestry of Somali cuisine. [...]
+>
+> An enduring testament to the influence of [Italian colonial rule in Somalia](https://en.wikipedia.org/wiki/Italian_Somaliland "Italian Somaliland") is the widespread adoption of [pasta](https://en.wikipedia.org/wiki/Pasta "Pasta") and [lasagne](https://en.wikipedia.org/wiki/Lasagna "Lasagna") in the local culinary landscape, espicially in the south, showcasing how these dishes have integrated into the traditional diet alongside rice. [...]
+>
+> Additionally, Somali merchants played a pivotal role in the global coffee trade, being one of the first to export coffee beans.
+
+### Negative parallelisms
+
+Parallel constructions involving "not", "but", or "however" such as "Not only ... but ..." or "It is not just about ..., it's ..." are common in LLM writing but are often unsuitable for writing in a neutral tone.
+
+**Examples**
+
+> **Self-Portrait** by Yayoi Kusama, executed in 2010 and currently preserved in the famous Uffizi Gallery in Florence, constitutes not only a work of self-representation, but a visual document of her obsessions, visual strategies and psychobiographical narratives.
+
+> It's not just about the beat riding under the vocals; it's part of the aggression and atmosphere.
+
+Here is an example of a negative parallelism across multiple sentences:
+
+> He hailed from the esteemed Duse family, renowned for their theatrical legacy. Eugenio's life, however, took a path that intertwined both personal ambition and familial complexities.
+
+### Outlines of negatives
+
+On rare occasions, user messages that appear AI-generated may also include short sentences describing items that are either absent from something else or would be considered useless in comparison to a previous, useful item. Some of these may read something along the lines of "no ..., no ..., just ..." or "What matters is ..., not ..., not ...".
+
+**Examples**
+
+> There are no long-form profiles. No editorial insights. No coverage of her game dev career. No notable accolades. Just TikTok recaps and callouts.
+
+---
+
+> The process demands rigor — not emotional fatigue, not personal offense, and certainly not a premature exit masked as moral high ground.
+
+---
+
+> Not a career, not a body of work, not sustained relevance — just an algorithmic moment.
+
+---
+
+> This is not a close call. It is not a gray area. This page should be gone, fully, cleanly, and without delay. No redirect. No merge. Just delete.
+
+---
+
+> Wikipedia's general notability guideline (WP:GNG) is crystal clear: significant coverage in reliable, independent, secondary sources. Not a few throwaway articles echoing Twitter drama. Not reactionary posts exploiting culture war tension. Not foreign-language gossip magazines translating controversy for clicks.
+
+---
+
+> What actually matters — and what continues to be completely absent — is significant, in-depth coverage in reliable, independent secondary sources. Not gossip sites. Not recycled outrage. Not tabloid blurbs about one viral controversy. And certainly not basic directory-style mentions of someone being a "video game writer" or TikTok creator.
+
+### Rule of three
+
+LLMs overuse the '[rule of three](https://en.wikipedia.org/wiki/Rule_of_three_(writing) "Rule of three (writing)")'. This can take different forms, from "adjective, adjective, adjective" to "short phrase, short phrase, and short phrase". LLMs often use this structure to make [superficial analyses](#superficial-analyses) appear more comprehensive.
+
+**Examples**
+
+> The Amaze Conference brings together global SEO professionals, marketing experts, and growth hackers to discuss the latest trends in digital marketing. The event features keynote sessions, panel discussions, and networking opportunities.
+
+### Vague attributions of opinion
+
+**Words to watch:** *Industry reports*, *Observers have cited*, *Some critics argue*...
+
+AI chatbots tend to attribute opinions or claims to some vague authority—a practice called [weasel wording](https://en.wikipedia.org/wiki/Weasel_wording "Weasel wording")—while citing only one or two sources that may or may not actually express such view. They also tend to overgeneralize the perspective of one or few sources into that of a wider group.
+
+**Examples**
+
+> His [Nick Ford's] compositions have been described as exploring conceptual themes and bridging the gaps between artistic media.
+
+— From [Draft:Nick Ford (musician)](https://en.wikipedia.org/wiki/Draft:Nick_Ford_(musician) "Draft:Nick Ford (musician)"). Here, the weasel wording implies the opinion comes from an independent source, but it actually cites Nick Ford's own website.
+
+> Due to its unique characteristics, the Haolai River is of interest to researchers and conservationists. Efforts are ongoing to monitor its ecological health and preserve the surrounding grassland environment, which is part of a larger initiative to protect China's semi-arid ecosystems from degradation.
+
+> The Kwararafa (Kororofa) confederacy is described in scholarship as a shifting [Benue valley](https://en.wikipedia.org/wiki/Benue_valley "Benue valley") coalition led by [Jukun](https://en.wikipedia.org/wiki/Jukun "Jukun") groups and incorporating a range of [Middle Belt](https://en.wikipedia.org/wiki/Middle_Belt "Middle Belt") peoples. Because much of the historical record derives from [Hausa](https://en.wikipedia.org/wiki/Hausa "Hausa") chronicles, Bornu sources and oral tradition, modern researchers treat Kwararafa as a fluid political and cultural formation rather than a fixed state. As a result, lists of member groups vary by period and source.
+
+### Excessive synonym variance / elegant variation
+
+Generative AI has a repetition-penalty code, meant to discourage it from reusing words too often. For instance, the output might give a main character's name and then repeatedly use a different synonym or related term (e.g., protagonist, key player, eponymous character) when mentioning it again.
+
+Note: If a user adds multiple pieces of AI-generated content in separate edits, this tell may not apply, as each piece of text may have been generated in isolation.
+
+**Examples**
+
+> Vierny, after a visit in Moscow in the early 1970's, committed to supporting artists resisting the constraints of socialist realism and discovered Yankilevskly, among others such as Ilya Kabakov and Erik Bulatov. In the challenging climate of Soviet artistic constraints, Yankilevsky, alongside other non-conformist artists, faced obstacles in expressing their creativity freely. Dina Vierny, recognizing the immense talent and the struggle these artists endured, played a pivotal role in aiding their artistic aspirations. [...]
+>
+> In this new chapter of his life, Yankilevsky found himself amidst a community of like-minded artists who, despite diverse styles, shared a common goal—to break free from the confines of state-imposed artistic norms, particularly socialist realism. [...]
+>
+> The move to Paris facilitated an environment where Yankilevsky could further explore and exhibit his distinctive artistic vision without the constraints imposed by the Soviet regime. Dina Vierny's unwavering support and commitment to the Russian avant-garde artists played a crucial role in fostering a space where their creativity could flourish, contributing to the rich tapestry of artistic expression in the vibrant cultural landscape of Paris. Vierny's commitment culminated in the groundbreaking exhibition "Russian Avant-Garde - Moscow 1973" at her Saint-Germain-des-Prés gallery, showcasing the diverse yet united front of non-conformist artists challenging the artistic norms of their time.
+
+### False ranges
+
+When *from ... to ...* constructions are not used figuratively, they are used to indicate the lower and upper bounds of a scale. The scale is either quantitative, involving an explicit or implicit numerical range (e.g. from 1990 to 2000, from 15 to 20 ounces, from winter to autumn), or qualitative, involving categorical bounds (e.g. "from seed to tree", "from mild to severe", "from white belt to black belt"). The same constructions may be used to form a [merism](https://en.wikipedia.org/wiki/Merism "Merism")—a figure of speech that combines the two extremes as two contrasting parts of the whole to refer to the whole. This is a figurative meaning, but it has the same structure as the non-figurative usage, because it still requires an identifiable scale: from head to toe (the length of a body denoting the whole body), [from soup to nuts](https://en.wiktionary.org/wiki/from_soup_to_nuts "wikt:from soup to nuts") (clearly based on time), etc. This is *not* a false range.
+
+LLMs really like mixing it up, such as when giving examples of items within a set (instead of simply mentioning them one after another). An important consideration is whether some middle ground can be identified without changing the endpoints. If the middle requires switching from one scale to another scale, or there is no scale to begin with or a coherent whole that could be conceived, the construction is a **false range**. LLMs often employ "figurative" (often simply: meaningless) "from ... to ..." constructions that purport to signify a scale, while the endpoints are loosely related or even unrelated things and no meaningful scale can be inferred. LLMs do this because such meaningless language is used in persuasive writing to impress and woo, and LLMs are heavily influenced by examples of persuasive writing during their training.
+
+**Example**
+
+> Our journey through the universe has taken us from the singularity of the Big Bang to the grand cosmic web, from the birth and death of stars that forge the elements of life, to the enigmatic dance of dark matter and dark energy that shape its destiny.
+>
+> [...] Intelligence and Creativity: From problem-solving and tool-making to scientific discovery, artistic expression, and technological innovation, human intelligence is characterized by its adaptability and capacity for novel solutions. [...] Continued Scientific Discovery: The quest to understand the universe, life, and ourselves will continue to drive scientific breakthroughs, from fundamental physics to medicine and neuroscience.
+
+### Title case in section headings
+
+In section headings, AI chatbots strongly tend to capitalize all main words.
+
+**Examples**
+
+> Global Context: Critical Mineral Demand
+>
+> According to a 2023 report by [Goldman Sachs](https://en.wikipedia.org/wiki/Goldman_Sachs "Goldman Sachs"), the global market for critical minerals [...]
+>
+> Strategic Negotiations and Global Partnerships
+>
+> In 2014, Katalayi was appointed senior executive adviser to the chairman of the board of [Gécamines](https://en.wikipedia.org/wiki/G%C3%A9camines "Gécamines") [...]
+>
+> High-Stakes Deals: Glencore, China, and Russia
+>
+> There was also interest from [Moscow](https://en.wikipedia.org/wiki/Moscow "Moscow") for strategic Congolese assets. [...]
+
+---
+
+## Punctuation and Formatting
+
+### Excessive use of boldface
+
+AI chatbots may display various phrases in [boldface](https://en.wikipedia.org/wiki/Boldface "Boldface") for emphasis in an excessive, mechanical manner. One of their tendencies, inherited from readmes, fan wikis, how-tos, sales pitches, slide decks, listicles and other materials that heavily use boldface, is to emphasize every instance of a chosen word or phrase, often in a "key takeaways" fashion. Some newer large language models or apps have instructions to avoid overuse of boldface.
+
+**Examples**
+
+> It blends **OKRs (Objectives and Key Results)**, **KPIs (Key Performance Indicators)**, and visual strategy tools such as the **Business Model Canvas (BMC)** and **Balanced Scorecard (BSC)**. OPC is designed to bridge the gap between strategy and execution by fostering a unified mindset and shared direction within organizations.
+
+> A **leveraged buyout (LBO)** is characterized by the extensive use of **debt financing** to acquire a company. This financing structure enables **private equity firms** and **financial sponsors** to control businesses while investing a relatively small portion of their own equity. The acquired company's **assets and future cash flows** serve as collateral for the debt, making lenders more willing to provide financing.
+
+> **50 Scientists and Thinkers in AI Safety with significant** influence on the field of alignment, containment, and risk mitigation. The list includes their **Productive Years**, their estimated **P(doom)** (probability of existential catastrophe), a **one-sentence summary of their contribution to AI Safety**, and their Wikipedia link.
+
+### Inline-header vertical lists
+
+AI chatbots output often includes vertical lists formatted in a specific way: an ordered or unordered list where the list marker (number, bullet, dash, etc.) is followed by an inline boldfaced header, separated with a colon from the remaining descriptive text.
+
+Instead of [proper wikitext](https://en.wikipedia.org/wiki/H:LIST "H:LIST"), a bullet point in an unordered list may appear as a bullet character (•), hyphen (-), en dash (–), hash (#), emoji, or similar character. Ordered lists (i.e. numbered lists) may use explicit numbers (such as `1.`) instead of standard wikitext. When copied as bare text appearing on the screen, some of the formatting information is lost, and line breaks may be lost as well.
+
+**Examples**
+
+> 1. Historical Context Post-WWII Era: The world was rapidly changing after WWII, [...] 2. Nuclear Arms Race: Following the U.S. atomic bombings, the Soviet Union detonated its first bomb in 1949, [...] 3. Key Figures Edward Teller: A Hungarian physicist who advocated for the development of more powerful nuclear weapons, [...] 4. Technical Details of Sundial Hydrogen Bomb: The design of Sundial involved a hydrogen bomb [...] 5. Destructive Potential: If detonated, Sundial would create a fireball up to 50 kilometers in diameter, [...] 6. Consequences and Reactions Global Impact: The explosion would lead to an apocalyptic nuclear winter, [...] 7. Political Reactions: The U.S. military and scientists expressed horror at the implications of such a weapon, [...] 8. Modern Implications Current Nuclear Arsenal: Today, there are approximately 12,000 nuclear weapons worldwide, [...] 9. Key Takeaways Understanding the Madness: The concept of Project Sundial highlights the extremes of human ingenuity [...] 10. Questions to Consider What were the motivations behind the development of Project Sundial? [...]
+
+> Conflict of Interest (COI)/Autobiography: While I understand the concern regarding my username [...]
+>
+> Notability (GNG and NPOLITICIAN): I have revised the article to focus on factual details [...]
+>
+> Original Research (WP) and Promotional Tone: I have worked on removing original research [...]
+>
+> Article Move to Main Namespace: Moving the draft to the main namespace after the AFC review [...]
+
+### Emojis
+
+AI chatbots love using [emojis](https://en.wikipedia.org/wiki/Emoji "Emoji"). In particular, they sometimes decorate section headings or bullet points by placing emojis in front of them. This is most noticeable in talkpage comments.
+
+**Examples**
+
+> Let's decode exactly what's happening here:
+>
+> 🧠 Cognitive Dissonance Pattern:
+>
+> You've proven authorship, demonstrated originality, and introduced new frameworks, yet they're defending a system that explicitly disallows recognition of originators unless a third party writes about them first.
+>
+> [...]
+>
+> 🧱 Structural Gatekeeping:
+>
+> Wikipedia policy favors:
+>
+> [...]
+>
+> 🚨 Underlying Motivation:
+>
+> Why would a human fight you on this?
+>
+> [...]
+>
+> 🧭 What You're Actually Dealing With:
+>
+> This is not a debate about rules.
+>
+> [...]
+
+> 🪷 Traditional Sanskrit Name: Trikoṇamiti
+>
+> Tri = Three
+>
+> Koṇa = Angle
+>
+> Miti = Measurement 🧭 "Measurement of three angles" — the ancient Indian art of triangle and angle mathematics.
+>
+> 🕰️ 1. Vedic Era (c. 1200 BCE – 500 BCE)
+>
+> [...]
+>
+> 🔭 2. Sine of the Bow: Sanskrit Terminology
+>
+> [...]
+>
+> 🌕 3. Āryabhaṭa (476 CE)
+>
+> [...]
+>
+> 🌀 4. Varāhamihira (6th Century CE)
+>
+> [...]
+>
+> 🌠 5. Bhāskarācārya II (12th Century CE)
+>
+> [...]
+>
+> 📤 Indian Legacy Spreads
+
+### Overuse of em dashes
+
+While human editors and writers often like [em dashes](https://en.wikipedia.org/wiki/Em_dash "Em dash") (—), AI *loves* them. LLM output uses them more often than nonprofessional human-written text of the same genre, and uses them in places where humans are more likely to use commas, parentheses, colons, or (misused) hyphens (-). LLMs especially tend to use em dashes in a formulaic, pat way, often mimicking "punched up" sales-like writing by over-emphasizing clauses or parallelisms.
+
+This sign is most useful when taken in combination with other indicators, not by itself.
+
+**Examples**
+
+> The term "Dutch Caribbean" is **not used in the statute** and is primarily promoted by **Dutch institutions**, not by the **people of the autonomous countries** themselves. In practice, many Dutch organizations and businesses use it for **their own convenience**, even placing it in addresses — e.g., "Curaçao, Dutch Caribbean" — but this only **adds confusion** internationally and **erases national identity**. You don't say **"Netherlands, Europe"** as an address — yet this kind of mislabeling continues.
+
+> you're right about one thing — we do seem to have different interpretations of what policy-based discussion entails. [...]
+>
+> When WP:BLP1E says "one event," it's shorthand — and the supporting essays, past AfD precedents, and practical enforcement show that "two incidents of fleeting attention" still often fall under the protective scope of BLP1E. This isn't "imagining" what policy should be — it's recognizing how community consensus has shaped its application.
+>
+> Yes, WP:GNG, WP:NOTNEWS, WP:NOTGOSSIP, and the rest of WP:BLP all matter — and I've cited or echoed each of them throughout. [...] If a subject lacks enduring, in-depth, independent coverage — and instead rides waves of sensational, short-lived attention — then we're not talking about encyclopedic significance. [...]
+>
+> [...] And consensus doesn't grow from silence — it grows from critique, correction, and clarity.
+>
+> If we disagree on that, then yes — we're speaking different languages.
+
+> The current revision of the article fully complies with Wikipedia's core content policies — including WP:V (Verifiability), WP:RS (Reliable Sources), and WP:BLP (Biographies of Living Persons) — with all significant claims supported by multiple independent and reputable international sources.
+>
+> [...] However, to date, no editor — including yourself — has identified any specific passages in the current version that were generated by AI or that fail to meet Wikipedia's content standards. [...]
+>
+> Given the article's current state — well-sourced, policy-compliant, and collaboratively improved — the continued presence of the "LLM advisory" banner is unwarranted.
+
+### Curly quotation marks and apostrophes
+
+AI chatbots typically use curly quotation marks ("..." or '...') instead of straight quotation marks ("..." or '...'). In some cases, AI chatbots inconsistently use pairs of curly and straight quotation marks in the same response. They also tend to use the curly apostrophe ('), the same character as the curly [right single quotation mark](https://en.wikipedia.org/wiki/Right_single_quotation_mark "Right single quotation mark"), instead of the straight apostrophe ('), such as in [contractions](https://en.wikipedia.org/wiki/Contraction_(grammar) "Contraction (grammar)") and [possessive forms](https://en.wikipedia.org/wiki/English_possessive "English possessive"). They may also do this inconsistently.
+
+Curly quotes alone do not prove LLM use. [Microsoft Word](https://en.wikipedia.org/wiki/Microsoft_Word "Microsoft Word") as well as [macOS](https://en.wikipedia.org/wiki/MacOS "MacOS") and [iOS](https://en.wikipedia.org/wiki/IOS "IOS") devices have a "[smart quotes](https://en.wikipedia.org/wiki/Smart_quotes "Smart quotes")" feature that converts straight quotes to curly quotes. Grammar correcting tools such as [LanguageTool](https://en.wikipedia.org/wiki/LanguageTool "LanguageTool") may also have such a feature. Curly quotation marks and apostrophes are common in professionally typeset works such as major newspapers. Citation tools like [Citer](https://citer.toolforge.org/) may repeat those that appear in the title of a web page: for example,
+
+> McClelland, Mac (2017-09-27). ["When 'Not Guilty' Is a Life Sentence"](https://www.nytimes.com/2017/09/27/magazine/when-not-guilty-is-a-life-sentence.html). *The New York Times*. Retrieved 2025-08-03.
+
+Note that Wikipedia allows users to customize the fonts used to display text. Some fonts display matched curly apostrophes as straight, in which case the distinction is invisible to the user.
+
+### Subject lines
+
+User messages and [unblock requests](https://en.wikipedia.org/wiki/Wikipedia:Identifying_LLM_unblock_requests "Wikipedia:Identifying LLM unblock requests") generated by AI chatbots sometimes begin with text that is intended to be pasted into the *Subject* field on an email form.
+
+**Examples**
+
+> Subject: Request for Permission to Edit Wikipedia Article - "Dog"
+
+> Subject: Request for Review and Clarification Regarding Draft Article
+
+## Communication Intended for the User
+
+Watch for prose that talks like a chatbot instead of serving the reader.
+
+### Over-collaborative framing
+
+AI drafts often narrate cooperation instead of doing the work: "Let's dive in," "You're absolutely right," "Great question," "I'd be happy to help," or "Here is a polished version." Delete the frame unless the social signal is the point of the message.
+
+### Knowledge-cutoff disclaimers
+
+Avoid irrelevant caveats about training data, browsing limits, or possible source gaps. If currentness matters, verify or state the exact uncertainty. If it does not matter, delete the disclaimer.
+
+### Refusal boilerplate
+
+Replace generic safety refusals with the shortest useful boundary and, when appropriate, a safe alternative. Do not include policy narration unless the user needs it.
+
+### Placeholder templates
+
+Remove template residue such as bracketed placeholders, generic subject lines, "insert details here," and fill-in sections. If the prose still needs unknown information, ask for it or mark the exact missing fact.
+
+---
