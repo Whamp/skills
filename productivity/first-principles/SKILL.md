@@ -59,7 +59,7 @@ A first principle is **not**:
 The useful distinction:
 
 | Category | Meaning | How to handle it |
-|---|---|---|
+| --- | --- | --- |
 | Fact | Verified true in this context | Build on it |
 | Hard constraint | Physics, law, API limit, budget, time, safety | Respect it unless changed upstream |
 | Soft constraint | Convention, preference, org habit, local norm | Challenge it |
@@ -309,7 +309,7 @@ Use this as the body of `FIRST-PRINCIPLES.md` when the reasoning is worth preser
 ### Rebuild Options Table
 
 | Option | Built from principles | Rejects assumption | Substitutes/recombines | Upside | Risk | Cheapest test |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | ... | ... | ... | ... | ... | ... | ... |
 
 ## Useful Question Bank

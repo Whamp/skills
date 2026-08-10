@@ -4,6 +4,6 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 
 ## Skills
 
-- `docs-to-types/` — converts grill-with-docs context, ADRs, and approved domain decisions into typed architecture.
-- `dynamic-workflow-patterns/` — teaches agents when and how to use Pi dynamic workflows, including fan-out, adversarial verification, tournaments, and loop-until-done patterns.
-- `property-based-testing/` — property-based testing patterns for serialization pairs, parsers, validators, normalizers, pure functions, and data structures.
+- [`docs-to-types`](docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
+- [`dynamic-workflow-patterns`](dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
+- [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
