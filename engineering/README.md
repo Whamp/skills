@@ -16,6 +16,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`javascript-testing-expert`](javascript-testing-expert/) — supplies idiomatic JavaScript and TypeScript testing patterns.
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
+- [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`rust-testing-expert`](rust-testing-expert/) — supplies idiomatic Rust testing patterns and tooling.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.

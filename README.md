@@ -36,6 +36,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`javascript-testing-expert`](engineering/javascript-testing-expert/) — supplies idiomatic JavaScript and TypeScript testing patterns.
 - [`model-routing`](engineering/model-routing/) — selects delegated model portfolios for specialized roles.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
+- [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](engineering/property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`rust-testing-expert`](engineering/rust-testing-expert/) — supplies idiomatic Rust testing patterns and tooling.
 - [`sideshow`](engineering/sideshow/) — publishes rich work to a hosted visual review and feedback loop.
