@@ -23,11 +23,12 @@ Use these terms consistently in filenames, documentation, and maintenance work:
 | installation surface | A consumer-managed copy or link created from the canonical source | source skill |
 | category | An organizational directory containing independent skills | package, namespace |
 | invocation policy | Whether a harness may invoke a skill autonomously or only after a user request | visibility |
-| provenance | The authorship, upstream origin, and license basis for publishing a skill | inspiration |
+| provenance | Whether a skill is Will-authored, materially transformed, or substantially verbatim third-party work | inspiration |
 
 ## Publishing Rules
 
-- Publish work Will authored or has the right to redistribute. Record material third-party origins and license terms inside the affected skill.
+- Publish work Will authored, materially rewrote, compiled, or distilled and now maintains. A transformed skill may draw on other work without carrying an exhaustive inspiration ledger.
+- Exclude substantially verbatim third-party skills presented as Will's work. Preserve attribution, copyright, or license notices when redistribution terms require them.
 - Keep skills portable. Replace personal paths, private infrastructure, secrets, and machine-specific assumptions with documented inputs or explicit compatibility requirements.
 - Keep a skill self-contained. Local links from its Markdown files must resolve inside its directory unless they deliberately point to a stable public source.
 - Use the folder name as the frontmatter `name`. Skill names are unique across categories.
@@ -42,7 +43,7 @@ A model-invoked skill keeps a trigger-focused `description` and omits `disable-m
 
 When adding or migrating a skill:
 
-1. Establish its provenance and license basis.
+1. Compare likely upstream sources and establish that the skill is Will-authored or materially transformed rather than a substantially verbatim third-party copy. Confirm redistribution terms for any retained third-party text or code.
 2. Place the complete skill directory under the best existing category.
 3. Update the root catalog and that category's README.
 4. Run `make validate`.
