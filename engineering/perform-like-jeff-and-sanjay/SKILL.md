@@ -25,7 +25,7 @@ Route to the requested decision rather than running the whole lifecycle uncondit
 
 - **Estimate:** Steps 1–2, then Step 8.
 - **Diagnose a bottleneck or flat profile:** Steps 1–4, then Step 8.
-- **Design a performance change:** Steps 1–5, then Step 8.
+- **Design a performance change:** Steps 1–2, take the applicable Step 3 branch, then Steps 4–5 and Step 8.
 - **Review a proposed change:** reconstruct Steps 1–5 from available evidence, then apply Steps 7–8.
 - **Implement:** Steps 1–7, then Step 8.
 - **Validate a claimed speedup:** reconstruct Steps 1–6, then apply Steps 7–8.
@@ -67,9 +67,9 @@ State dominant assumptions and their source. Hardware tables and historical benc
 
 **Complete when:** operation counts, unit costs, overlap assumptions, dominant term, uncertainty, and falsifier are explicit enough to reject at least one implausible direction or justify what must be measured next.
 
-### 3. Establish a production-like baseline
+### 3. Establish the applicable evidence baseline
 
-Measure an optimized, production-relevant build with enough symbols or metadata to interpret profiles. Exercise representative data, size distributions, concurrency, and configuration. Record hardware, runtime/compiler, build mode, benchmark command, warmup, sample count, variance, and system load when available.
+**Existing-target branch:** measure an optimized, production-relevant build with enough symbols or metadata to interpret profiles. Exercise representative data, size distributions, concurrency, and configuration. Record hardware, runtime/compiler, build mode, benchmark command, warmup, sample count, variance, and system load when available.
 
 Collect evidence for the suspected resource:
 
@@ -85,14 +85,16 @@ Use profiling as codebase reconnaissance: read loops and routines high in the dy
 
 **Flat profile branch:** aggregate validated small gains; inspect high-stack loops and repeated boundary crossings; seek structural or algorithmic changes; examine unnecessary generality, allocations, contention, cache misses, I/O, and code footprint. A flat CPU profile can mean distributed waste or exhausted obvious hotspots.
 
-**Complete when:** the baseline is reproducible, the relevant resource has direct evidence, and benchmark noise is small enough to distinguish the expected effect. Otherwise report a measurement plan instead of an optimization claim.
+**Pre-implementation design branch:** when the target does not yet exist, use the Step 2 estimate, workload bounds, and comparable measurements when available. Cite each comparable and its material differences. Mark the expected effect unmeasured. Specify the instrumentation or measurement hook, benchmark, and target-scope measurement that will validate the hypothesis after implementation. Do not claim a speedup.
+
+**Complete when:** an existing-target baseline is reproducible, directly measures the relevant resource, and has low enough noise to distinguish the expected effect; or a pre-implementation design records bounded assumptions, labeled estimates, relevant comparables, and a concrete validation plan. Otherwise report what evidence is missing instead of making an optimization claim.
 
 ### 4. Write one gated causal hypothesis
 
 Use this record:
 
 ```text
-BOTTLENECK: observed resource and scope
+BOTTLENECK: observed or estimated constrained resource and scope; label the evidence class
 MULTIPLIER: frequency, probability, cardinality, contention, or emitted copies
 MOVE: proposed transformation
 GATE: evidence that its precondition holds
@@ -102,7 +104,7 @@ FALSIFIER: result that disproves the mechanism
 CONTRACTS: semantics and operational properties that must remain true
 ```
 
-After Step 3 identifies the constrained resource, choose the portable move from [technique gates](references/technique-gates.md). Then, before naming a concrete facility, load only the matching specialized branch: [C++ representations and containers](references/cpp-and-protobuf-gates.md#c-representations-and-containers), [C++ ownership and lifecycle](references/cpp-and-protobuf-gates.md#c-ownership-and-lifecycle), [C++ code size and compiler controls](references/cpp-and-protobuf-gates.md#c-code-size-and-compiler-controls), or [Protocol Buffers](references/cpp-and-protobuf-gates.md#protocol-buffers).
+Using the measured or pre-implementation evidence from Step 3, choose the portable move from [technique gates](references/technique-gates.md). Then, before naming a concrete facility, load only the matching specialized branch: [C++ representations and containers](references/cpp-and-protobuf-gates.md#c-representations-and-containers), [C++ ownership and lifecycle](references/cpp-and-protobuf-gates.md#c-ownership-and-lifecycle), [C++ code size and compiler controls](references/cpp-and-protobuf-gates.md#c-code-size-and-compiler-controls), or [Protocol Buffers](references/cpp-and-protobuf-gates.md#protocol-buffers).
 
 Prefer, subject to evidence:
 
@@ -116,9 +118,9 @@ Prefer, subject to evidence:
 8. specialize a demonstrated common subset;
 9. assist the compiler or use hardware-specific operations.
 
-A lower rung may come first when measurement identifies it as the actual constraint. Reject named types or tricks whose mechanism, gate, and lose-condition cannot be stated for this workload.
+A lower rung may come first when the available evidence identifies it as the actual or expected constraint. Reject named types or tricks whose mechanism, gate, and lose-condition cannot be stated for this workload.
 
-**Complete when:** one move has stronger causal evidence than its alternatives, all record fields are filled, and the expected gain meets the Step 1 decision threshold at the target scope.
+**Complete when:** one move has stronger causal evidence than its alternatives, all record fields are filled, the measured or estimated gain meets the Step 1 decision threshold at the target scope, and every unmeasured effect is explicitly labeled.
 
 ### 5. Set the implementation boundary
 
