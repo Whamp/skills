@@ -4,5 +4,6 @@ Skills for thinking, planning, writing, research, and personal operating-system 
 
 ## Skills
 
-- `first-principles/` — interactive first-principles thinking grill for decomposing problems from fundamentals.
-- `distilling-skills/` — find, evaluate, and combine agent skills on a topic into a concentrated best-of-breed version.
+- [`clear-writing`](clear-writing/) — writes and revises durable human-facing prose with plain force.
+- [`distilling-skills`](distilling-skills/) — finds, evaluates, and combines agent skills into a concentrated best-of-breed version.
+- [`first-principles`](first-principles/) — runs an interactive first-principles grill for decomposing problems from fundamentals.

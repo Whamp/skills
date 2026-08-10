@@ -1,5 +1,10 @@
 {
   "config": {
     "MD013": false
-  }
+  },
+  "ignores": [
+    "productivity/clear-writing/references/ai-writing-patterns.md",
+    "productivity/clear-writing/references/elements-of-style/*.md",
+    "productivity/clear-writing/references/wikipedia-ai-artifacts.md"
+  ]
 }
