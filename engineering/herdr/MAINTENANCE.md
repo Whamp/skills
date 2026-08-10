@@ -1,6 +1,6 @@
 # Herdr Skill Maintenance
 
-The local `herdr` skill is Detached. Yadm owns its content; the Skills CLI and Herdr updater do not.
+`Whamp/skills` owns the maintained `herdr` skill. Consumer installations update through the Skills CLI; the Herdr updater and `herdr --skill` remain upstream evidence, not update owners.
 
 ## Upstream baseline
 
@@ -15,11 +15,11 @@ The local `herdr` skill is Detached. Yadm owns its content; the Skills CLI and H
 - Installed client/server protocol at review: `19`
 - Review date: 3 August 2026
 
-The upstream skill, the skill bundled by `herdr --skill`, and the recorded blob matched at review. The v0.8.0 runtime changed after the upstream skill's last edit, so an unchanged skill blob does not prove that local guidance is current.
+The upstream skill, the skill bundled by `herdr --skill`, and the recorded blob matched at review. The v0.8.0 runtime changed after the upstream skill's last edit, so an unchanged skill blob does not prove that the maintained guidance is current.
 
-## Local invariant
+## Maintained invariant
 
-Upstream is a capability reference, not the policy source. Preserve the local invocation policy, proactive background-terminal behavior, tab-first sidecar topology, sidecar vocabulary, and progressive-disclosure shape. Import only useful CLI, lifecycle, safety, and capability changes.
+Upstream is a capability reference, not the policy source. Preserve the published invocation policy, proactive background-terminal behavior, tab-first sidecar topology, sidecar vocabulary, and progressive-disclosure shape. Import only useful CLI, lifecycle, safety, and capability changes.
 
 ## Review triggers
 
@@ -49,7 +49,7 @@ Review upstream when:
      --output "$evidence_dir/cli-help.json"
    ```
 
-   `capture-cli-help.py` recursively appends `--help` to every discovered command path, including hidden top-level compatibility groups. It exits nonzero and lists failures when any path cannot be captured. This step is complete when `cli-help.json` has an empty `failures` array, every command referenced by the local skill appears in its `commands` array, and the client/server versions and protocols are recorded.
+   `capture-cli-help.py` recursively appends `--help` to every discovered command path, including hidden top-level compatibility groups. It exits nonzero and lists failures when any path cannot be captured. This step is complete when `cli-help.json` has an empty `failures` array, every command referenced by the maintained skill appears in its `commands` array, and the client/server versions and protocols are recorded.
 
 2. Fetch release evidence, pinned versioned docs, and the current upstream skill independently:
 
@@ -105,22 +105,24 @@ Review upstream when:
 3. Compare three independent surfaces:
 
    - bundled `herdr --skill` against the release and current upstream skill blobs;
-   - the current upstream skill against the previously recorded commit and local `SKILL.md`;
-   - release notes, changelog, pinned docs, installed help, and API schema against the previously reviewed release and local CLI guidance.
+   - the current upstream skill against the previously recorded commit and canonical `SKILL.md`;
+   - release notes, changelog, pinned docs, installed help, and API schema against the previously reviewed release and canonical CLI guidance.
 
-   Confirm changed commands and semantics with the installed binary before updating local prose. Record protocol changes because mixed client/server versions may be incompatible.
+   Confirm changed commands and semantics with the installed binary before updating canonical prose. Record protocol changes because mixed client/server versions may be incompatible.
 
 4. Give every skill-relevant release item exactly one written disposition:
 
-   - **accepted** into one named local file;
-   - **already covered**, with the existing local source named; or
-   - **rejected**, with a reason tied to the local invariant.
+   - **accepted** into one named canonical file;
+   - **already covered**, with the existing canonical source named; or
+   - **rejected**, with a reason tied to the maintained invariant.
 
    Keep one release item per bullet. Do not advance the baseline until every relevant item has exactly one disposition. An unchanged upstream skill blob is not evidence that runtime capabilities are unchanged.
 
-5. Validate every command family referenced by the local skill. Confirm the skill remains model-invoked under both Pi and Codex controls, Detached in `CLASSIFICATIONS.md`, and synchronized with `invocation-policy-map.html`.
+5. Validate every command family referenced by the canonical skill. Confirm the public default remains model-invoked in Pi and Codex.
 
-6. Update the commit, blob, release, protocol, review date, and last-review disposition below. The review is complete when the baseline matches the captured evidence, every accepted behavior is validated against the installed interface, every rejected behavior has a recorded reason, and yadm has committed and pushed only the intended files.
+6. Update the commit, blob, release, protocol, review date, and last-review disposition below. Run the `Whamp/skills` repository validation, merge the canonical change, and update the consumer with `npx skills update herdr --global --yes`. Confirm the installed files match the merged source, the installer receipt names `Whamp/skills`, and consumer ownership and invocation inventories remain synchronized.
+
+The review is complete when the baseline matches the captured evidence, every accepted behavior is validated against the installed interface, every rejected behavior has a recorded reason, the canonical source is merged with passing CI, and each updated consumer reports the skill current.
 
 ## Last review disposition: v0.8.0
 
@@ -158,5 +160,5 @@ Review upstream when:
 - IME and ConPTY changes → no local Linux command or lifecycle effect.
 - Windows input and process-survival fixes → existing local commands require no syntax change.
 - License change → no operational effect.
-- Upstream explicit-only invocation posture → conflicts with the local proactive sidecar policy.
-- Upstream monolithic skill structure → conflicts with local progressive disclosure.
+- Upstream explicit-only invocation posture → conflicts with the maintained proactive sidecar policy.
+- Upstream monolithic skill structure → conflicts with the maintained progressive-disclosure shape.
