@@ -1,0 +1,13 @@
+Provider,Model,Model ID,Effort,Effective Effort,Access Pool,Cost Per Task,Intelligence Index,Model Coding Index,Agentic Index,Index Version,As Of,Source
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:low,low,low,OpenAI subscription,0.0405,33.3,44.2,25.4,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:medium,medium,medium,OpenAI subscription,0.0504,38.1,50.7,31,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:high,high,high,OpenAI subscription,0.0948,46.1,63.3,40.1,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:xhigh,xhigh,xhigh,OpenAI subscription,0.139,49.1,68.6,42.9,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:max,max,max,OpenAI subscription,0.2094,51.2,71.4,45.6,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:low,low,low,OpenAI subscription,0.1975,49.4,69.7,40,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:medium,medium,medium,OpenAI subscription,0.314,53.6,76.3,44.5,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:high,high,high,OpenAI subscription,0.453,55.9,77.2,48.5,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:xhigh,xhigh,xhigh,OpenAI subscription,0.6825,57.7,78.3,51.8,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:max,max,max,OpenAI subscription,1.0373,58.9,77.4,54,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+Z.ai,GLM-5.2,zai/glm-5.2:none,none,none,Z.ai Pro subscription,,34.1,46.5,34.8,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free
+Z.ai,GLM-5.2,zai/glm-5.2,max,max,Z.ai Pro subscription,0.3701,51.1,68.8,43.1,4.1,2026-07-12,https://artificialanalysis.ai/api/v2/language/models/free

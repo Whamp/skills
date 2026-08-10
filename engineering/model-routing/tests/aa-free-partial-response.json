@@ -1,0 +1,29 @@
+{
+  "intelligence_index_version": "4.1",
+  "data": [
+    {
+      "name": "GPT-5.6 Luna (xhigh)",
+      "slug": "gpt-5-6-luna-xhigh",
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 49.1,
+        "artificial_analysis_coding_index": 68.6,
+        "artificial_analysis_agentic_index": 42.9
+      },
+      "artificial_analysis_intelligence_index_cost": {
+        "cost_per_task": {"total_cost": 0.139}
+      }
+    },
+    {
+      "name": "GLM-5.2 (max)",
+      "slug": "glm-5-2",
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 51.1,
+        "artificial_analysis_coding_index": 68.8,
+        "artificial_analysis_agentic_index": 43.1
+      },
+      "artificial_analysis_intelligence_index_cost": {
+        "cost_per_task": {"total_cost": 0.3701}
+      }
+    }
+  ]
+}
