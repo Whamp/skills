@@ -1,6 +1,7 @@
 ---
 name: sideshow
-description: Sideshow hosted review. Use when the user mentions Sideshow, requests a hosted visual review or feedback loop, or when a plan, comparison, diagram, diff, code, structured data, terminal output, screenshot, or interactive explainer would be easier to evaluate visually than in chat.
+description: Publish work to a hosted visual review and feedback loop.
+disable-model-invocation: true
 compatibility: Requires Node.js 22.18+, npx, and a configured SIDESHOW_URL/SIDESHOW_TOKEN workspace.
 ---
 
