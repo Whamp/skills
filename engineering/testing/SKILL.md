@@ -72,11 +72,16 @@ Extract setup behind helpers only when the helper names a domain operation or hi
 
 ## 4. Prove discrimination
 
-For a bug, run the test against the buggy or pre-fix revision and then against the fix. It must fail before and pass after. For new behavior, safely introduce or simulate the named counterfeit—for example, suppress the state transition, return the wrong boundary value, or invert the condition—then restore the implementation.
+Use the strongest safe discrimination proof available:
 
-Inspect the red result. A setup error, timeout, unrelated exception, or failure in a different assertion does not prove the intended behavior. Leave no deliberate defect in the final change.
+1. For a bug, run the test against the buggy or pre-fix revision and then against the fix.
+2. For new behavior, run the test before implementing the behavior and again after implementation.
+3. For behavior that already exists, use an available mutation tool or safely introduce a local temporary counterfeit—for example, suppress the state transition, return the wrong boundary value, or invert the condition—then restore the implementation.
+4. When none of those proofs is safe or proportionate, record the unproven counterfeit and the constraint that prevented exercising it. Prefer an honest limitation over changing production code merely to manufacture a red result.
 
-**Complete when:** evidence shows red for the named reason and green after the correct behavior is restored.
+Inspect every red result. A setup error, timeout, unrelated exception, or failure in a different assertion does not prove the intended behavior. Leave no deliberate defect in the final change.
+
+**Complete when:** the strongest safe proof goes red for the named reason and green after the correct behavior is restored, or the unproven counterfeit and blocking constraint are explicitly recorded.
 
 ## 5. Validate and operate
 
@@ -92,7 +97,7 @@ Use coverage to locate unexercised risk, not as a target by itself. Use mutation
 - [ ] The chosen surface is the narrowest one that contains the risk.
 - [ ] The oracle is independent of the implementation.
 - [ ] The test avoids private state and incidental call choreography.
-- [ ] Red evidence proves the test discriminates the target defect.
+- [ ] The strongest safe discrimination proof was exercised, or its limitation was recorded.
 - [ ] Time, randomness, concurrency, external responses, and durable state are controlled where relevant.
 - [ ] Coverage, mutation, retries, and snapshots support a decision rather than replace one.
 - [ ] The test remains useful after an internal refactor that preserves behavior.
