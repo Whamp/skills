@@ -15,7 +15,7 @@ npx skills add Whamp/skills --list
 Install one skill:
 
 ```bash
-npx skills add Whamp/skills --skill property-based-testing
+npx skills add Whamp/skills --skill testing
 ```
 
 Use `--global` for a user-level installation or the installer's `--agent` option to select specific harnesses.
@@ -28,19 +28,16 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`codegraph`](engineering/codegraph/) — scouts structural code graphs before targeted source reads and changes.
 - [`docs-to-types`](engineering/docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
 - [`dynamic-workflow-patterns`](engineering/dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
-- [`e2e-testing`](engineering/e2e-testing/) — designs and operates Playwright tests for critical user journeys.
 - [`explain-diff-html`](engineering/explain-diff-html/) — creates interactive HTML explainers for code changes.
-- [`fuzzing`](engineering/fuzzing/) — builds and operates fuzzing harnesses for Rust, C/C++, and Go.
+- [`fuzzing`](engineering/fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](engineering/herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
-- [`integration-testing`](engineering/integration-testing/) — tests behavior across API, database, service, filesystem, queue, and contract boundaries.
-- [`javascript-testing-expert`](engineering/javascript-testing-expert/) — supplies idiomatic JavaScript and TypeScript testing patterns.
 - [`model-routing`](engineering/model-routing/) — selects delegated model portfolios for specialized roles.
 - [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
 - [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](engineering/property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
-- [`rust-testing-expert`](engineering/rust-testing-expert/) — supplies idiomatic Rust testing patterns and tooling.
 - [`sideshow`](engineering/sideshow/) — publishes rich work to a hosted visual review and feedback loop.
+- [`testing`](engineering/testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
 - [`worktree-first`](engineering/worktree-first/) — isolates substantive repository changes in dedicated Git worktrees.
 
 ### Productivity

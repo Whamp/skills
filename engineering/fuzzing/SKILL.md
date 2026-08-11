@@ -1,359 +1,123 @@
 ---
 name: fuzzing
-description: Use when writing fuzz harnesses, running fuzzing campaigns, analyzing coverage, or triaging crashes for Rust, C/C++, or Go code. Covers cargo-fuzz, libFuzzer, AFL++, and Go native fuzzing. Does not cover web/API fuzzing or black-box e2e testing.
-disable-model-invocation: true
+description: Coverage-guided fuzzing. Use when selecting or writing fuzz targets for parsers, decoders, protocol handlers, unsafe or FFI code, or untrusted inputs; running cargo-fuzz, libFuzzer, AFL++, or Go fuzzing; designing fuzz oracles and corpora; analyzing coverage plateaus; or reproducing, minimizing, deduplicating, and converting crashes into regressions.
 ---
 
 # Fuzzing
 
-> **Scope:** Coverage-guided fuzzing of libraries and parsers. Not web fuzzing, not property-based testing (see `rust-testing-expert` for proptest, Miri, sanitizer basics).
+A fuzz target combines generated input, coverage feedback, a tight harness, and an oracle. The campaign is useful only when failures reproduce and the harness can reach the behavior at risk.
 
-## When to fuzz
+## Route the engine
 
-**Do** fuzz parsers, deserializers, protocol handlers, file format processors, and anything accepting untrusted input.
+- Rust with cargo-fuzz and libFuzzer — read [cargo-fuzz](references/cargo-fuzz.md).
+- C or C++ with libFuzzer or AFL++ — read [C and C++ fuzzing](references/c-cpp-libfuzzer-afl-plus-plus.md).
+- Go's native `testing.F` — read [Go native fuzzing](references/go-native-fuzzing.md).
+- Broad generated values or operation sequences where coverage feedback is not the search signal — load `property-based-testing` instead.
 
-**Do** fuzz serialization roundtrips: `deserialize(serialize(x)) == x`.
+Use more than one engine only when their instrumentation, mutation strategy, or platform support creates a concrete benefit. Do not multiply campaigns by default.
 
-**Do** fuzz code with `unsafe` blocks (Rust), raw pointer manipulation (C/C++), or CGo FFI boundaries.
+## 1. Frame the campaign
 
-**Don't** fuzz pure business logic better served by property-based testing.
-
-## Universal harness principles
-
-Every harness, regardless of language, must follow these rules:
-
-| Rule | Rationale |
-| ------ | ----------- |
-| **Deterministic** | Same input = same behavior. No `rand()`, no `time()`, no `/dev/urandom`. Seed PRNGs from fuzzer input if randomness is needed. |
-| **No global state leaks** | Reset or isolate state between iterations. Global state causes non-reproducible crashes. |
-| **Fast** | Target 100-1000+ exec/sec. No logging, no I/O, no network. Mock expensive operations. |
-| **Never call `exit()`** | Kills the fuzzer process. Return error codes or let the SUT `abort()`. |
-| **Handle all input sizes** | Empty, tiny, huge, malformed — the harness must not crash on unexpected sizes. Reject gracefully with early return. |
-| **Free resources** | Prevent memory exhaustion during long campaigns. |
-| **Narrow targets** | One harness per format/protocol. Don't mix PNG and TCP in the same target. |
-
-### Interleaved fuzzing
-
-Test multiple related operations in one harness by using the first byte(s) as an operation selector:
-
-```c
-uint8_t mode = data[0];
-switch (mode % N) {
-    case 0: op_a(...); break;
-    case 1: op_b(...); break;
-}
-```
-
-Use when operations share input types and a single corpus makes sense across all of them.
-
-## Corpus management
-
-**Do** seed with valid example inputs — dramatically accelerates initial coverage.
-
-**Do** minimize regularly:
-
-- libFuzzer: `./fuzz -merge=1 minimized/ corpus/`
-- AFL++: `afl-cmin -i queue/ -o minimized/ -- ./fuzz`
-- cargo-fuzz: `cargo +nightly fuzz run target -- -merge=1`
-- Go: corpus managed automatically under `testdata/fuzz/`
-
-**Do** merge corpora from multiple campaigns or fuzzers.
-
-**Don't** commit massive corpora to version control — store minimized corpora only.
-
-## Dictionaries
-
-Dictionaries provide domain-specific tokens (magic bytes, keywords, delimiters) to help the fuzzer bypass format checks.
+Write the campaign contract before the harness:
 
 ```text
-# png.dict
-magic="\x89PNG\r\n\x1a\n"
-ihdr="IHDR"
-idat="IDAT"
+Target: <narrow production entry point>
+Risk: <crash, undefined behavior, hang, or semantic defect>
+Input model: <bytes, structured value, or operation sequence>
+Oracle: <observable failure condition>
+Engine: <existing project tool or justified choice>
+Budget: <local smoke, bounded campaign, or continuous service>
+Regression path: <where minimized failures will live>
 ```
 
-Usage: `./fuzz -dict=format.dict corpus/` (libFuzzer/cargo-fuzz) or `afl-fuzz -x format.dict ...` (AFL++).
+Good targets include parsers, decoders, protocol and file-format handlers, compression or serialization code, unsafe memory operations, and FFI boundaries. Business logic can also benefit when coverage-guided mutation and its oracle fit better than direct examples or property generators; choose by search mechanism, not category labels.
 
-**Generate from:** header files (`grep -o '".*"' header.h`), binary strings (`strings ./bin`), man pages, or ask an LLM. Keep focused: 50-200 entries.
+**Complete when:** every field is concrete and the target owns enough behavior to expose the risk without booting an unrelated system.
 
-AFL++ with `afl-clang-lto` auto-extracts dictionaries via `AFL_LLVM_DICT2FILE=auto.dict`.
+## 2. Build a tight harness
 
-## Overcoming obstacles
+A tight harness is:
 
-When coverage plateaus, check for these blockers:
+- deterministic for the same input and build
+- independent between invocations, with global and persistent state reset
+- bounded in input size, memory, time, recursion, and output
+- tolerant of malformed and empty input unless rejection itself violates the contract
+- free of avoidable logging, network, GUI, process startup, and durable writes in the hot loop
+- responsible for releasing resources on every path
 
-| Obstacle | Solution |
-| ---------- | ---------- |
-| Checksum/hash validation | Conditional bypass: `#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION` (C/C++) or `if !cfg!(fuzzing)` (Rust) |
-| Non-deterministic PRNG | Fixed seed under fuzzing build flag |
-| Complex multi-stage validation | Keep cheap checks (magic bytes), skip expensive ones (crypto signatures) during fuzzing |
-| Magic value comparisons | Add to dictionary; AFL++ CMPLOG (`-c0`) solves these automatically |
+Call the production entry point directly. Replace a slow network or UI adapter with the underlying parser or handler rather than mocking the logic under test. Never call `exit()` from the harness.
 
-**Do** provide safe defaults when skipping validation to avoid false positives from violated assumptions.
+Do not bypass checks merely to inflate coverage. When an expensive checksum, signature, or envelope prevents deeper search, prefer a lower production seam that accepts validated input. If a fuzz-only bypass is necessary, preserve the assumptions the skipped check established and make the build flag impossible to enable in production.
 
-**Do** measure coverage before and after each patch.
+Run the harness over empty, smallest-valid, malformed, and representative seed inputs before starting the engine. A harness crash, leak, or nondeterministic result is a harness defect until shown otherwise.
 
-## Crash triage
+**Complete when:** seeds replay deterministically, malformed input is handled as specified, and persistent iterations leave no relevant state behind.
 
-1. **Reproduce:** Re-run the crash input: `./fuzz crash-<hash>` or `cargo +nightly fuzz run target fuzz/artifacts/target/crash-<hash>`
-2. **Minimize:** `./fuzz -minimize_crash=1 -exact_artifact_path=min.bin crash-<hash>`
-3. **Classify:** Read the sanitizer report — ASan (buffer overflow, use-after-free, double-free), UBSan (integer overflow, null deref), or plain signal (SEGV, ABRT)
-4. **Deduplicate:** Group crashes by stack trace signature, not input content
-5. **Fix and regress:** Add minimized crash input to the seed corpus as a regression test
+## 3. Choose an oracle
 
----
+A target that only ignores a return value can find panics, sanitizer findings, timeouts, and process crashes; it cannot detect silent wrong answers. Add the strongest independent observation the contract supports:
 
-## Rust: cargo-fuzz
+- **Safety oracle** — no crash, undefined behavior, leak, resource exhaustion, or forbidden hang
+- **Semantic oracle** — a successful result satisfies a public invariant or validator
+- **Differential oracle** — optimized, unsafe, new, or alternate implementation agrees with an independent reference
+- **Metamorphic oracle** — a transformed input preserves a stated relation, such as encode/decode roundtrip or normalization idempotence
 
-> For Miri, sanitizer basics, and proptest, see `rust-testing-expert`.
+Name a counterfeit defect for every semantic oracle. Keep the reference path simpler and independent; comparing two wrappers around the same implementation adds no discrimination.
 
-### Setup
+**Complete when:** the target detects its named risk and each semantic assertion rejects a plausible counterfeit.
 
-```bash
-rustup install nightly
-cargo install cargo-fuzz
-cargo fuzz init              # creates fuzz/ directory
-cargo fuzz add my_target     # adds a new target
-```
+## 4. Design the input search
 
-Requires nightly. Code must be in `lib.rs` (not just `main.rs`).
+Seed with a small set of valid and boundary examples that reach distinct behavior. Keep coverage-contributing regression inputs; minimize rather than accumulate a large opaque corpus. Merge corpora from compatible campaigns through the engine's supported command.
 
-### Minimal harness
+Use a dictionary for stable tokens, delimiters, magic bytes, or keywords when the engine supports one. Use structure-aware generation or mutation when byte mutations are rejected before reaching meaningful logic. Preserve malformed-input exploration too: a generator that produces only valid values cannot challenge rejection paths.
 
-```rust
-#![no_main]
-use libfuzzer_sys::fuzz_target;
+When coverage stalls, inspect the corpus replay rather than the corpus count. Look for:
 
-fuzz_target!(|data: &[u8]| {
-    let _ = my_crate::parse(data);
-});
-```
+- an entry point the harness never calls
+- an early validation wall
+- unsupported input sizes or missing tokens
+- nondeterminism that makes coverage unstable
+- slow or stateful code consuming the budget
+- an oracle that cannot observe deeper failures
 
-### Structure-aware fuzzing with `arbitrary`
+Change one search constraint at a time and remeasure reach.
 
-```rust
-use arbitrary::Arbitrary;
+**Complete when:** risk-bearing regions are reachable or every remaining barrier has a recorded reason and next experiment.
 
-#[derive(Debug, Arbitrary)]
-pub struct Config {
-    pub width: u32,
-    pub height: u32,
-    pub name: String,
-}
-```
+## 5. Run and record the campaign
 
-```rust
-fuzz_target!(|config: my_crate::Config| {
-    config.validate();
-});
-```
+Run ordinary regression tests first; seed replay should already be green. Start with a short smoke campaign, then use a bounded local or CI budget. Use the engine's documented worker model rather than launching ad hoc copies that corrupt or duplicate state.
 
-Add `arbitrary = { version = "1", features = ["derive"] }` to your library's `Cargo.toml`.
+Record the source revision, engine and compiler versions, sanitizer or instrumentation mode, target, corpus, dictionary, worker count, maximum input size, timeout, and random seed or replay command where available. Preserve logs needed to distinguish product failure, harness failure, timeout, and infrastructure exhaustion.
 
-### Running
+Coverage is a diagnostic for target reach, not proof of correctness. Compare coverage only across compatible builds and corpora. Optimize executions per second only after confirming that the faster harness preserves the same relevant behavior and oracle.
 
-```bash
-cargo +nightly fuzz run my_target                    # ASan enabled by default
-cargo +nightly fuzz run my_target --sanitizer none   # 2x faster for safe Rust
-cargo +nightly fuzz run my_target -- -dict=fuzz/my.dict -max_len=4096
-```
+**Complete when:** another developer can reproduce the campaign configuration and replay its corpus without the active fuzzer.
 
-### Safe vs unsafe decision
+## 6. Triage every failure
 
-```bash
-cargo install cargo-geiger
-cargo geiger   # shows unsafe usage in your crate + dependencies
-```
+1. Reproduce with the original target, build mode, options, and input.
+2. Minimize the failing input with the engine's supported minimizer.
+3. Classify product defect, harness defect, unsupported resource case, flaky execution, or infrastructure failure.
+4. Deduplicate by root cause and meaningful stack, not filename or input bytes alone.
+5. Show that the minimized input fails before the fix and passes after it.
+6. Keep a durable regression: a normal focused test when it communicates the contract, plus the minimized corpus input when engine replay remains valuable.
 
-- Unsafe code present: keep ASan (default)
-- Pure safe Rust: use `--sanitizer none` for 2x throughput
+A sanitizer report names an observed failure, not automatically its root cause. Inspect the first relevant frame and the violated contract before changing production code.
 
-### Coverage
+**Complete when:** the failure is minimized, reproducible, classified, fixed or tracked, and replayed by the project's normal or scheduled test path.
 
-```bash
-rustup toolchain install nightly --component llvm-tools-preview
-cargo install cargo-binutils rustfilt
-cargo +nightly fuzz coverage my_target
-# Then generate HTML (see coverage section below)
-```
+## 7. Operate continuously
 
----
+For security-sensitive or heavily exposed targets, run minimized corpora as ordinary regression inputs and use a continuous fuzzing service when the project can support its toolchain and triage load. Replay useful corpora under compatible sanitizers. Track reach, unique actionable failures, time-to-reproduce, and stale targets; raw corpus size and crash count are not health metrics.
 
-## C/C++: libFuzzer and AFL++
+## Review checklist
 
-### libFuzzer harness
-
-```c
-#include <stdint.h>
-#include <stddef.h>
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-    if (size < 4) return 0;
-    target_parse(data, size);
-    return 0;
-}
-```
-
-**Compile:** `clang++ -fsanitize=fuzzer,address -g -O2 harness.cc target.cc -o fuzz`
-
-**Run:** `./fuzz corpus/ -dict=format.dict -max_len=4096`
-
-### FuzzedDataProvider (structured input)
-
-```cpp
-#include <fuzzer/FuzzedDataProvider.h>
-
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
-    FuzzedDataProvider fdp(data, size);
-    auto len = fdp.ConsumeIntegral<size_t>();
-    auto name = fdp.ConsumeRandomLengthString(64);
-    auto remaining = fdp.ConsumeRemainingBytes<uint8_t>();
-    process(name.c_str(), remaining.data(), remaining.size());
-    return 0;
-}
-```
-
-### AFL++ persistent mode
-
-```c
-#include <unistd.h>
-
-int main(int argc, char **argv) {
-    #ifdef __AFL_HAVE_MANUAL_CONTROL
-        __AFL_INIT();
-    #endif
-    unsigned char buf[MAX_SIZE];
-    while (__AFL_LOOP(10000)) {
-        ssize_t len = read(0, buf, sizeof(buf));
-        if (len <= 0) break;
-        target_function(buf, len);
-    }
-    return 0;
-}
-```
-
-**Compile:** `afl-clang-fast++ -O2 -fsanitize=fuzzer harness.cc target.cc -o fuzz`
-
-**Run:** `afl-fuzz -i seeds/ -o findings/ -- ./fuzz`
-
-**Multi-core:** Start one `-M primary` and N `-S secondaryNN` instances. AFL++ scales linearly with physical cores.
-
-### CMPLOG (magic value solver)
-
-Build a CMPLOG-instrumented copy: `AFL_LLVM_CMPLOG=1 afl-clang-fast++ ...`
-
-Run with: `afl-fuzz -c0 -S cmplog -i seeds -o state -- ./fuzz`
-
-### Sanitizer flags
-
-```bash
-# libFuzzer
-clang++ -fsanitize=fuzzer,address,undefined -g -O2 -U_FORTIFY_SOURCE ...
-
-# AFL++
-AFL_USE_ASAN=1 afl-clang-fast++ ...
-```
-
-ASan requires ~20TB virtual memory. Disable memory limits: `-rss_limit_mb=0` (libFuzzer) or `-m none` (AFL++).
-
----
-
-## Go: native fuzzing (Go 1.18+)
-
-Go has built-in coverage-guided fuzzing via `testing.F`.
-
-### Harness
-
-```go
-// parser_fuzz_test.go
-package mypackage
-
-import "testing"
-
-func FuzzParse(f *testing.F) {
-    // Seed corpus
-    f.Add([]byte(`{"valid": true}`))
-    f.Add([]byte(`<xml/>`))
-    f.Add([]byte{})
-
-    f.Fuzz(func(t *testing.T, data []byte) {
-        result, err := Parse(data)
-        if err != nil {
-            return // expected for invalid input
-        }
-        // Optional: check invariants on valid parse
-        if result.Validate() != nil {
-            t.Errorf("parsed but invalid: %v", result)
-        }
-    })
-}
-```
-
-### Running Go fuzzing
-
-```bash
-go test -fuzz=FuzzParse -fuzztime=5m ./...
-```
-
-Crashes are saved to `testdata/fuzz/FuzzParse/` and automatically replayed as regression tests on subsequent `go test` runs.
-
-### Key differences from external fuzzers
-
-- **Integrated:** No separate tool install. Corpus lives in `testdata/fuzz/`.
-- **Typed seeds:** `f.Add()` accepts typed arguments (`string`, `[]byte`, `int`, `float64`, etc.), not just raw bytes.
-- **Automatic regression:** Crash inputs become permanent test cases.
-- **No dictionary support:** Use `f.Add()` with representative inputs containing magic values instead.
-- **Single-process:** No built-in multi-core. Run multiple `go test -fuzz` processes on different functions for parallelism.
-- **No sanitizers:** Go's runtime provides its own race detector (`-race`) and bounds checking. Use `-race` during fuzzing for concurrent code.
-
----
-
-## Coverage analysis (all languages)
-
-Coverage reveals whether your harness reaches the code you care about. Measure coverage from the *corpus*, not from fuzzer runtime stats.
-
-### Generating reports
-
-**Rust:**
-
-```bash
-cargo +nightly fuzz coverage my_target
-TARGET=$(rustc -vV | sed -n 's|host: ||p')
-cargo +nightly cov -- show -Xdemangler=rustfilt \
-  "target/$TARGET/coverage/$TARGET/release/my_target" \
-  -instr-profile="fuzz/coverage/my_target/coverage.profdata" \
-  -format=html -o fuzz_html/ src/lib.rs
-```
-
-**C/C++ (LLVM):**
-
-```bash
-clang++ -fprofile-instr-generate -fcoverage-mapping -O2 \
-  -DNO_MAIN harness.cc target.cc execute-rt.cc -o fuzz_cov
-LLVM_PROFILE_FILE=fuzz.profraw ./fuzz_cov corpus/
-llvm-profdata merge -sparse fuzz.profraw -o fuzz.profdata
-llvm-cov show ./fuzz_cov -instr-profile=fuzz.profdata \
-  -format=html -output-dir=html/ -ignore-filename-regex='harness|execute-rt'
-```
-
-**Go:**
-
-```bash
-go test -fuzz=FuzzParse -fuzztime=1m -coverprofile=fuzz_cov.out ./...
-go tool cover -html=fuzz_cov.out -o fuzz_cov.html
-```
-
-### Interpreting and acting on gaps
-
-| Observation | Action |
-| ------------- | -------- |
-| Large uncovered blocks behind a check | Add the check's value to dictionary, or patch the obstacle |
-| Function never called | Harness doesn't reach it — restructure harness or add a new target |
-| Branch always taken one way | Corpus lacks inputs that trigger the other branch — add seed inputs |
-| Coverage plateaued | Try CMPLOG (AFL++), add dictionary, increase `-max_len`, or run longer |
-
-**Do** compare coverage across campaigns to track progress.
-
-**Don't** use `-fsanitize=fuzzer` for coverage builds — it conflicts with profile instrumentation. Build a separate coverage binary.
-
-**Don't** use `-O3` for coverage — it can eliminate code and produce misleading results.
+- [ ] Target, risk, oracle, engine, budget, and regression path are named.
+- [ ] The harness is deterministic, bounded, isolated, and tolerant of malformed input.
+- [ ] Semantic failures have an independent oracle and counterfeit.
+- [ ] Seeds and structure help reach behavior without excluding malformed cases.
+- [ ] Coverage and throughput changes preserve the target's meaning.
+- [ ] Campaign configuration and failures replay outside the active fuzzer.
+- [ ] Minimized failures become durable regression evidence.
