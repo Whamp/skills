@@ -35,6 +35,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`integration-testing`](engineering/integration-testing/) — tests behavior across API, database, service, filesystem, queue, and contract boundaries.
 - [`javascript-testing-expert`](engineering/javascript-testing-expert/) — supplies idiomatic JavaScript and TypeScript testing patterns.
 - [`model-routing`](engineering/model-routing/) — selects delegated model portfolios for specialized roles.
+- [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
 - [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](engineering/property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.

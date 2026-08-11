@@ -15,6 +15,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`integration-testing`](integration-testing/) — tests API, database, service, filesystem, queue, and contract boundaries.
 - [`javascript-testing-expert`](javascript-testing-expert/) — supplies idiomatic JavaScript and TypeScript testing patterns.
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
+- [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
 - [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
