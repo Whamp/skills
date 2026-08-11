@@ -17,4 +17,4 @@ test:
 validate: test
 	uv run python scripts/validate_skill_repository.py
 	npx --yes markdownlint-cli2@$(MARKDOWNLINT_VERSION) '**/*.md'
-	npx --yes skills@$(SKILLS_CLI_VERSION) add . --list
+	bash scripts/validate_skill_installer_discovery.sh $(SKILLS_CLI_VERSION)
