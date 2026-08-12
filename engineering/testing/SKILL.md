@@ -1,22 +1,22 @@
 ---
 name: testing
-description: Testing design and maintenance. Use when choosing a test seam or level; writing or reviewing regression, unit, integration, contract, browser, JavaScript/TypeScript, or Rust tests; proving a bug fix; auditing AI-generated tests or suspected test slop; diagnosing flaky tests; interpreting coverage or mutation results; or deciding whether tests should be improved, quarantined, or removed. Routes property testing and fuzzing.
+description: Testing design and maintenance for selecting test seams and levels, writing explicit regression, unit, integration, contract, or browser tests, proving bug fixes, reviewing tests, diagnosing flakes, and interpreting coverage or mutation results. Use `property-based-testing` directly for broad generated domains, invariants, operation sequences, or schedules; use `fuzzing` directly for coverage-guided exploration of parsers, protocols, unsafe code, or untrusted input.
 ---
 
 # Testing
 
 Build the smallest executable argument that can disagree with a wrong implementation. A passing test matters only when its setup, observation, and oracle can expose the named risk.
 
-## Route the work
+## Route before choosing examples
 
-Choose every branch that materially affects the test:
+Reading this skill starts test selection; it does not imply that explicit examples are the right surface. Inspect the requested contract and relevant code enough to choose every matching branch. Load each matching specialist before framing the evidence; language references supplement that choice.
 
 | Need | Route |
 | --- | --- |
+| Broad generated domains, invariants, operation sequences, or schedules | Load the `property-based-testing` skill. |
+| Coverage-guided exploration of parsers, protocols, unsafe code, or untrusted inputs | Load the `fuzzing` skill. |
 | Small, explicit examples or regressions | Continue with this process. |
 | Test-first sequencing | When the user requests TDD and an installed `tdd` skill is available, load it for red-green sequencing. This skill still owns test selection and quality. |
-| Broad generated domains, operation sequences, or schedules | Load the `property-based-testing` skill. |
-| Coverage-guided exploration of parsers, protocols, unsafe code, or untrusted inputs | Load the `fuzzing` skill. |
 | Database, HTTP, filesystem, queue, service, or contract boundary | Read [integration and contract testing](references/integration-and-contract.md). |
 | Real browser journey or deployment wiring | Read [end-to-end browser testing](references/e2e.md). |
 | JavaScript or TypeScript execution details | Read [JavaScript and TypeScript testing](references/javascript-typescript.md). |

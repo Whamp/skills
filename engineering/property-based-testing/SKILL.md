@@ -1,6 +1,6 @@
 ---
 name: property-based-testing
-description: Property-based testing. Use for tests and reviews involving broad structured domains, parsers and codecs, canonicalizers and validators, compact postcondition oracles, differential models, stateful APIs and protocols, or concurrent schedules.
+description: Property-based testing for implementation and test work with broad structured behavior. Use when a feature or bug spans input combinations, round trips, encoding and decoding, serialization, normalization or idempotence, ordering or pagination, schema variants, stateful operation sequences, distributed or concurrent schedules, parsers or codecs with semantic invariants, or differential models; also use when designing or reviewing generators, shrinkers, properties, and counterexample handling.
 ---
 
 # Property-based testing

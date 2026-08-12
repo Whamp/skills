@@ -1,6 +1,6 @@
 ---
 name: fuzzing
-description: Coverage-guided fuzzing. Use when selecting or writing fuzz targets for parsers, decoders, protocol handlers, unsafe or FFI code, or untrusted inputs; running cargo-fuzz, libFuzzer, AFL++, or Go fuzzing; designing fuzz oracles and corpora; analyzing coverage plateaus; or reproducing, minimizing, deduplicating, and converting crashes into regressions.
+description: Coverage-guided fuzzing for implementation and test work on input-processing and memory-safety boundaries. Use when a feature or bug touches parsers, lexers, decoders, deserializers, codecs, file formats, protocol handlers, malformed, chunked, or adversarial input, unsafe or FFI code, or crash, hang, and resource-exhaustion risks; also use when designing or running fuzz targets, engines, oracles, seeds and corpora, coverage campaigns, crash minimization, and regression conversion.
 ---
 
 # Fuzzing
