@@ -16,6 +16,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
 - [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
+- [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
 - [`worktree-first`](worktree-first/) — isolates substantive repository changes in dedicated Git worktrees.
