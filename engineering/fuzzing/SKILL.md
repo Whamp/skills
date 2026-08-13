@@ -1,38 +1,51 @@
 ---
 name: fuzzing
-description: Coverage-guided fuzzing for implementation and test work on input-processing and memory-safety boundaries. Use when a feature or bug touches parsers, lexers, decoders, deserializers, codecs, file formats, protocol handlers, malformed, chunked, or adversarial input, unsafe or FFI code, or crash, hang, and resource-exhaustion risks; also use when designing or running fuzz targets, engines, oracles, seeds and corpora, coverage campaigns, crash minimization, and regression conversion.
+description: Fuzzing for coverage-guided input search, target and campaign design, failure minimization, and regression replay. Use to assess or execute fuzzing at input-processing, protocol, file-format, unsafe-code, FFI, or memory-safety boundaries; also use for existing fuzz targets, campaigns, corpora, and discovered failures.
 ---
 
 # Fuzzing
 
 A fuzz target combines generated input, coverage feedback, a tight harness, and an oracle. The campaign is useful only when failures reproduce and the harness can reach the behavior at risk.
 
-## Route the engine
+## 1. Commit or return
 
-- Rust with cargo-fuzz and libFuzzer — read [cargo-fuzz](references/cargo-fuzz.md).
-- C or C++ with libFuzzer or AFL++ — read [C and C++ fuzzing](references/c-cpp-libfuzzer-afl-plus-plus.md).
-- Go's native `testing.F` — read [Go native fuzzing](references/go-native-fuzzing.md).
-- Broad generated values or operation sequences where coverage feedback is not the search signal — load `property-based-testing` instead.
-
-Use more than one engine only when their instrumentation, mutation strategy, or platform support creates a concrete benefit. Do not multiply campaigns by default.
-
-## 1. Frame the campaign
-
-Write the campaign contract before the harness:
+Inspect the relevant production entry point and existing toolchain before
+committing to a campaign. Write one outcome:
 
 ```text
-Target: <narrow production entry point>
-Risk: <crash, undefined behavior, hang, or semantic defect>
-Input model: <bytes, structured value, or operation sequence>
+Commit:
+Target: <direct production entry point>
+Risk: <crash, hang, resource, memory-safety, or semantic defect>
+Input model: <bytes or structured input>
+Feedback: <why coverage-guided mutation is useful>
 Oracle: <observable failure condition>
-Engine: <existing project tool or justified choice>
-Budget: <local smoke, bounded campaign, or continuous service>
+Engine: <supported project tool>
+Budget: <CPU, memory, workers, and wall time>
 Regression path: <where minimized failures will live>
 ```
 
-Good targets include parsers, decoders, protocol and file-format handlers, compression or serialization code, unsafe memory operations, and FFI boundaries. Business logic can also benefit when coverage-guided mutation and its oracle fit better than direct examples or property generators; choose by search mechanism, not category labels.
+or:
 
-**Complete when:** every field is concrete and the target owns enough behavior to expose the risk without booting an unrelated system.
+```text
+Return: Use <Examples | Property-based testing> because <why fuzzing lacks leverage>.
+```
+
+Return when meaningful cases form a small table, structured generation is the
+better search signal, the available oracle cannot observe the dominant risk, or
+the harness requires unrelated system startup or unauthorized dependencies.
+
+After Commit, read the matching adapter when one is listed:
+
+- Rust with cargo-fuzz and libFuzzer — [cargo-fuzz](references/cargo-fuzz.md)
+- C or C++ with libFuzzer or AFL++ — [C and C++ fuzzing](references/c-cpp-libfuzzer-afl-plus-plus.md)
+- Go's native `testing.F` — [Go native fuzzing](references/go-native-fuzzing.md)
+- Another ecosystem — use the project's supported engine and its upstream documentation.
+
+Use more than one engine only when their instrumentation, mutation strategy, or
+platform support creates a concrete benefit.
+
+**Complete when:** every Commit field is concrete and fuzzing owns the search, or
+Return names why fuzzing lacks leverage and transfers the risk.
 
 ## 2. Build a tight harness
 
@@ -87,15 +100,36 @@ Change one search constraint at a time and remeasure reach.
 
 ## 5. Run and record the campaign
 
-Run ordinary regression tests first; seed replay should already be green. Start with a short smoke campaign, then use a bounded local or CI budget. Use the engine's documented worker model rather than launching ad hoc copies that corrupt or duplicate state.
+Run ordinary regression tests first and replay representative seeds. When the
+ordinary suite is unavailable or already red, use current base-revision or CI
+evidence when available and record the limitation; do not let a narrower green
+result hide an affected failure. Demonstrate safely that the oracle can reject
+its named counterfeit, or record why that failure path cannot be exercised
+directly.
 
-Record the source revision, engine and compiler versions, sanitizer or instrumentation mode, target, corpus, dictionary, worker count, maximum input size, timeout, and random seed or replay command where available. Preserve logs needed to distinguish product failure, harness failure, timeout, and infrastructure exhaustion.
+Run the smallest justified worker count under the declared CPU, memory, and wall
+budget. Use the engine's supported worker model. Record the exact command,
+revision, engine and compiler versions, instrumentation, target, corpus,
+dictionary, worker count, input limit, timeout, elapsed time, and replay command
+where available.
 
-Coverage is a diagnostic for target reach, not proof of correctness. Compare coverage only across compatible builds and corpora. Optimize executions per second only after confirming that the faster harness preserves the same relevant behavior and oracle.
+A clean local smoke establishes harness acceptance only. Report its conclusion
+as: no failure found within the recorded campaign. Stop after the declared local
+budget unless new reach or failure evidence identifies a distinct experiment.
 
-**Complete when:** another developer can reproduce the campaign configuration and replay its corpus without the active fuzzer.
+Coverage measures target reach, not correctness. Compare it only across
+compatible builds and corpora.
 
-## 6. Triage every failure
+When another skill or plan owns the parent evidence, return the result to its
+final audit.
+
+**Complete when:** seeds replay; the ordinary regression result is green or
+accounted for; the oracle's failure path has been exercised or its limitation
+recorded; the campaign stays within its declared resources; another developer
+can reproduce the command and corpus replay without the active fuzzer; and any
+parent evidence is closed.
+
+## 6. If the campaign finds a failure
 
 1. Reproduce with the original target, build mode, options, and input.
 2. Minimize the failing input with the engine's supported minimizer.
@@ -108,16 +142,6 @@ A sanitizer report names an observed failure, not automatically its root cause. 
 
 **Complete when:** the failure is minimized, reproducible, classified, fixed or tracked, and replayed by the project's normal or scheduled test path.
 
-## 7. Operate continuously
+## 7. If continuous operation is warranted
 
 For security-sensitive or heavily exposed targets, run minimized corpora as ordinary regression inputs and use a continuous fuzzing service when the project can support its toolchain and triage load. Replay useful corpora under compatible sanitizers. Track reach, unique actionable failures, time-to-reproduce, and stale targets; raw corpus size and crash count are not health metrics.
-
-## Review checklist
-
-- [ ] Target, risk, oracle, engine, budget, and regression path are named.
-- [ ] The harness is deterministic, bounded, isolated, and tolerant of malformed input.
-- [ ] Semantic failures have an independent oracle and counterfeit.
-- [ ] Seeds and structure help reach behavior without excluding malformed cases.
-- [ ] Coverage and throughput changes preserve the target's meaning.
-- [ ] Campaign configuration and failures replay outside the active fuzzer.
-- [ ] Minimized failures become durable regression evidence.
