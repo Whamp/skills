@@ -118,24 +118,50 @@ Inspect every red result. A setup error, timeout, unrelated exception, or failur
 
 **Complete when:** the strongest safe proof goes red for the named reason and green after the correct behavior is restored, or the unproven counterfeit and blocking constraint are explicitly recorded.
 
-## 5. Validate and operate
+## 5. Close the evidence
 
-Run the narrow test while iterating. For every new or renamed test, use runner collection, listing, or focused execution output to confirm that the intended command selects it. Account for focus, skip, todo, tag, feature, and exclusion markers; a green suite does not prove an unseen test ran.
+Use this evidence ladder:
 
-Then run the repository's required type checks, linters, and full test suite once the change is complete. When order, concurrency, retry, or shared state matters, also repeat the test under the relevant seed, order, worker count, or scheduler.
+1. While iterating, run the narrow evidence affected by the latest change.
+2. After the last relevant mutation, run each contract card's evidence on the
+   final patch.
+3. Run the nearest affected regression scope.
+4. Run the repository's required broad checks when they are available and
+   proportionate.
 
-Use coverage to locate unexercised risk, not as a target by itself. Use mutation testing on changed or risk-bearing code when the tool exists and survivors can become concrete test goals. Investigate small score changes and flaky results before drawing conclusions.
+A command that rewrites source, fixtures, snapshots, goldens, generated files, or
+configuration is a mutation and invalidates earlier evidence for affected risks.
+Inspect the resulting diff before relying on later validation.
 
-**Complete when:** new and renamed tests are collected, the intended test command and project validation are green, relevant nondeterminism has been stressed, and failures leave enough context to reproduce.
+Confirm that new and renamed tests are collected. Account for focus, skip, todo,
+tags, feature flags, exclusions, order, concurrency, retry, and shared state when
+they affect the claim.
 
-## Review checklist
+Classify each failed, timed-out, skipped, or zero-test command as a product
+failure, runner failure, known baseline failure, unrelated failure, or expected
+red. Resolve it, revert the responsible change, or record the limitation. A
+narrower green result does not supersede an unresolved affected-scope failure.
 
-- [ ] The test names an observable contract and plausible failure.
-- [ ] The chosen surface is the narrowest one that contains the risk.
-- [ ] The oracle is independent of the implementation.
-- [ ] New and renamed tests are collected by the intended command.
-- [ ] The test avoids private state and incidental call choreography.
-- [ ] The strongest safe discrimination proof was exercised, or its limitation was recorded.
-- [ ] Time, randomness, concurrency, external responses, and durable state are controlled where relevant.
-- [ ] Coverage, mutation, retries, and snapshots support a decision rather than replace one.
-- [ ] The test remains useful after an internal refactor that preserves behavior.
+When the broad suite is already red, use current base-revision or CI evidence
+when available to identify pre-existing failures. Completion then requires green
+targeted and affected-scope evidence plus an accounting of the broad result; it
+does not require repairing unrelated baseline failures.
+
+Repeat a green command only after changed code, command side effects, or a newly
+identified risk could change its result. Repeat a red command when a relevant
+edit, setup correction, or changed hypothesis makes the rerun informative.
+
+Before finishing:
+
+- mark every contract card `verified` or `unverified` with its limitation;
+- account for unexpected or scope-expanding changed paths;
+- preserve commands and failure context needed to reproduce limitations.
+
+A card is closed when it is verified or its limitation is recorded. Stop test
+work when all cards are closed on the final patch and another test or
+rerun would address no changed code, open card, changed risk, or unresolved
+failure.
+
+**Complete when:** every contract card has current final-patch evidence or an
+explicit limitation; targeted and affected-scope evidence has no hidden failure;
+required broad results are accounted for; and no deliberate counterfeit remains.
