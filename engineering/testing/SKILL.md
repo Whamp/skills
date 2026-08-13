@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Testing design and maintenance for selecting test seams and levels, writing explicit regression, unit, integration, contract, or browser tests, proving bug fixes, reviewing tests, diagnosing flakes, and interpreting coverage or mutation results. Use `property-based-testing` directly for broad generated domains, invariants, operation sequences, or schedules; use `fuzzing` directly for coverage-guided exploration of parsers, protocols, unsafe code, or untrusted input.
+description: Testing strategy and explicit behavioral evidence. Use for selecting test seams and levels, writing regression, unit, integration, contract, or browser tests, proving fixes, reviewing tests, diagnosing flakes, and interpreting coverage or mutation results. Use it to choose explicit examples, property-based testing, or fuzzing as the primary search mechanism for each risk.
 ---
 
 # Testing
@@ -9,14 +9,26 @@ Build the smallest executable argument that can disagree with a wrong implementa
 
 ## Route before choosing examples
 
-Reading this skill starts test selection; it does not imply that explicit examples are the right surface. Inspect the requested contract and relevant code enough to choose every matching branch. Load each matching specialist before framing the evidence; language references supplement that choice.
+Inspect the requested contract, relevant production code, types, callers, and
+existing tests before choosing evidence.
 
-| Need | Route |
+Choose one primary search mechanism for each independently falsifiable risk:
+
+| Primary search | Use when |
 | --- | --- |
-| Broad generated domains, invariants, operation sequences, or schedules | Load the `property-based-testing` skill. |
-| Coverage-guided exploration of parsers, protocols, unsafe code, or untrusted inputs | Load the `fuzzing` skill. |
-| Small, explicit examples or regressions | Continue with this process. |
-| Test-first sequencing | When the user requests TDD and an installed `tdd` skill is available, load it for red-green sequencing. This skill still owns test selection and quality. |
+| **Examples** | The meaningful cases form a small explicit table or named regression. Continue with this skill. |
+| **Property-based testing** | A broad generated domain, operation sequence, or schedule can challenge a compact independent oracle. Load `property-based-testing`. |
+| **Fuzzing** | Coverage-guided mutation is useful at a reachable production input seam with a named risk, oracle, supported engine, and bounded budget. Load `fuzzing`. |
+
+A primary search mechanism is not exclusive evidence ownership. Explicit examples
+may still document named boundaries, minimized regressions, or separate risks.
+Every branch returns to this skill's final evidence audit.
+
+Load branch-specific guidance only when its matching dimension applies:
+
+| Dimension | Guidance |
+| --- | --- |
+| Test-first sequencing requested by the user | Load an installed `tdd` skill for red-green sequencing; this skill still owns evidence quality. |
 | Database, HTTP, filesystem, queue, service, or contract boundary | Read [integration and contract testing](references/integration-and-contract.md). |
 | Real browser journey or deployment wiring | Read [end-to-end browser testing](references/e2e.md). |
 | JavaScript or TypeScript execution details | Read [JavaScript and TypeScript testing](references/javascript-typescript.md). |
@@ -24,23 +36,38 @@ Reading this skill starts test selection; it does not imply that explicit exampl
 | AI-generated tests or suspected test slop | Read [adversarial test audit](references/adversarial-test-audit.md). |
 | Flakes, coverage, mutation results, duplication, quarantine, or removal | Read [test suite maintenance](references/test-suite-maintenance.md). |
 
-A language reference supplements the chosen test surface; it does not choose that surface. Load more than one reference when both dimensions matter, such as Rust code crossing a database boundary.
+Load more than one branch when dimensions combine, such as Rust code crossing a
+database boundary.
 
-## 1. Frame the evidence
+**Complete when:** each independently falsifiable risk has a primary search
+mechanism, or the missing information needed to choose one is named.
 
-Write the test claim before writing test code:
+## 1. Inventory and frame the contract
+
+Write one contract card for each independently observable requested claim and
+each source-grounded preservation risk:
 
 ```text
-Behavior: <observable contract>
-Risk: <plausible failure this test should expose>
-Seam: <public input and observation point>
+Contract: <requested behavior>
+Preservation: <adjacent existing behavior, or none>
+Observation: <public surface where the contract is visible>
+Risk: <plausible failure>
 Oracle: <independent source of the expected result>
-Counterfeit: <wrong implementation or defect that must make the test fail>
+Counterfeit: <wrong behavior the evidence can reject>
+Primary search: <Examples | Property-based testing | Fuzzing>
+Evidence: <existing test, transient probe, durable test, or command>
 ```
 
-Ground the contract in specifications, public documentation, types, callers, accepted behavior, and existing tests. Treat names and comments as search leads, not proof. If selecting the seam would change scope or expose a new production interface, confirm that decision before writing the test.
+Use one card for a single claim. Several cards may share one invariant or
+evidence route when each card states why it applies. A contract card does not
+require a new test file.
 
-**Complete when:** every field is concrete and the counterfeit could plausibly survive without this test.
+Ground cards in specifications, public documentation, types, callers, accepted
+behavior, and existing tests. Treat names and comments as search leads, not
+proof. Confirm any production-interface or scope-expanding seam before adding it.
+
+**Complete when:** every requested claim and grounded preservation risk has an
+evidence route, or is marked unverified with the missing evidence named.
 
 ## 2. Choose the smallest discriminating surface
 
@@ -53,7 +80,14 @@ Place the test at the narrowest surface that still contains the risk:
 
 Choose real dependencies and test doubles by what the test must detect. A fake is appropriate when it preserves the contract under test and removes an unrelated, destructive, unavailable, or prohibitively expensive dependency. A real dependency is required when its actual behavior is the risk.
 
-**Complete when:** a narrower test would miss the named risk and every replaced dependency has an explicit realism tradeoff.
+Narrow evidence may localize a fault, but it does not discharge a contract whose
+observation is a runnable artifact, serialized boundary, user-facing entry point,
+or downstream consumer. Exercise an exact journey through that surface when the
+surface itself is part of the contract.
+
+**Complete when:** a narrower surface would miss the named risk, every replaced
+dependency has an explicit realism tradeoff, and every contract observed through
+an outer surface has an evidence route through that surface.
 
 ## 3. Build an independent test
 
