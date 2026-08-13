@@ -5,7 +5,7 @@ description: Property-based testing for implementation and test work with broad 
 
 # Property-based testing
 
-A property test searches a quantified domain for a counterexample and shrinks failures. A green run is evidence over the searched cases, not proof over every value.
+A property test generates many inputs from a described domain and checks each with an independent rule for expected behavior, called an oracle. This search can find combinations and edge cases that selected examples miss. When the framework supports shrinking, it reduces a failure to a simpler counterexample. A green run is evidence over the searched cases, not proof over every value.
 
 ## Choose the branch
 
@@ -17,13 +17,13 @@ A property test searches a quantified domain for a counterexample and shrinks fa
 
 ### 1. Establish leverage
 
-Use property-based testing when a broad or structured domain, operation sequence, or schedule can challenge a compact oracle. Prefer example tests when the meaningful cases are a small explicit table, the only oracle would duplicate the implementation, or effects cannot be isolated within the test budget.
+Use property-based testing when a broad or structured domain, operation sequence, or schedule can challenge a compact independent check of expected behavior. Prefer example tests when the meaningful cases are a small explicit table, the expected behavior is unclear or would be checked by duplicating the implementation, or effects cannot be isolated within the test budget.
 
 Write the candidate in this form:
 
-> Generate **[domain]** to challenge **[risk]**, checked by **[oracle]**.
+> Generate **[domain]** to challenge **[risk]**, checked by **[independent rule for expected behavior]**.
 
-**Complete when:** all three blanks are concrete. If the oracle blank remains vague, use examples or first clarify the contract.
+**Complete when:** all three blanks are concrete. If the expected-behavior check remains vague, use examples or first clarify the contract.
 
 ### 2. State the contract
 
@@ -35,9 +35,9 @@ Ground `D`, `P`, `R`, and `≈` in specifications, public documentation, types, 
 
 **Complete when:** every term in the quantified statement has a source, and unresolved product decisions have been surfaced to the user.
 
-### 3. Choose an oracle
+### 3. Choose an independent check
 
-Load [designing properties](references/designing-properties.md). Choose the simplest observation independent enough to catch a plausible faulty implementation. For each proposed property, name the **counterfeit** implementation or bug class it should reject. Build a portfolio only when distinct risks need distinct observations; property count is not a quality target.
+Load [designing properties](references/designing-properties.md). Choose the simplest oracle—an observable rule for expected behavior—independent enough to catch a plausible faulty implementation. For each proposed property, name the **counterfeit** implementation or bug class it should reject. Build a portfolio only when distinct risks need distinct observations; property count is not a quality target.
 
 **Complete when:** every property has a grounded contract, an observable oracle, and at least one named counterfeit it should reject.
 

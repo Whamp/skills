@@ -5,7 +5,7 @@ description: Coverage-guided fuzzing for implementation and test work on input-p
 
 # Fuzzing
 
-A fuzz target combines generated input, coverage feedback, a tight harness, and an oracle. The campaign is useful only when failures reproduce and the harness can reach the behavior at risk.
+A fuzzer mutates inputs and uses coverage feedback to reach paths that selected examples may miss. A fuzz target connects that search to a tight harness and an oracle—an observable check for failure or wrong behavior. The campaign is useful only when failures reproduce and the harness can reach the behavior at risk.
 
 ## Route the engine
 
@@ -24,13 +24,13 @@ Write the campaign contract before the harness:
 Target: <narrow production entry point>
 Risk: <crash, undefined behavior, hang, or semantic defect>
 Input model: <bytes, structured value, or operation sequence>
-Oracle: <observable failure condition>
+Oracle: <observable check for failure or wrong behavior>
 Engine: <existing project tool or justified choice>
 Budget: <local smoke, bounded campaign, or continuous service>
 Regression path: <where minimized failures will live>
 ```
 
-Good targets include parsers, decoders, protocol and file-format handlers, compression or serialization code, unsafe memory operations, and FFI boundaries. Business logic can also benefit when coverage-guided mutation and its oracle fit better than direct examples or property generators; choose by search mechanism, not category labels.
+Good targets include parsers, decoders, protocol and file-format handlers, compression or serialization code, unsafe memory operations, and FFI boundaries. Business logic can also benefit when coverage-guided mutation and its observable failure check fit better than direct examples or property generators; choose by search mechanism, not category labels.
 
 **Complete when:** every field is concrete and the target owns enough behavior to expose the risk without booting an unrelated system.
 
@@ -53,9 +53,9 @@ Run the harness over empty, smallest-valid, malformed, and representative seed i
 
 **Complete when:** seeds replay deterministically, malformed input is handled as specified, and persistent iterations leave no relevant state behind.
 
-## 3. Choose an oracle
+## 3. Choose an observable failure check
 
-A target that only ignores a return value can find panics, sanitizer findings, timeouts, and process crashes; it cannot detect silent wrong answers. Add the strongest independent observation the contract supports:
+The fuzzing term for this check is an **oracle**. A target that ignores a return value can still find panics, sanitizer findings, timeouts, and process crashes, but it cannot detect silent wrong answers. Add the strongest independent observation the contract supports:
 
 - **Safety oracle** — no crash, undefined behavior, leak, resource exhaustion, or forbidden hang
 - **Semantic oracle** — a successful result satisfies a public invariant or validator

@@ -1,30 +1,33 @@
 ---
 name: testing
-description: Testing strategy and explicit behavioral evidence. Use for selecting test seams and levels, writing regression, unit, integration, contract, or browser tests, proving fixes, reviewing tests, diagnosing flakes, and interpreting coverage or mutation results. Use it to choose explicit examples, property-based testing, or fuzzing as the primary search mechanism for each risk.
+description: Testing strategy and explicit behavioral evidence. Use for selecting test seams and levels, writing regression, unit, integration, contract, or browser tests, proving fixes, reviewing tests, diagnosing flakes, and interpreting coverage or mutation results. Use it to map plausible failures to explicit examples, property-based testing, or fuzzing after inspecting the relevant code and tests.
 ---
 
 # Testing
 
 Build the smallest executable argument that can disagree with a wrong implementation. A passing test matters only when its setup, observation, and oracle can expose the named risk.
 
-## Route before choosing examples
+## Route after inspecting the seam
 
 Inspect the requested contract, relevant production code, types, callers, and
-existing tests before choosing evidence.
+existing tests before selecting evidence. Group coupled claims when shared state,
+ordering, composition, propagation, or lifecycle could make their interaction
+fail.
 
-Choose one primary search mechanism for each independently falsifiable risk:
+Choose an evidence route for each plausible failure or interaction:
 
-| Primary search | Use when |
+| Evidence route | Use when |
 | --- | --- |
-| **Examples** | The meaningful cases form a small explicit table or named regression. Continue with this skill. |
-| **Property-based testing** | A broad generated domain, operation sequence, or schedule can challenge a compact independent oracle. Load `property-based-testing`. |
-| **Fuzzing** | Coverage-guided mutation is useful at a reachable production input seam with a named risk, oracle, supported engine, and bounded budget. Load `fuzzing`. |
+| **Examples** | The meaningful cases are enumerable, the expected result is still unclear, repository tooling is unavailable, or no executable generated campaign is intended. Continue with this skill. |
+| **Property-based testing** | Generate many structured inputs, operation sequences, or schedules to find combinations and edge cases that selected examples may miss. Load `property-based-testing` when you can name the domain, risk, independent check of expected behavior, available repository runner, and executable property. |
+| **Fuzzing** | Mutate inputs with coverage feedback to discover paths and failures that selected examples may miss. Load `fuzzing` when you can name a reachable production input seam, risk, observable failure check, supported engine, and bounded executable campaign. |
 
-A primary search mechanism is not exclusive evidence ownership. Explicit examples
-may still document named boundaries, minimized regressions, or separate risks.
-Every branch returns to this skill's final evidence audit.
+Specialist guidance explains how to run a generated search; the executable
+property or campaign supplies the evidence. Keep examples for named boundaries
+and minimized regressions. Load both specialist skills when separate risks
+qualify for each route.
 
-Load branch-specific guidance only when its matching dimension applies:
+Load branch-specific guidance when its matching dimension applies:
 
 | Dimension | Guidance |
 | --- | --- |
@@ -39,35 +42,36 @@ Load branch-specific guidance only when its matching dimension applies:
 Load more than one branch when dimensions combine, such as Rust code crossing a
 database boundary.
 
-**Complete when:** each independently falsifiable risk has a primary search
-mechanism, or the missing information needed to choose one is named.
+**Complete when:** each plausible failure has an evidence route, each identified
+interaction is covered, and every specialist load has an executable plan or the
+missing information needed to choose is named.
 
 ## 1. Inventory and frame the contract
 
-Write one contract card for each independently observable requested claim and
-each source-grounded preservation risk:
+Build a compact contract inventory:
 
 ```text
-Contract: <requested behavior>
-Preservation: <adjacent existing behavior, or none>
-Observation: <public surface where the contract is visible>
+Contract: <requested claim or coupled claims>
+Preservation: <source-grounded adjacent behavior, or none>
+Interaction: <shared state, ordering, composition, propagation, or lifecycle risk, or none>
+Observation: <public surface where the behavior is visible>
 Risk: <plausible failure>
-Oracle: <independent source of the expected result>
-Counterfeit: <wrong behavior the evidence can reject>
-Primary search: <Examples | Property-based testing | Fuzzing>
-Evidence: <existing test, transient probe, durable test, or command>
+Oracle and counterfeit: <independent expected result and wrong behavior it rejects>
+Evidence route: <examples, generated search, existing evidence, or unverified>
 ```
 
-Use one card for a single claim. Several cards may share one invariant or
-evidence route when each card states why it applies. A contract card does not
-require a new test file.
+Group coupled claims when shared evidence can discriminate their composition.
+Keep independent claims separate. Several entries may share one evidence route,
+and an inventory entry does not require a new test file.
 
-Ground cards in specifications, public documentation, types, callers, accepted
-behavior, and existing tests. Treat names and comments as search leads, not
-proof. Confirm any production-interface or scope-expanding seam before adding it.
+Ground the inventory in specifications, public documentation, types, callers,
+accepted behavior, and existing tests. Treat names and comments as search leads,
+not proof. Confirm any production-interface or scope-expanding seam before adding
+it.
 
-**Complete when:** every requested claim and grounded preservation risk has an
-evidence route, or is marked unverified with the missing evidence named.
+**Complete when:** every requested claim and grounded preservation risk maps to
+discriminating evidence or is marked unverified with the missing evidence named,
+and every identified interaction risk is covered explicitly.
 
 ## 2. Choose the smallest discriminating surface
 
@@ -80,14 +84,19 @@ Place the test at the narrowest surface that still contains the risk:
 
 Choose real dependencies and test doubles by what the test must detect. A fake is appropriate when it preserves the contract under test and removes an unrelated, destructive, unavailable, or prohibitively expensive dependency. A real dependency is required when its actual behavior is the risk.
 
-Narrow evidence may localize a fault, but it does not discharge a contract whose
-observation is a runnable artifact, serialized boundary, user-facing entry point,
-or downstream consumer. Exercise an exact journey through that surface when the
-surface itself is part of the contract.
+Narrow evidence may localize a fault, but it does not discharge a contract when
+representation, wiring, lifecycle, serialization, or user-visible behavior
+through an outer boundary is the named risk. In that case, exercise an exact
+journey and assert the specific boundary value or effect; reaching the surface is
+not evidence by itself. The observation surface determines where evidence must
+observe behavior, not where the implementation belongs. Broaden a shared or
+global production seam only with independent support from source, types, or
+callers.
 
 **Complete when:** a narrower surface would miss the named risk, every replaced
-dependency has an explicit realism tradeoff, and every contract observed through
-an outer surface has an evidence route through that surface.
+dependency has an explicit realism tradeoff, the journey rejects the named
+boundary counterfeit, and any broadened seam has support beyond the observation
+path.
 
 ## 3. Build an independent test
 
