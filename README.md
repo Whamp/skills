@@ -31,6 +31,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`explain-diff-html`](engineering/explain-diff-html/) — creates interactive HTML explainers for code changes.
 - [`fuzzing`](engineering/fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](engineering/herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
+- [`herdr-grok-review`](engineering/herdr-grok-review/) — runs Grok 4.6 Extra High debug reviews in Herdr with race probes and merge verdicts.
 - [`model-routing`](engineering/model-routing/) — selects delegated model portfolios for specialized roles.
 - [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.

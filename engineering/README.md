@@ -11,6 +11,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`explain-diff-html`](explain-diff-html/) — creates interactive HTML explainers for code changes.
 - [`fuzzing`](fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
+- [`herdr-grok-review`](herdr-grok-review/) — runs Grok 4.6 Extra High debug reviews in Herdr with race probes and merge verdicts.
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
