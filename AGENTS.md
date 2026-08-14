@@ -51,6 +51,20 @@ When adding or migrating a skill:
 
 Migration is complete when the canonical source is merged, repository validation passes, the consumer reports this repository as its update source, and no divergent hand-maintained installation remains.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and specs are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the five canonical label names without overrides. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Domain documentation uses the single-context layout. See `docs/agents/domain.md`.
+
 ## Expected Absences
 
 - A root `SKILL.md` is intentionally absent because each nested skill is independently installable.
