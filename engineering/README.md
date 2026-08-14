@@ -10,6 +10,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`dynamic-workflow-patterns`](dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
 - [`explain-diff-html`](explain-diff-html/) — creates interactive HTML explainers for code changes.
 - [`fuzzing`](fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
+- [`grok-worker`](grok-worker/) — delegates implementation and debugging to a one-shot Grok worker for model-family diversification.
 - [`herdr`](herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
 - [`herdr-grok-review`](herdr-grok-review/) — runs Grok 4.6 Extra High debug reviews in Herdr with race probes and merge verdicts.
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
