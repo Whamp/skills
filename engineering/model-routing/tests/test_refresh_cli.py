@@ -61,12 +61,33 @@ class RefreshCliTest(unittest.TestCase):
             "OpenAI subscription",
         )
         self.assertEqual(
-            rows_by_id["zai/glm-5.2"]["Access Pool"], "Z.ai Pro subscription"
+            rows_by_id["zai/glm-5.3:max"]["Access Pool"], "Z.ai Pro subscription"
         )
-        self.assertEqual(rows_by_id["zai/glm-5.2:none"]["Cost Per Task"], "")
-        self.assertEqual(rows_by_id["zai/glm-5.2"]["Index Version"], "4.1")
-        self.assertEqual(rows_by_id["zai/glm-5.2"]["As Of"], "2026-07-12")
+        self.assertEqual(
+            rows_by_id["cursor-grok-4.6-xhigh"]["Access Pool"],
+            "Cursor subscription via agent CLI",
+        )
+        for pending_model_id in (
+            "zai/glm-5.3:max",
+            "cursor-grok-4.6-xhigh",
+        ):
+            pending_row = rows_by_id[pending_model_id]
+            self.assertEqual(pending_row["Benchmark Status"], "pending")
+            self.assertEqual(pending_row["Cost Per Task"], "")
+            self.assertEqual(pending_row["Intelligence Index"], "")
+            self.assertEqual(pending_row["Model Coding Index"], "")
+            self.assertEqual(pending_row["Agentic Index"], "")
+            self.assertEqual(pending_row["Index Version"], "")
+            self.assertEqual(pending_row["As Of"], "2026-07-12")
+        self.assertEqual(
+            rows_by_id["openai-codex/gpt-5.6-sol:high"]["Benchmark Status"],
+            "published",
+        )
         self.assertNotIn("Unselected Model", {row["Model"] for row in rows})
+        self.assertEqual(
+            {row["Model"] for row in rows if row["Provider"] == "Z.ai"},
+            {"GLM-5.3"},
+        )
 
     def test_rejects_incomplete_payload_without_replacing_snapshot(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

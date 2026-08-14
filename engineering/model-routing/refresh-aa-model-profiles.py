@@ -24,11 +24,12 @@ FIELDS = [
     "Intelligence Index",
     "Model Coding Index",
     "Agentic Index",
+    "Benchmark Status",
     "Index Version",
     "As Of",
     "Source",
 ]
-PROFILES = [
+BENCHMARK_PROFILES = [
     (
         "gpt-5-6-luna-low",
         "OpenAI",
@@ -119,24 +120,27 @@ PROFILES = [
         "max",
         "OpenAI subscription",
     ),
-    (
-        "glm-5-2-non-reasoning",
-        "Z.ai",
-        "GLM-5.2",
-        "zai/glm-5.2:none",
-        "none",
-        "none",
-        "Z.ai Pro subscription",
-    ),
-    (
-        "glm-5-2",
-        "Z.ai",
-        "GLM-5.2",
-        "zai/glm-5.2",
-        "max",
-        "max",
-        "Z.ai Pro subscription",
-    ),
+]
+
+PENDING_PROFILES = [
+    {
+        "Provider": "Z.ai",
+        "Model": "GLM-5.3",
+        "Model ID": "zai/glm-5.3:max",
+        "Effort": "max",
+        "Effective Effort": "max",
+        "Access Pool": "Z.ai Pro subscription",
+        "Source": "local: pi --list-models zai",
+    },
+    {
+        "Provider": "Cursor",
+        "Model": "Grok 4.6",
+        "Model ID": "cursor-grok-4.6-xhigh",
+        "Effort": "xhigh",
+        "Effective Effort": "xhigh",
+        "Access Pool": "Cursor subscription via agent CLI",
+        "Source": "local: agent --list-models",
+    },
 ]
 
 
@@ -214,7 +218,7 @@ def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]
         for payload in payloads
         for model in payload.get("data", [])
     }
-    missing_slugs = [slug for slug, *_ in PROFILES if slug not in models]
+    missing_slugs = [slug for slug, *_ in BENCHMARK_PROFILES if slug not in models]
     if missing_slugs:
         raise SystemExit("missing required model profiles: " + ", ".join(missing_slugs))
 
@@ -240,7 +244,7 @@ def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]
         effort,
         effective_effort,
         pool,
-    ) in PROFILES:
+    ) in BENCHMARK_PROFILES:
         model = models[slug]
         cost = value(
             model,
@@ -248,8 +252,7 @@ def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]
             "cost_per_task",
             "total_cost",
         )
-        if slug != "glm-5-2-non-reasoning" or cost is not None:
-            cost = require_number(cost, "Cost Per Task", slug)
+        cost = require_number(cost, "Cost Per Task", slug)
 
         rows.append(
             {
@@ -277,9 +280,24 @@ def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]
                     "Agentic Index",
                     slug,
                 ),
+                "Benchmark Status": "published",
                 "Index Version": version,
                 "As Of": as_of,
                 "Source": API_URL,
+            }
+        )
+
+    for profile in PENDING_PROFILES:
+        rows.append(
+            {
+                **profile,
+                "Cost Per Task": "",
+                "Intelligence Index": "",
+                "Model Coding Index": "",
+                "Agentic Index": "",
+                "Benchmark Status": "pending",
+                "Index Version": "",
+                "As Of": as_of,
             }
         )
     return rows
