@@ -13,6 +13,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`grok-worker`](grok-worker/) — delegates implementation and debugging to a one-shot Grok worker for model-family diversification.
 - [`herdr`](herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
 - [`herdr-grok-review`](herdr-grok-review/) — runs Grok 4.6 Extra High debug reviews in Herdr with race probes and merge verdicts.
+- [`integrate-napkin-agent-skills`](integrate-napkin-agent-skills/) — connects Napkin project memory to agent setup with template selection and optional project-local Pi tools.
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
