@@ -1,0 +1,5 @@
+interface:
+  display_name: "Integrate Napkin Agent Skills"
+  short_description: "Connect Napkin to Matt skill setup"
+policy:
+  allow_implicit_invocation: false
