@@ -46,6 +46,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 
 ### Productivity
 
+- [`bro`](productivity/bro/) — restates the previous response in plain, concise language for a cold reader.
 - [`clear-writing`](productivity/clear-writing/) — writes and revises durable human-facing prose with plain force.
 - [`distilling-skills`](productivity/distilling-skills/) — finds, evaluates, and combines related skills into a concentrated replacement.
 - [`first-principles`](productivity/first-principles/) — separates facts, assumptions, constraints, analogies, and unknowns before rebuilding an approach.
