@@ -1,0 +1,6 @@
+interface:
+  display_name: "PSR AGENTS.md Pointer"
+  short_description: "Add the pi-session-recall pointer to a project's AGENTS.md"
+  default_prompt: "Use $psr-agents-pointer to add the pi-session-recall pointer to this repository's AGENTS.md."
+policy:
+  allow_implicit_invocation: false
