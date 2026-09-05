@@ -48,7 +48,7 @@ Before launching a fanout, collect one observation for every candidate access po
 
 Use an opaque account label, not credentials. Accept observations supplied by the caller or a local profile. The policy does not require a particular collection tool. Preserve `unknown` values rather than inventing them.
 
-An observation establishes spare capacity only when its source is current under the caller or profile's freshness rule and explicitly reports room in the named window. Unknown, stale, or unavailable observations do not establish spare capacity. A model listing proves catalog presence, not authentication, quota, or billing eligibility.
+An observation establishes spare capacity only when its source is current under the caller or profile's freshness rule and explicitly reports room in the named window. Unknown, stale, or unavailable observations do not establish spare capacity. Record retrieval time separately when source observation time is unknown. Missing telemetry alone need not block useful work: use an otherwise authorized capable route with bounded concurrency, without claiming headroom or clearing known exhaustion. A model listing proves catalog presence, not authentication, quota, or billing eligibility.
 
 Keep pools separate even when names overlap:
 
@@ -62,7 +62,7 @@ Schedule required roles before optional fanout. Under pressure, reduce optional 
 
 After a real quota failure, capture the same provider, account, pool, window, reset, observation time, and source fields from the failure evidence. Replan work that has not launched; do not treat earlier capacity as a reservation.
 
-This step is complete when every candidate pool has a timestamped observation, required roles are scheduled ahead of optional fanout, and every non-spare or blocked route has an explicit reason.
+This step is complete when every candidate pool has a source observation or an explicit unknown state with retrieval time, required roles are scheduled ahead of optional fanout, and every non-spare or blocked route has an explicit reason.
 
 ## 3. Route the OpenAI lane
 
@@ -122,4 +122,4 @@ Fable is user-requested only. When the user explicitly requests Fable, route thr
 
 Choose the context size from the task's input requirement. Never select Fable autonomously or use it as a fallback for OpenAI, GLM, or Grok. Opus has no active route in this policy. Keep Fable capacity separate from Cursor's first-party Grok capacity.
 
-This step is complete when an explicit user request names the selected Fable 5.1 context route and its third-party pool observation, or no Fable role exists.
+This step is complete when an explicit user request authorizes Fable and the parent records its selected Fable 5.1 context route and third-party pool observation, or no Fable role exists.

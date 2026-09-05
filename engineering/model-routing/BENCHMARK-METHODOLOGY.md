@@ -80,11 +80,11 @@ Primary public sources:
 
 ## Refresh
 
-The checked-in CSV remains a historical snapshot. A future benchmark refresh must first review the pending-profile configuration in `refresh-aa-model-profiles.py`; it still emits the historical Grok access identifier and source. Update that configuration only with separately approved route evidence, then run from the repository root with `ARTIFICIAL_ANALYSIS_KEY` available:
+The checked-in CSV remains a historical snapshot. A future benchmark refresh must first review the pending-profile configuration in `refresh-aa-model-profiles.py`; it still emits the historical Grok access identifier and source. Update that configuration only with separately approved route evidence, then run from the model-routing skill directory with `ARTIFICIAL_ANALYSIS_KEY` available:
 
 ```bash
-python engineering/model-routing/refresh-aa-model-profiles.py
-python engineering/model-routing/tests/test_refresh_cli.py
+python refresh-aa-model-profiles.py
+python tests/test_refresh_cli.py
 ```
 
 The refresh command fetches every free-API page, selects configured published profiles, appends configured pending access profiles, and atomically replaces `MODEL-PROFILES.csv`. When Artificial Analysis publishes a pending model, move it into the benchmark-profile configuration and add its API response to the test fixture. Completion requires a passing CLI test, one retrieval date across all rows, and an index version on every `published` row.
