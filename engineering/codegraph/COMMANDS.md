@@ -62,7 +62,7 @@ codegraph exports <file> --include-tests --unused
 codegraph dataflow <symbol> -T --file <path>
 ```
 
-Use `--file` and `--kind` to disambiguate common names. For `exports --unused --json`, inspect both `results` and `reexportedSymbols`; unused public-surface suspects may be reported as re-exported symbols rather than direct results.
+For `context` and `dataflow`, use `--file` and `--kind` to disambiguate common names. For `exports --unused --json`, inspect both `results` and `reexportedSymbols`; unused public-surface suspects may be reported as re-exported symbols rather than direct results.
 
 ## Relationships and blast radius
 

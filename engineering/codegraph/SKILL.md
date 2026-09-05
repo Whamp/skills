@@ -41,7 +41,7 @@ Known command shapes:
 - `cycles --functions` is separate from file-level cycles; run it when the report might imply a symbol/function cycle, and say explicitly when only a file-level cycle was found.
 - `deps --json` returns `{ file, results: [{ file, imports, importedBy }] }`; read `results[0]`, not top-level `imports`.
 - `deps --json` proves file import edges and `typeOnly`; it usually does not name the imported symbols or runtime calls. Use source reads or targeted exact search for import specifiers, call sites, and responsibility claims.
-- `path` resolves symbols, not file paths. For file-to-file cycle edges, use `cycles` plus `deps --json`; do not waste time trying `codegraph path fileA fileB`.
+- `path` resolves symbols by default. For file paths, use `codegraph path fileA fileB --file`; use `cycles` plus `deps --json` to inspect all edges of a file cycle.
 - `fn-impact --file`/`-f` can be fragile across CLI versions. If it errors, rerun unscoped, then disambiguate by the reported definition path.
 - `roles` is not path-positional; scope with supported flags such as `--file` or post-filter JSON by `.file`.
 - `exports --unused --json` returns `results` plus `reexportedSymbols`; inspect both, or you will miss re-exported public-surface suspects.
@@ -84,7 +84,7 @@ Known command shapes:
    codegraph brief <file> -T
    ```
 
-   If names are ambiguous, rerun with `--file`, `--kind`, or a file-level query. If `where` misses a local closure or property method after CodeGraph has named the file, use `brief <file>` plus a targeted exact search inside the narrowed area; record that the symbol edge was not visible. Completion criterion: every candidate has an exact path/line or a named CodeGraph blind spot with the narrowed file path.
+   If names are ambiguous, use `where --file <path>` for a file overview, then `context <symbol> --file <path>` for a scoped symbol query. `where` has no `--kind` flag; check each command's help rather than carrying flags between commands. If `where` misses a local closure or property method after CodeGraph has named the file, use `brief <file>` plus a targeted exact search inside the narrowed area; record that the symbol edge was not visible. Completion criterion: every candidate has an exact path/line or a named CodeGraph blind spot with the narrowed file path.
 
 4. Trace the relevant structure.
 
