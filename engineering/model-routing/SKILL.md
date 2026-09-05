@@ -1,33 +1,70 @@
 ---
 name: model-routing
-description: Route delegated model portfolios across Pi/API and CLI-only access. Use when selecting models for delegated roles, structuring multi-family review and synthesis, or adding family diversity to frontend work, alternative implementations, debugging, and adversarial review.
+description: Route delegated model portfolios across independent provider and subscription pools. Use when selecting models for delegated roles, planning multi-family review and synthesis, handling quota pressure, or adding family diversity to frontend work, alternative implementations, debugging, and adversarial review.
 ---
 
-# Model Routing
+# Model routing
 
-Route a **portfolio**: an OpenAI primary lane supplies the capability baseline, a GLM lane supplies general family diversity, and a Grok lane supplies implementation, debugging, and adversarial diversity. Plan every role before delegation.
+Route a portfolio. OpenAI supplies the capability baseline, GLM supplies broad family diversity, and Grok supplies implementation, debugging, and adversarial diversity. The parent chooses a model for each launch. Keep ticket role configurations model-neutral.
 
 ## 1. Classify the roles
 
 Assign each role exactly one route class:
 
-- **Throughput** — value comes from breadth, attempts are independent, and a weak result is cheap to discard.
-- **Routine** — correctness, coherence, or sustained reasoning matters, including difficult first attempts.
-- **Reviewer** — independently assess work against one review axis.
-- **Synthesis** — consolidate completed review reports without performing another review.
+- **Throughput**: breadth matters, attempts are independent, and a weak result is cheap to discard.
+- **Routine**: correctness, coherence, or sustained reasoning matters, including difficult first attempts.
+- **Reviewer**: independently assess work against one review axis.
+- **Synthesis**: consolidate completed review reports without performing another review.
 
 Mark these diversity triggers where they apply:
 
-- **Frontend** — visual direction, interaction design, composition, or polish.
-- **Alternative candidate** — a competing approach, implementation, interface proposal, design, or prototype.
-- **Grok worker** — a diagnosis remains uncertain or a fix failed, a competing implementation could expose a material tradeoff, or correlated OpenAI and GLM assumptions would be costly.
-- **Adversarial review** — failure-oriented review, debugging, race or concurrency analysis, assumption challenge, or a merge gate.
+- **Frontend**: visual direction, interaction design, composition, or polish.
+- **Alternative candidate**: a competing approach, implementation, interface proposal, design, or prototype.
+- **Grok diversification**: a diagnosis remains uncertain or a fix failed, a competing implementation could expose a material tradeoff, or correlated OpenAI and GLM assumptions would be costly.
+- **Adversarial review**: failure-oriented review, debugging, race or concurrency analysis, assumption challenge, or a merge gate.
 
-Routine is the default. Route depth-dependent work as Routine regardless of cost. High-stakes work requires explicit review axes, paired OpenAI and GLM coverage on each axis, a Grok adversarial pass on the highest-risk axis, and a separate Synthesis role.
+Routine is the default. Route depth-dependent work as Routine regardless of cost. For high-stakes work, define at least these independent axes:
 
-This step is complete when every role has one route class, every diversity trigger is marked, and every high-stakes task has explicit review axes, Grok's highest-risk axis, and a Synthesis role.
+- **Standards**: repository guidance, engineering rules, safety constraints, and maintainability.
+- **Spec**: the user contract, acceptance criteria, and required behavior.
 
-## 2. Route the OpenAI lane
+Add narrower axes when the change needs them. Each required axis gets independent OpenAI and GLM coverage. Assign Grok to the highest-risk axis, then give the completed reports to a separate Synthesis role.
+
+Record the role, axis, requested and resolved model, model family, provider, account, pool, runtime, and any substitution. Judge findings by evidence. Do not use majority voting. Two routes from the same model family still count as one family after a fallback.
+
+This step is complete when every role has a route class, every diversity trigger is marked, every high-stakes task has Standards and Spec coverage plus its highest-risk Grok axis, and the provenance fields are ready to capture at launch.
+
+## 2. Check capacity before fanout
+
+Before launching a fanout, collect one observation for every candidate access pool. Preserve the source-reported capacity state or remaining value. Each observation also contains:
+
+- `provider`
+- `account`
+- `pool`
+- `window`
+- `resetAt`
+- `observedAt`
+- `source`
+
+Use an opaque account label, not credentials. Accept observations supplied by the caller or a local profile. The policy does not require a particular collection tool. Preserve `unknown` values rather than inventing them.
+
+An observation establishes spare capacity only when its source is current under the caller or profile's freshness rule and explicitly reports room in the named window. Unknown, stale, or unavailable observations do not establish spare capacity. A model listing proves catalog presence, not authentication, quota, or billing eligibility.
+
+Keep pools separate even when names overlap:
+
+- OpenAI Codex subscription, direct OpenAI pay-as-you-go, and Cursor-hosted OpenAI models;
+- Z.ai coding subscription, direct Z.ai pay-as-you-go, and Cursor-hosted GLM models;
+- Cursor's first-party Grok pool and its third-party Fable pool.
+
+Token counts, API-price estimates, and per-run currency telemetry do not report remaining quota. A zero charge may have several causes. Shared concurrent consumption also means a fresh capacity observation cannot reserve future work.
+
+Schedule required roles before optional fanout. Under pressure, reduce optional alternatives and redundant passes. Route required work through another already-authorized, capable pool while preserving its axis and family requirement. The explicit-user Fable rule below still applies; fallback never authorizes Fable. Never activate overage, buy credit, upgrade a plan, or enable a fallback execution mode to complete the route. If no allowed route can perform a required role, report that role as blocked with its latest capacity observation instead of silently dropping it.
+
+After a real quota failure, capture the same provider, account, pool, window, reset, observation time, and source fields from the failure evidence. Replan work that has not launched; do not treat earlier capacity as a reservation.
+
+This step is complete when every candidate pool has a timestamped observation, required roles are scheduled ahead of optional fanout, and every non-spare or blocked route has an explicit reason.
+
+## 3. Route the OpenAI lane
 
 Use these starting routes:
 
@@ -38,56 +75,51 @@ Use these starting routes:
 
 Sol `xhigh` and `max` are escalation routes. Use Sol `xhigh` after a Sol `high` attempt produces concrete evidence that its reasoning is insufficient for the same task. Use Sol `max` after Sol `xhigh` also proves insufficient. Evidence follows the task across delegations.
 
-When OpenAI is unavailable, substitute `zai/glm-5.3:max` for each affected OpenAI role and record the substitution. Preserve the portfolio's roles when a subscription pool is temporarily exhausted.
+When an OpenAI route cannot launch, use an already-authorized capable pool. `zai/glm-5.3:max` is the default capability fallback. Record the substitution, and do not count it as a second family when the portfolio already has GLM coverage. Use an available authorized family such as Grok for a still-required diversity role; otherwise report that role as blocked.
 
-When comparing models or revising this policy, read [`MODEL-PROFILES.csv`](MODEL-PROFILES.csv) and [`BENCHMARK-METHODOLOGY.md`](BENCHMARK-METHODOLOGY.md) for metrics, cost semantics, effort aliases, subscription facts, provenance, and refresh instructions. Runtime routing follows the routes and escalation sequence above.
+When comparing models or revising this policy, read [`MODEL-PROFILES.csv`](MODEL-PROFILES.csv) and [`BENCHMARK-METHODOLOGY.md`](BENCHMARK-METHODOLOGY.md) for metrics, cost semantics, effort aliases, access-snapshot limits, and provenance. Runtime routing follows this file rather than historical access labels in the CSV.
 
-This step is complete when every OpenAI-lane role has an exact model and effort, or an explicitly mapped workflow tier, and every fallback is recorded.
+This step is complete when every OpenAI-lane role has an exact model and effort, or a recorded substitution, and any lost family coverage has a replacement or blocked-role report.
 
-## 3. Add the GLM diversity lane
+## 4. Add the GLM diversity lane
 
-Route every GLM role through Pi's normal model access to `zai/glm-5.3:max`:
+Route GLM roles through Pi's normal model access to `zai/glm-5.3:max`:
 
 - **Review:** pair each OpenAI Reviewer with a GLM Reviewer on the same axis.
-- **Code review:** invoke `$code-review` twice without modifying it—once with all reviewers routed to Sol `high` and once with all reviewers routed to GLM-5.3 `max`.
-- **Frontend:** add a GLM diversification pass on design taste and execution.
-- **Alternatives:** when the design path is unclear or competing approaches could expose useful tradeoffs, route at least one candidate through GLM.
+- **Code review:** invoke `$code-review` twice without modifying it. The parent routes all reviewers to Sol `high` for one run and GLM-5.3 `max` for the other.
+- **Frontend:** add a GLM pass on design taste and execution.
+- **Alternatives:** when competing approaches could expose useful tradeoffs, route at least one candidate through GLM.
 
-Use available Z.ai subscription capacity proactively; a plausible benefit from diversity is enough to add the lane. Preserve the OpenAI lane. For alternative approaches, the delegating agent returns one recommended result synthesized from both families.
+Use observed spare Z.ai coding-subscription capacity proactively. Preserve the OpenAI lane. For alternatives, the parent returns one recommendation synthesized from the independent candidates. Frontend and alternative passes may be optional; Standards and Spec coverage is required for high-stakes work.
 
-When GLM is unavailable, retain the OpenAI roles and record the unavailable provider or quota.
+When the GLM route cannot launch, use an already-authorized capable route from another non-OpenAI family and record the substitution. If none is available, keep the other roles and report the GLM diversity role as blocked.
 
-This step is complete when every review axis, Frontend role, and Alternative candidate has GLM-5.3 coverage or a concrete availability reason.
+This step is complete when every required review axis has GLM or another non-OpenAI family, every selected Frontend or Alternative role has its planned coverage, and every substitution preserves family provenance.
 
-## 4. Add the Grok diversification lane
+## 5. Add the Grok diversification lane
 
-Default Grok roles to `cursor-grok-4.6-xhigh` through Cursor's `agent` CLI. Grok uses a Cursor CLI-only route: launch a separate process and return its result to the delegating or Synthesis agent. The delegating model may select any available Grok 4.6 profile until stronger effort-routing evidence exists. Keep Pi and workflow model fields for Pi-accessible routes such as OpenAI and GLM.
+Use `cursor/grok-4.6:slow:xhigh` through the existing Pi Cursor provider. `:slow` selects the non-Fast Grok profile and `:xhigh` selects reasoning effort. This is the normal Grok route. Use observed spare capacity in Cursor's first-party Grok pool proactively for:
 
-### Mutable implementation and debugging
+- every role marked with the Grok diversification trigger;
+- the highest-risk review axis on high-stakes work;
+- adversarial review, especially race, concurrency, resource-lifetime, and merge-safety analysis;
+- a final challenge when correlated OpenAI and GLM assumptions would be costly.
 
-For each role marked with the Grok worker trigger, invoke `$grok-worker`. That skill owns the mutable one-shot launch and delivery contract.
+The provider runs a Cursor SDK agent loop, so record the requested and resolved provider, model, runtime, and tool contract with the result. Do not infer ordinary Pi tool behavior from the provider name.
 
-This branch is complete when the delegating agent has delivered the candidate change or recorded a concrete CLI availability reason.
+The standalone Cursor CLI skills are historical explicit routes, not automatic fallbacks. Invoke `$grok-worker` only when the user explicitly requests its CLI worker route. Invoke `$herdr-grok-review` only when the user explicitly requests its Herdr probe-capable CLI review. If the normal Cursor provider route is unavailable, use another allowed pool or report the Grok role as blocked. Do not switch to a CLI route on your own.
 
-### Read-only review
+After multi-family reviews, a separate Sol `medium` Synthesis agent consolidates findings on the same axis, preserves disagreements and route provenance, and keeps different axes separate.
 
-For a direct read-only review launch, run `agent --help` and `agent --list-models`; verify the current Grok model identifier and derive flags from installed help. With the current interface:
+This step is complete when every required Grok role has a captured provider result or a blocked-role report, and every completed multi-family review has a separate Synthesis result or recorded substitution.
 
-```bash
-agent --print --mode ask \
-  --model cursor-grok-4.6-xhigh \
-  --trust --workspace "$PWD" \
-  "$(cat "$prompt_file")"
-```
+## 6. Honor explicit Fable requests
 
-Use read-only Grok review for:
+Fable is user-requested only. When the user explicitly requests Fable, route through the Cursor third-party pool to one of the current Fable 5.1 models:
 
-- the highest-risk review axis on every high-stakes task;
-- adversarial review triggers, especially race, concurrency, resource-lifetime, and merge-safety analysis;
-- a final challenge to a chosen approach when correlated assumptions across the OpenAI and GLM lanes would be costly.
+- `cursor/claude-fable-5-1@300k`
+- `cursor/claude-fable-5-1@1m`
 
-When the user requests a probe-capable Grok debug review in Herdr, invoke `$herdr-grok-review` instead of recreating its launch and checkout-preservation contract.
+Choose the context size from the task's input requirement. Never select Fable autonomously or use it as a fallback for OpenAI, GLM, or Grok. Opus has no active route in this policy. Keep Fable capacity separate from Cursor's first-party Grok capacity.
 
-After multi-family reviews, a separate Sol `medium` Synthesis agent receives the completed reports, consolidates same-axis findings, preserves disagreements and model provenance, and keeps different review axes separate. When the CLI or Grok model is unavailable, preserve the OpenAI and GLM roles and record the failed availability check.
-
-This branch is complete when every Adversarial review and high-stakes task has a captured Grok report or availability reason, and every completed multi-family review has a Sol `medium` Synthesis agent or a recorded fallback.
+This step is complete when an explicit user request names the selected Fable 5.1 context route and its third-party pool observation, or no Fable role exists.
