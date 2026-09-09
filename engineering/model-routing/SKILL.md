@@ -58,6 +58,8 @@ Keep distinct pools separate:
 
 Token counts, API-price estimates, and per-run currency telemetry do not report remaining quota. Shared consumption also means a capacity observation cannot reserve future work.
 
+When interchangeable routes provide the same required model family and capability from different pools, consume the pool whose current usable quota resets first. Keep assigning new bounded roles there until the source reports exhaustion or a quota error confirms it, then use the next pool. After a reset, refresh all candidate pools and reorder them. If reset times match, drain the pool with the higher used percentage first. A pool with an unknown reset cannot outrank a pool with a known upcoming reset.
+
 Schedule required roles before optional breadth. Under pressure, reduce redundant passes and route required work through another authorized, capable pool while preserving its axis and family requirement. Never activate overage, buy credit, upgrade a plan, or enable a different execution runtime to obtain capacity. Report an irreplaceable role as blocked.
 
 After a quota or local-resource failure, capture the failure evidence and replan work that has not launched.
@@ -113,9 +115,9 @@ Use a caller-authorized Grok route for:
 
 The standard direct route is `xai/grok-4.6:high`. The Cursor Models route is `cursor/grok-4.6:slow:high`, where `:slow` selects the non-Fast Cursor profile. Both selectors request `high` reasoning effort.
 
-Treat direct xAI and Cursor Models as separate capacity pools for the same Grok family. They may replace each other for a Grok role, but they do not provide independent family evidence. When both pools report current capacity, favor the pool with less pressure on its limiting window. Distribute several useful Grok roles across both pools instead of draining one. Never duplicate a role only to consume quota.
+Treat direct xAI and Cursor Models as separate capacity pools for the same Grok family. They may replace each other for a Grok role, but they do not provide independent family evidence. Apply the expiry-first rule: drain the non-exhausted Grok pool with the earlier current reset before assigning work to the later-resetting pool. Do not balance toward the less-used pool while earlier-expiring capacity remains.
 
-If one pool has unknown telemetry, use it serially for bounded roles and keep a measured healthy pool for required fanout or fallback. A successful call proves availability only for that call. Stop assigning new work to a pool after a quota error, then replan unlaunched roles against the other pool.
+A successful call proves availability only for that call. After a quota error, refresh both pools and replan unlaunched Grok roles against the remaining capacity.
 
 After multi-family review, route a separate Sol `medium` Synthesis child. It preserves disagreements and route provenance rather than resolving findings by vote.
 
