@@ -1,151 +1,239 @@
 {
-  "intelligence_index_version": "4.1",
+  "intelligence_index_version": "4.3",
   "data": [
     {
-      "name": "GPT-5.6 Luna (low)",
-      "slug": "gpt-5-6-luna-low",
-      "evaluations": {
-        "artificial_analysis_intelligence_index": 33.3,
-        "artificial_analysis_coding_index": 44.2,
-        "artificial_analysis_agentic_index": 25.4
-      },
+      "slug": "claude-fable-5-1-medium",
+      "name": "Claude Fable 5.1 (Adaptive Reasoning, Medium Effort, Default Fallback)",
       "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 3983.28,
         "cost_per_task": {
-          "total_cost": 0.0405
+          "total_cost": 2.9826
         }
-      }
-    },
-    {
-      "name": "GPT-5.6 Luna (medium)",
-      "slug": "gpt-5-6-luna-medium",
-      "evaluations": {
-        "artificial_analysis_intelligence_index": 38.1,
-        "artificial_analysis_coding_index": 50.7,
-        "artificial_analysis_agentic_index": 31.0
       },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.0504
-        }
-      }
-    },
-    {
-      "name": "GPT-5.6 Luna (high)",
-      "slug": "gpt-5-6-luna-high",
-      "evaluations": {
-        "artificial_analysis_intelligence_index": 46.1,
-        "artificial_analysis_coding_index": 63.3,
-        "artificial_analysis_agentic_index": 40.1
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.0948
-        }
-      }
-    },
-    {
-      "name": "GPT-5.6 Luna (xhigh)",
-      "slug": "gpt-5-6-luna-xhigh",
       "evaluations": {
         "artificial_analysis_intelligence_index": 49.1,
-        "artificial_analysis_coding_index": 68.6,
-        "artificial_analysis_agentic_index": 42.9
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.139
-        }
+        "artificial_analysis_coding_index": 77.1,
+        "artificial_analysis_agentic_index": 50.6
       }
     },
     {
-      "name": "GPT-5.6 Luna (max)",
+      "slug": "glm-5-3",
+      "name": "GLM-5.3 (max)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 2503.48,
+        "cost_per_task": {
+          "total_cost": 2.0056
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 44.9,
+        "artificial_analysis_coding_index": 74.8,
+        "artificial_analysis_agentic_index": 53.4
+      }
+    },
+    {
+      "slug": "glm-5-3-flash",
+      "name": "GLM-5.3-Flash",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 280.28,
+        "cost_per_task": {
+          "total_cost": 0.2533
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 41.9,
+        "artificial_analysis_coding_index": 71.5,
+        "artificial_analysis_agentic_index": 51.2
+      }
+    },
+    {
       "slug": "gpt-5-6-luna",
+      "name": "GPT-5.6 Luna (max)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 319.93,
+        "cost_per_task": {
+          "total_cost": 0.1783
+        }
+      },
       "evaluations": {
-        "artificial_analysis_intelligence_index": 51.2,
+        "artificial_analysis_intelligence_index": 37.5,
         "artificial_analysis_coding_index": 71.4,
-        "artificial_analysis_agentic_index": 45.6
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.2094
-        }
+        "artificial_analysis_agentic_index": 42.7
       }
     },
     {
-      "name": "GPT-5.6 Sol (low)",
-      "slug": "gpt-5-6-sol-low",
+      "slug": "gpt-5-6-luna-high",
+      "name": "GPT-5.6 Luna (high)",
+      "artificial_analysis_intelligence_index_cost": null,
       "evaluations": {
-        "artificial_analysis_intelligence_index": 49.4,
-        "artificial_analysis_coding_index": 69.7,
-        "artificial_analysis_agentic_index": 40.0
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.1975
-        }
+        "artificial_analysis_intelligence_index": 32.9,
+        "artificial_analysis_coding_index": 63.3,
+        "artificial_analysis_agentic_index": 35.6
       }
     },
     {
-      "name": "GPT-5.6 Sol (medium)",
-      "slug": "gpt-5-6-sol-medium",
+      "slug": "gpt-5-6-luna-low",
+      "name": "GPT-5.6 Luna (low)",
+      "artificial_analysis_intelligence_index_cost": null,
       "evaluations": {
-        "artificial_analysis_intelligence_index": 53.6,
-        "artificial_analysis_coding_index": 76.3,
-        "artificial_analysis_agentic_index": 44.5
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.314
-        }
+        "artificial_analysis_intelligence_index": 21.8,
+        "artificial_analysis_coding_index": 44.2,
+        "artificial_analysis_agentic_index": 17.9
       }
     },
     {
-      "name": "GPT-5.6 Sol (high)",
-      "slug": "gpt-5-6-sol-high",
+      "slug": "gpt-5-6-luna-medium",
+      "name": "GPT-5.6 Luna (medium)",
+      "artificial_analysis_intelligence_index_cost": null,
       "evaluations": {
-        "artificial_analysis_intelligence_index": 55.9,
-        "artificial_analysis_coding_index": 77.2,
-        "artificial_analysis_agentic_index": 48.5
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.453
-        }
+        "artificial_analysis_intelligence_index": 25.8,
+        "artificial_analysis_coding_index": 50.7,
+        "artificial_analysis_agentic_index": 25.4
       }
     },
     {
-      "name": "GPT-5.6 Sol (xhigh)",
-      "slug": "gpt-5-6-sol-xhigh",
+      "slug": "gpt-5-6-luna-xhigh",
+      "name": "GPT-5.6 Luna (xhigh)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 179.33,
+        "cost_per_task": {
+          "total_cost": 0.0853
+        }
+      },
       "evaluations": {
-        "artificial_analysis_intelligence_index": 57.7,
-        "artificial_analysis_coding_index": 78.3,
-        "artificial_analysis_agentic_index": 51.8
-      },
-      "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {
-          "total_cost": 0.6825
-        }
+        "artificial_analysis_intelligence_index": 34.8,
+        "artificial_analysis_coding_index": 68.6,
+        "artificial_analysis_agentic_index": 39.5
       }
     },
     {
-      "name": "GPT-5.6 Sol (max)",
       "slug": "gpt-5-6-sol",
-      "evaluations": {
-        "artificial_analysis_intelligence_index": 58.9,
-        "artificial_analysis_coding_index": 77.4,
-        "artificial_analysis_agentic_index": 54.0
-      },
+      "name": "GPT-5.6 Sol (max)",
       "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 3464.84,
         "cost_per_task": {
-          "total_cost": 1.0373
+          "total_cost": 1.9885
         }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 47.1,
+        "artificial_analysis_coding_index": 77.4,
+        "artificial_analysis_agentic_index": 50.5
       }
     },
     {
-      "name": "Unselected Model",
+      "slug": "gpt-5-6-sol-high",
+      "name": "GPT-5.6 Sol (high)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 1487.34,
+        "cost_per_task": {
+          "total_cost": 0.808
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 42.5,
+        "artificial_analysis_coding_index": 77.2,
+        "artificial_analysis_agentic_index": 44.7
+      }
+    },
+    {
+      "slug": "gpt-5-6-sol-low",
+      "name": "GPT-5.6 Sol (low)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 637.28,
+        "cost_per_task": {
+          "total_cost": 0.2606
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 33.8,
+        "artificial_analysis_coding_index": 69.7,
+        "artificial_analysis_agentic_index": 32.6
+      }
+    },
+    {
+      "slug": "gpt-5-6-sol-medium",
+      "name": "GPT-5.6 Sol (medium)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 997.39,
+        "cost_per_task": {
+          "total_cost": 0.505
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 39.5,
+        "artificial_analysis_coding_index": 76.3,
+        "artificial_analysis_agentic_index": 40.5
+      }
+    },
+    {
+      "slug": "gpt-5-6-sol-xhigh",
+      "name": "GPT-5.6 Sol (xhigh)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 2082.28,
+        "cost_per_task": {
+          "total_cost": 1.1844
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 44.1,
+        "artificial_analysis_coding_index": 78.3,
+        "artificial_analysis_agentic_index": 47.8
+      }
+    },
+    {
+      "slug": "gpt-6-astra-high",
+      "name": "GPT-6 Astra (high)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 2916.61,
+        "cost_per_task": {
+          "total_cost": 1.7214
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 51,
+        "artificial_analysis_coding_index": 77.1,
+        "artificial_analysis_agentic_index": 48.7
+      }
+    },
+    {
+      "slug": "grok-4-6",
+      "name": "Grok 4.6 (high)",
+      "artificial_analysis_intelligence_index_cost": {
+        "total_cost": 2351.83,
+        "cost_per_task": {
+          "total_cost": 1.8589
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 44.4,
+        "artificial_analysis_coding_index": 76.8,
+        "artificial_analysis_agentic_index": 53.4
+      }
+    },
+    {
+      "slug": "qwen3-8-flash-next",
+      "name": "Qwen3.8-Flash-Next",
+      "artificial_analysis_intelligence_index_cost": null,
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 42.2,
+        "artificial_analysis_coding_index": 73.1,
+        "artificial_analysis_agentic_index": null
+      }
+    },
+    {
       "slug": "unselected-model",
-      "evaluations": {},
-      "artificial_analysis_intelligence_index_cost": null
+      "name": "Unselected Model",
+      "artificial_analysis_intelligence_index_cost": {
+        "cost_per_task": {
+          "total_cost": 99.0
+        }
+      },
+      "evaluations": {
+        "artificial_analysis_intelligence_index": 99.0,
+        "artificial_analysis_coding_index": 99.0,
+        "artificial_analysis_agentic_index": 99.0
+      }
     }
   ]
 }

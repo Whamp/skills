@@ -1,16 +1,18 @@
 {
-  "intelligence_index_version": "4.1",
+  "intelligence_index_version": "4.3",
   "data": [
     {
       "name": "GPT-5.6 Luna (xhigh)",
       "slug": "gpt-5-6-luna-xhigh",
       "evaluations": {
-        "artificial_analysis_intelligence_index": 49.1,
+        "artificial_analysis_intelligence_index": 34.8,
         "artificial_analysis_coding_index": 68.6,
-        "artificial_analysis_agentic_index": 42.9
+        "artificial_analysis_agentic_index": 39.5
       },
       "artificial_analysis_intelligence_index_cost": {
-        "cost_per_task": {"total_cost": 0.139}
+        "cost_per_task": {
+          "total_cost": 0.0853
+        }
       }
     }
   ]

@@ -1,13 +1,17 @@
 Provider,Model,Model ID,Effort,Effective Effort,Access Pool,Cost Per Task,Intelligence Index,Model Coding Index,Agentic Index,Benchmark Status,Index Version,As Of,Source
-OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:low,low,low,OpenAI subscription,0.0088,33.9,44.2,25.7,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:medium,medium,medium,OpenAI subscription,0.0113,38.9,50.7,31.8,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:high,high,high,OpenAI subscription,0.0216,47,63.3,41,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:xhigh,xhigh,xhigh,OpenAI subscription,0.0316,50.1,68.6,44.4,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:max,max,max,OpenAI subscription,0.0471,52.3,71.4,46.9,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:low,low,low,OpenAI subscription,0.2311,50.7,69.7,41.6,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:medium,medium,medium,OpenAI subscription,0.3717,55.6,76.3,47.9,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:high,high,high,OpenAI subscription,0.5477,57.3,77.2,50.6,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:xhigh,xhigh,xhigh,OpenAI subscription,0.8072,59,78.3,53.6,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:max,max,max,OpenAI subscription,1.2312,60.9,77.4,57.8,published,4.1,2026-08-14,https://artificialanalysis.ai/api/v2/language/models/free
-Z.ai,GLM-5.3,zai/glm-5.3:max,max,max,Z.ai Pro subscription,,,,,pending,,2026-08-14,local: pi --list-models zai
-Cursor,Grok 4.6,cursor-grok-4.6-xhigh,xhigh,xhigh,Cursor subscription via agent CLI,,,,,pending,,2026-08-14,local: agent --list-models
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:low,low,low,OpenAI subscription,,21.8,44.2,17.9,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:medium,medium,medium,OpenAI subscription,,25.8,50.7,25.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:high,high,high,OpenAI subscription,,32.9,63.3,35.6,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:xhigh,xhigh,xhigh,OpenAI subscription,0.0853,34.8,68.6,39.5,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Luna,openai-codex/gpt-5.6-luna:max,max,max,OpenAI subscription,0.1783,37.5,71.4,42.7,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:low,low,low,OpenAI subscription,0.2606,33.8,69.7,32.6,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:medium,medium,medium,OpenAI subscription,0.505,39.5,76.3,40.5,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:high,high,high,OpenAI subscription,0.808,42.5,77.2,44.7,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:xhigh,xhigh,xhigh,OpenAI subscription,1.1844,44.1,78.3,47.8,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:max,max,max,OpenAI subscription,1.9885,47.1,77.4,50.5,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+OpenAI,GPT-6 Astra,openai-codex/gpt-6-astra:high,high,high,OpenAI subscription,1.7214,51,77.1,48.7,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+Z.ai,GLM-5.3,zai/glm-5.3:max,max,max,Z.ai coding subscription,2.0056,44.9,74.8,53.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+Z.ai,GLM-5.3-Flash,zai/glm-5.3-flash:max,max,max,Z.ai coding subscription,0.2533,41.9,71.5,51.2,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+Cursor,Grok 4.6,cursor/grok-4.6:slow:high,high,high,Cursor Models,1.8589,44.4,76.8,53.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+Cursor,Claude Fable 5.1,cursor/claude-fable-5-1@300k:medium,medium,medium,Cursor Other Models,2.9826,49.1,77.1,50.6,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+Alibaba,Qwen3.8-Flash-Next,local-profile/qwen3.8-flash-next,default,default,Caller-configured local inference,,42.2,73.1,,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free

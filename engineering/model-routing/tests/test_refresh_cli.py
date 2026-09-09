@@ -41,9 +41,9 @@ class RefreshCliTest(unittest.TestCase):
 
         self.assertEqual(mode, 0o644)
         self.assertNotIn(b"\r", output_bytes)
-        self.assertEqual(len(rows), 12)
+        self.assertEqual(len(rows), 16)
         rows_by_id = {row["Model ID"]: row for row in rows}
-        self.assertEqual(len(rows_by_id), 12)
+        self.assertEqual(len(rows_by_id), 16)
         self.assertEqual(
             rows_by_id["openai-codex/gpt-5.6-luna:xhigh"]["Model Coding Index"],
             "68.6",
@@ -53,40 +53,55 @@ class RefreshCliTest(unittest.TestCase):
             "77.2",
         )
         self.assertEqual(
-            rows_by_id["openai-codex/gpt-5.6-sol:max"]["Agentic Index"],
-            "54.0",
+            rows_by_id["openai-codex/gpt-6-astra:high"]["Intelligence Index"],
+            "51",
+        )
+        self.assertEqual(
+            rows_by_id["cursor/grok-4.6:slow:high"]["Agentic Index"],
+            "53.4",
+        )
+        self.assertEqual(
+            rows_by_id["cursor/claude-fable-5-1@300k:medium"]["Model Coding Index"],
+            "77.1",
+        )
+        self.assertEqual(
+            rows_by_id["zai/glm-5.3-flash:max"]["Model Coding Index"],
+            "71.5",
+        )
+        self.assertEqual(
+            rows_by_id["local-profile/qwen3.8-flash-next"]["Model Coding Index"],
+            "73.1",
+        )
+        self.assertEqual(
+            rows_by_id["local-profile/qwen3.8-flash-next"]["Cost Per Task"], ""
+        )
+        self.assertEqual(
+            rows_by_id["local-profile/qwen3.8-flash-next"]["Agentic Index"], ""
         )
         self.assertEqual(
             rows_by_id["openai-codex/gpt-5.6-luna:xhigh"]["Access Pool"],
             "OpenAI subscription",
         )
         self.assertEqual(
-            rows_by_id["zai/glm-5.3:max"]["Access Pool"], "Z.ai Pro subscription"
+            rows_by_id["zai/glm-5.3:max"]["Access Pool"],
+            "Z.ai coding subscription",
         )
         self.assertEqual(
-            rows_by_id["cursor-grok-4.6-xhigh"]["Access Pool"],
-            "Cursor subscription via agent CLI",
+            rows_by_id["cursor/grok-4.6:slow:high"]["Access Pool"],
+            "Cursor Models",
         )
-        for pending_model_id in (
-            "zai/glm-5.3:max",
-            "cursor-grok-4.6-xhigh",
-        ):
-            pending_row = rows_by_id[pending_model_id]
-            self.assertEqual(pending_row["Benchmark Status"], "pending")
-            self.assertEqual(pending_row["Cost Per Task"], "")
-            self.assertEqual(pending_row["Intelligence Index"], "")
-            self.assertEqual(pending_row["Model Coding Index"], "")
-            self.assertEqual(pending_row["Agentic Index"], "")
-            self.assertEqual(pending_row["Index Version"], "")
-            self.assertEqual(pending_row["As Of"], "2026-07-12")
         self.assertEqual(
-            rows_by_id["openai-codex/gpt-5.6-sol:high"]["Benchmark Status"],
-            "published",
+            rows_by_id["cursor/claude-fable-5-1@300k:medium"]["Access Pool"],
+            "Cursor Other Models",
         )
+        for row in rows:
+            self.assertEqual(row["Benchmark Status"], "published")
+            self.assertEqual(row["Index Version"], "4.3")
+            self.assertEqual(row["As Of"], "2026-07-12")
         self.assertNotIn("Unselected Model", {row["Model"] for row in rows})
         self.assertEqual(
             {row["Model"] for row in rows if row["Provider"] == "Z.ai"},
-            {"GLM-5.3"},
+            {"GLM-5.3", "GLM-5.3-Flash"},
         )
 
     def test_rejects_incomplete_payload_without_replacing_snapshot(self) -> None:

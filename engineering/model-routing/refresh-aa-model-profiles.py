@@ -8,6 +8,7 @@ import math
 import os
 import tempfile
 import urllib.request
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
@@ -29,8 +30,24 @@ FIELDS = [
     "As Of",
     "Source",
 ]
+
+
+@dataclass(frozen=True)
+class BenchmarkProfile:
+    """Maps one Artificial Analysis profile to its policy route."""
+
+    slug: str
+    provider: str
+    model_name: str
+    model_id: str
+    effort: str
+    effective_effort: str
+    access_pool: str
+    optional_fields: frozenset[str] = frozenset()
+
+
 BENCHMARK_PROFILES = [
-    (
+    BenchmarkProfile(
         "gpt-5-6-luna-low",
         "OpenAI",
         "GPT-5.6 Luna",
@@ -38,8 +55,9 @@ BENCHMARK_PROFILES = [
         "low",
         "low",
         "OpenAI subscription",
+        frozenset({"Cost Per Task"}),
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-luna-medium",
         "OpenAI",
         "GPT-5.6 Luna",
@@ -47,8 +65,9 @@ BENCHMARK_PROFILES = [
         "medium",
         "medium",
         "OpenAI subscription",
+        frozenset({"Cost Per Task"}),
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-luna-high",
         "OpenAI",
         "GPT-5.6 Luna",
@@ -56,8 +75,9 @@ BENCHMARK_PROFILES = [
         "high",
         "high",
         "OpenAI subscription",
+        frozenset({"Cost Per Task"}),
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-luna-xhigh",
         "OpenAI",
         "GPT-5.6 Luna",
@@ -66,7 +86,7 @@ BENCHMARK_PROFILES = [
         "xhigh",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-luna",
         "OpenAI",
         "GPT-5.6 Luna",
@@ -75,7 +95,7 @@ BENCHMARK_PROFILES = [
         "max",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-sol-low",
         "OpenAI",
         "GPT-5.6 Sol",
@@ -84,7 +104,7 @@ BENCHMARK_PROFILES = [
         "low",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-sol-medium",
         "OpenAI",
         "GPT-5.6 Sol",
@@ -93,7 +113,7 @@ BENCHMARK_PROFILES = [
         "medium",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-sol-high",
         "OpenAI",
         "GPT-5.6 Sol",
@@ -102,7 +122,7 @@ BENCHMARK_PROFILES = [
         "high",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-sol-xhigh",
         "OpenAI",
         "GPT-5.6 Sol",
@@ -111,7 +131,7 @@ BENCHMARK_PROFILES = [
         "xhigh",
         "OpenAI subscription",
     ),
-    (
+    BenchmarkProfile(
         "gpt-5-6-sol",
         "OpenAI",
         "GPT-5.6 Sol",
@@ -120,27 +140,61 @@ BENCHMARK_PROFILES = [
         "max",
         "OpenAI subscription",
     ),
-]
-
-PENDING_PROFILES = [
-    {
-        "Provider": "Z.ai",
-        "Model": "GLM-5.3",
-        "Model ID": "zai/glm-5.3:max",
-        "Effort": "max",
-        "Effective Effort": "max",
-        "Access Pool": "Z.ai Pro subscription",
-        "Source": "local: pi --list-models zai",
-    },
-    {
-        "Provider": "Cursor",
-        "Model": "Grok 4.6",
-        "Model ID": "cursor-grok-4.6-xhigh",
-        "Effort": "xhigh",
-        "Effective Effort": "xhigh",
-        "Access Pool": "Cursor subscription via agent CLI",
-        "Source": "local: agent --list-models",
-    },
+    BenchmarkProfile(
+        "gpt-6-astra-high",
+        "OpenAI",
+        "GPT-6 Astra",
+        "openai-codex/gpt-6-astra:high",
+        "high",
+        "high",
+        "OpenAI subscription",
+    ),
+    BenchmarkProfile(
+        "glm-5-3",
+        "Z.ai",
+        "GLM-5.3",
+        "zai/glm-5.3:max",
+        "max",
+        "max",
+        "Z.ai coding subscription",
+    ),
+    BenchmarkProfile(
+        "glm-5-3-flash",
+        "Z.ai",
+        "GLM-5.3-Flash",
+        "zai/glm-5.3-flash:max",
+        "max",
+        "max",
+        "Z.ai coding subscription",
+    ),
+    BenchmarkProfile(
+        "grok-4-6",
+        "Cursor",
+        "Grok 4.6",
+        "cursor/grok-4.6:slow:high",
+        "high",
+        "high",
+        "Cursor Models",
+    ),
+    BenchmarkProfile(
+        "claude-fable-5-1-medium",
+        "Cursor",
+        "Claude Fable 5.1",
+        "cursor/claude-fable-5-1@300k:medium",
+        "medium",
+        "medium",
+        "Cursor Other Models",
+    ),
+    BenchmarkProfile(
+        "qwen3-8-flash-next",
+        "Alibaba",
+        "Qwen3.8-Flash-Next",
+        "local-profile/qwen3.8-flash-next",
+        "default",
+        "default",
+        "Caller-configured local inference",
+        frozenset({"Cost Per Task", "Agentic Index"}),
+    ),
 ]
 
 
@@ -212,13 +266,24 @@ def require_number(candidate: Any, field: str, slug: str) -> int | float:
     return candidate
 
 
+def _profile_number_or_blank(
+    candidate: Any, field: str, profile: BenchmarkProfile
+) -> int | float | str:
+    """Validates a benchmark number or preserves an allowed API omission."""
+    if candidate is None and field in profile.optional_fields:
+        return ""
+    return require_number(candidate, field, profile.slug)
+
+
 def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]]:
     models = {
         model["slug"]: model
         for payload in payloads
         for model in payload.get("data", [])
     }
-    missing_slugs = [slug for slug, *_ in BENCHMARK_PROFILES if slug not in models]
+    missing_slugs = [
+        profile.slug for profile in BENCHMARK_PROFILES if profile.slug not in models
+    ]
     if missing_slugs:
         raise SystemExit("missing required model profiles: " + ", ".join(missing_slugs))
 
@@ -236,68 +301,47 @@ def make_rows(payloads: list[dict[str, Any]], as_of: str) -> list[dict[str, Any]
     version = normalized_versions.pop()
 
     rows = []
-    for (
-        slug,
-        provider,
-        model_name,
-        model_id,
-        effort,
-        effective_effort,
-        pool,
-    ) in BENCHMARK_PROFILES:
-        model = models[slug]
-        cost = value(
-            model,
-            "artificial_analysis_intelligence_index_cost",
-            "cost_per_task",
-            "total_cost",
-        )
-        cost = require_number(cost, "Cost Per Task", slug)
-
+    for profile in BENCHMARK_PROFILES:
+        model = models[profile.slug]
         rows.append(
             {
-                "Provider": provider,
-                "Model": model_name,
-                "Model ID": model_id,
-                "Effort": effort,
-                "Effective Effort": effective_effort,
-                "Access Pool": pool,
-                "Cost Per Task": cost,
-                "Intelligence Index": require_number(
+                "Provider": profile.provider,
+                "Model": profile.model_name,
+                "Model ID": profile.model_id,
+                "Effort": profile.effort,
+                "Effective Effort": profile.effective_effort,
+                "Access Pool": profile.access_pool,
+                "Cost Per Task": _profile_number_or_blank(
+                    value(
+                        model,
+                        "artificial_analysis_intelligence_index_cost",
+                        "cost_per_task",
+                        "total_cost",
+                    ),
+                    "Cost Per Task",
+                    profile,
+                ),
+                "Intelligence Index": _profile_number_or_blank(
                     value(
                         model, "evaluations", "artificial_analysis_intelligence_index"
                     ),
                     "Intelligence Index",
-                    slug,
+                    profile,
                 ),
-                "Model Coding Index": require_number(
+                "Model Coding Index": _profile_number_or_blank(
                     value(model, "evaluations", "artificial_analysis_coding_index"),
                     "Model Coding Index",
-                    slug,
+                    profile,
                 ),
-                "Agentic Index": require_number(
+                "Agentic Index": _profile_number_or_blank(
                     value(model, "evaluations", "artificial_analysis_agentic_index"),
                     "Agentic Index",
-                    slug,
+                    profile,
                 ),
                 "Benchmark Status": "published",
                 "Index Version": version,
                 "As Of": as_of,
                 "Source": API_URL,
-            }
-        )
-
-    for profile in PENDING_PROFILES:
-        rows.append(
-            {
-                **profile,
-                "Cost Per Task": "",
-                "Intelligence Index": "",
-                "Model Coding Index": "",
-                "Agentic Index": "",
-                "Benchmark Status": "pending",
-                "Index Version": "",
-                "As Of": as_of,
             }
         )
     return rows
