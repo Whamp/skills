@@ -43,7 +43,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`repo-cleanup`](engineering/repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](engineering/sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](engineering/testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
-- [`worktree-first`](engineering/worktree-first/) — isolates substantive repository changes in dedicated Git worktrees.
+- [`worktree-first`](engineering/worktree-first/) routes substantive work through Lane where adopted and plain Git worktrees elsewhere.
 
 ### Productivity
 
