@@ -12,6 +12,7 @@ OpenAI,GPT-5.6 Sol,openai-codex/gpt-5.6-sol:max,max,max,OpenAI subscription,1.98
 OpenAI,GPT-6 Astra,openai-codex/gpt-6-astra:high,high,high,OpenAI subscription,1.7214,51,77.1,48.7,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
 Z.ai,GLM-5.3,zai/glm-5.3:max,max,max,Z.ai coding subscription,2.0056,44.9,74.8,53.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
 Z.ai,GLM-5.3-Flash,zai/glm-5.3-flash:max,max,max,Z.ai coding subscription,0.2533,41.9,71.5,51.2,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
+xAI,Grok 4.6,xai/grok-4.6:high,high,high,Direct xAI access,1.8589,44.4,76.8,53.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
 Cursor,Grok 4.6,cursor/grok-4.6:slow:high,high,high,Cursor Models,1.8589,44.4,76.8,53.4,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
 Cursor,Claude Fable 5.1,cursor/claude-fable-5-1@300k:medium,medium,medium,Cursor Other Models,2.9826,49.1,77.1,50.6,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free
 Alibaba,Qwen3.8-Flash-Next,local-profile/qwen3.8-flash-next,default,default,Caller-configured local inference,,42.2,73.1,,published,4.3,2026-09-09,https://artificialanalysis.ai/api/v2/language/models/free

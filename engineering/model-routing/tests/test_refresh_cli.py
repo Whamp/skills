@@ -41,9 +41,9 @@ class RefreshCliTest(unittest.TestCase):
 
         self.assertEqual(mode, 0o644)
         self.assertNotIn(b"\r", output_bytes)
-        self.assertEqual(len(rows), 16)
+        self.assertEqual(len(rows), 17)
         rows_by_id = {row["Model ID"]: row for row in rows}
-        self.assertEqual(len(rows_by_id), 16)
+        self.assertEqual(len(rows_by_id), 17)
         self.assertEqual(
             rows_by_id["openai-codex/gpt-5.6-luna:xhigh"]["Model Coding Index"],
             "68.6",
@@ -55,6 +55,10 @@ class RefreshCliTest(unittest.TestCase):
         self.assertEqual(
             rows_by_id["openai-codex/gpt-6-astra:high"]["Intelligence Index"],
             "51",
+        )
+        self.assertEqual(
+            rows_by_id["xai/grok-4.6:high"]["Agentic Index"],
+            "53.4",
         )
         self.assertEqual(
             rows_by_id["cursor/grok-4.6:slow:high"]["Agentic Index"],
@@ -85,6 +89,10 @@ class RefreshCliTest(unittest.TestCase):
         self.assertEqual(
             rows_by_id["zai/glm-5.3:max"]["Access Pool"],
             "Z.ai coding subscription",
+        )
+        self.assertEqual(
+            rows_by_id["xai/grok-4.6:high"]["Access Pool"],
+            "Direct xAI access",
         )
         self.assertEqual(
             rows_by_id["cursor/grok-4.6:slow:high"]["Access Pool"],

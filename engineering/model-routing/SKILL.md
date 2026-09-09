@@ -53,7 +53,7 @@ Keep distinct pools separate:
 
 - OpenAI Codex subscription, direct OpenAI pay-as-you-go, and Cursor-hosted OpenAI models;
 - Z.ai coding subscription, direct Z.ai pay-as-you-go, and Cursor-hosted GLM models;
-- Cursor Models for Grok and Cursor Other Models for Fable;
+- direct xAI access and Cursor Models for Grok, and Cursor Other Models for Fable;
 - local inference resources described by the caller's profile.
 
 Token counts, API-price estimates, and per-run currency telemetry do not report remaining quota. Shared consumption also means a capacity observation cannot reserve future work.
@@ -104,18 +104,22 @@ This step is complete when each selected volume pool has an assigned launch or e
 
 Use `zai/glm-5.3:max` as the default non-OpenAI Reviewer and alternative-candidate route. For high-stakes work, pair it with the OpenAI Reviewer on the same axis. The parent may substitute GLM-5.3-Flash or the local Flash-class family when the role remains within that model's demonstrated capability, but records the change in strength and family.
 
-Use `cursor/grok-4.6:slow:high` for:
+Use a caller-authorized Grok route for:
 
 - every role marked with the Grok diversification trigger;
 - the highest-risk review axis on high-stakes work;
 - adversarial race, concurrency, resource-lifetime, and merge-safety analysis;
 - a final challenge when correlated assumptions would be costly.
 
-`:slow` selects the non-Fast Cursor profile. `:high` selects reasoning effort. Keep Cursor Models capacity separate from Cursor Other Models capacity.
+The standard direct route is `xai/grok-4.6:high`. The Cursor Models route is `cursor/grok-4.6:slow:high`, where `:slow` selects the non-Fast Cursor profile. Both selectors request `high` reasoning effort.
+
+Treat direct xAI and Cursor Models as separate capacity pools for the same Grok family. They may replace each other for a Grok role, but they do not provide independent family evidence. When both pools report current capacity, favor the pool with less pressure on its limiting window. Distribute several useful Grok roles across both pools instead of draining one. Never duplicate a role only to consume quota.
+
+If one pool has unknown telemetry, use it serially for bounded roles and keep a measured healthy pool for required fanout or fallback. A successful call proves availability only for that call. Stop assigning new work to a pool after a quota error, then replan unlaunched roles against the other pool.
 
 After multi-family review, route a separate Sol `medium` Synthesis child. It preserves disagreements and route provenance rather than resolving findings by vote.
 
-This step is complete when every required review axis has independent family evidence, each triggered Grok role has a result or blocked-role report, and completed multi-family reviews have separate synthesis.
+This step is complete when every required review axis has independent family evidence, each triggered Grok role has a result or blocked-role report, both authorized Grok pools have separate capacity records, and completed multi-family reviews have separate synthesis.
 
 ## 6. Escalate with Astra and Fable
 

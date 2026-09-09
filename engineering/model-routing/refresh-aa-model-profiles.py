@@ -169,6 +169,15 @@ BENCHMARK_PROFILES = [
     ),
     BenchmarkProfile(
         "grok-4-6",
+        "xAI",
+        "Grok 4.6",
+        "xai/grok-4.6:high",
+        "high",
+        "high",
+        "Direct xAI access",
+    ),
+    BenchmarkProfile(
+        "grok-4-6",
         "Cursor",
         "Grok 4.6",
         "cursor/grok-4.6:slow:high",

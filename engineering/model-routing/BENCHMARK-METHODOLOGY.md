@@ -32,7 +32,7 @@ Runtime routing treats each provider, account, and pool tuple as independent. Im
 
 - OpenAI Codex subscription, direct OpenAI pay-as-you-go, and Cursor-hosted OpenAI models;
 - Z.ai coding subscription, direct Z.ai pay-as-you-go, and Cursor-hosted GLM models;
-- Cursor Models for Grok and Cursor Other Models for Fable;
+- direct xAI access and Cursor Models for Grok, and Cursor Other Models for Fable;
 - caller-configured local inference resources.
 
 Personal plan names, limits, quota multipliers, prices, and freshness rules belong in the caller's local profile. The public policy accepts profile or caller observations without prescribing a private path or collection tool.
@@ -51,7 +51,7 @@ GLM-5.3 requires thinking. Z.ai documents `max` as its default and recommended e
 
 ## Snapshot limits
 
-`MODEL-PROFILES.csv` is a 2026-09-09 snapshot of selected Artificial Analysis free-API profiles. Every row uses Intelligence Index version 4.3. It covers the active policy routes for Luna, Sol, Astra, GLM-5.3, GLM-5.3-Flash, Grok 4.6, Fable 5.1 Medium, and Qwen3.8-Flash-Next.
+`MODEL-PROFILES.csv` is a 2026-09-09 snapshot of selected Artificial Analysis free-API profiles. Every row uses Intelligence Index version 4.3. It covers the active policy routes for Luna, Sol, Astra, GLM-5.3, GLM-5.3-Flash, Grok 4.6, Fable 5.1 Medium, and Qwen3.8-Flash-Next. Grok appears once for direct xAI and once for Cursor Models. Both rows reuse the same model-level benchmark profile because provider separation adds capacity, not family diversity.
 
 Artificial Analysis does not publish an Agentic Index or estimated task cost for Qwen3.8-Flash-Next. It also omits task-cost estimates for Luna Low, Medium, and High in this snapshot. The refresh program permits only these named omissions and still requires every selected model's Intelligence and Coding scores.
 
@@ -80,6 +80,8 @@ Primary public sources:
 - Z.ai GLM-5.3: <https://docs.z.ai/guides/llm/glm-5.3>
 - Z.ai reasoning effort: <https://docs.z.ai/guides/capabilities/thinking>
 - Z.ai coding subscriptions: <https://docs.z.ai/devpack/overview>
+- xAI Grok 4.6: <https://docs.x.ai/developers/grok-4-6>
+- xAI reasoning effort: <https://docs.x.ai/developers/model-capabilities/text/reasoning>
 - Cursor TypeScript SDK: <https://cursor.com/docs/sdk/typescript>
 - Cursor models and pricing: <https://cursor.com/docs/models-and-pricing>
 
