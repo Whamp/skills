@@ -15,9 +15,9 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
+- [`pastlight-agents-pointer`](pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
 - [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
-- [`psr-agents-pointer`](psr-agents-pointer/) — adds a concise pi-session-recall tool pointer to a project's AGENTS.md.
 - [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.

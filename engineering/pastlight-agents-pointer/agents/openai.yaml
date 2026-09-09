@@ -1,0 +1,6 @@
+interface:
+  display_name: "Pastlight AGENTS.md pointer"
+  short_description: "Add the Pastlight pointer to a project's AGENTS.md"
+  default_prompt: "Use $pastlight-agents-pointer to add the Pastlight pointer to this repository's AGENTS.md."
+policy:
+  allow_implicit_invocation: false
