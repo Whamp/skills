@@ -2,6 +2,8 @@
 
 Read this reference after selecting a `cursor/*` route. The child `agent` selects its role. The `model` field selects the Cursor provider route.
 
+Apply the caller's pool and model permission rules before selecting this route. Explicit-user-message approval requirements also apply to fallbacks, wrappers, and resumed children. Catalog presence and this example do not authorize a restricted model. Verify the selected role is executable with the required tools before launching; a reviewer tool-profile failure is separate from model availability.
+
 Launch a normal Pi child with the exact selector:
 
 ```js
