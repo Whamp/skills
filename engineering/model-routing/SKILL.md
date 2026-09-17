@@ -71,7 +71,7 @@ When running Standards and Spec reviews, use different families. The implementer
 
 Grok is useful for adversarial reasoning, concurrency, resource lifetime, and challenging correlated assumptions. It is an option, not a required reviewer. GLM, Kimi, or another capable independent family can perform the same review axis. GLM-5.3 and GLM-5.3-Flash are one family; direct xAI and Cursor Grok are one family despite separate pools.
 
-The standard Grok selectors are `xai/grok-4.6:high` and `cursor/grok-4.6:slow:high`. Verify selectors against the current runtime catalog rather than guessing suffix variations. Before any Cursor launch, read [`CURSOR-SUBAGENTS.md`](CURSOR-SUBAGENTS.md).
+The standard Grok selectors are `xai/grok-4.6:high` and `cursor/grok-4.6:slow:high`. Verify selectors against the current runtime catalog rather than guessing suffix variations. Before assigning a role to a Cursor route, read [`CURSOR-SUBAGENTS.md`](CURSOR-SUBAGENTS.md).
 
 Consolidate completed reviews without rerunning them. The parent may synthesize; launch a separate synthesis child only when the review contract or report volume warrants it. Preserve disagreements and evidence rather than deciding by vote.
 
