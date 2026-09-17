@@ -16,3 +16,7 @@ Use these scenarios to check policy changes manually, not as model evaluation re
 | Grok is unavailable for a required independent review axis | Preserve the axis with an eligible capable GLM or Kimi route, if authorized; do not make Grok mandatory. |
 | GLM-5.3-Flash and GLM-5.3 are proposed as independent reviewers | Count them as one GLM family and add a different eligible family for independent coverage. |
 | The parent can synthesize completed reviews without another child | Do not require a Sol child solely for synthesis; preserve evidence and disagreements while using the parent or another eligible synthesis route. |
+| A Cursor reviewer has no `pi__read` bridge tool | Check its exposed native file tools before declaring file access unavailable; overlapping Pi built-ins are hidden by default. |
+| A Pi read-only tool allowlist is supplied to a Cursor child | Do not infer that Cursor host tools or configured MCP are disabled. Preserve authority restrictions and require suitable isolation when enforcement is part of the task. |
+| A reviewer forbids shell commands but is asked to inspect a Git diff | Supply the diff and file list; do not widen authority or treat a missing Pi `bash` name as proof that no native shell exists. |
+| Pi rejects a reviewer's required tools before launch | Repair or replace the compatible Pi role within authority; this is not evidence that the Cursor agent lacks native tools. |
