@@ -1,150 +1,98 @@
 ---
 name: model-routing
-description: Route delegated model portfolios across independent provider and subscription pools. Use when selecting models for delegated roles, planning multi-family review and synthesis, handling quota pressure, watching long-running work, or adding family diversity to implementation, debugging, visual work, and adversarial review.
+description: Choose delegated models using task capability, subscription permissions, live availability, and quota priorities. Use when selecting reviewers or workers, handling quota pressure or launch failures, or planning multi-family review.
 ---
 
 # Model routing
 
-Route a portfolio. Sol is the dependable default. Luna, GLM-5.3-Flash, and a caller-configured local Flash-class model supply inexpensive volume. GLM-5.3 and Grok supply independent review families. Astra and Fable supply escalation capacity. The parent chooses the model, authority, tools, context, and isolation for each child.
+Choose a capable route from the pools the caller permits. Start ordinary work with Luna Max or GLM-5.3-Flash, not the most expensive model. Model preferences never grant spending permission or make one provider indispensable.
 
-## 1. Classify each role
+## 1. Establish the routing contract
 
-Assign each role one route class:
+Read the caller's subscription profile and current task instructions before selecting models. Keep these decisions separate:
 
-- **Throughput**: breadth matters, attempts are independent, and a weak result is cheap to discard.
-- **Routine**: correctness, coherence, or sustained reasoning matters, including difficult first attempts.
-- **Watcher**: observe a long-running process and report completion, stalls, or named anomalies.
-- **Reviewer**: independently assess work against one review axis.
-- **Synthesis**: consolidate completed reports without repeating their reviews.
-- **Escalation**: attack a difficult unresolved problem or a task suited to a specialist model.
+- **Permission:** which provider, account, pool, model, and runtime may be used, including any user-message-only approval requirement.
+- **Availability:** authentication, supported selector, executable child and tools, quota windows, and local service readiness.
+- **Task fit:** required capabilities, review axes, family independence, context, and write authority.
+- **Preference:** pools to preserve or consume first, quota efficiency, reset order, and model strengths.
 
-Mark these triggers when they apply:
+Apply permission and task requirements first. Exclude known-unavailable routes. Rank the remaining routes by the caller's spending priorities, then quota efficiency and task fit. Use reset order as a tie-breaker among interchangeable routes, not as an override of a preserve-pool instruction.
 
-- **Vision**: image, video frame, rendered interface, computer-use, or 3D evidence matters.
-- **Alternative candidate**: a competing approach, implementation, interface, or prototype could expose a useful tradeoff.
-- **Grok diversification**: diagnosis remains uncertain, a fix failed, or correlated OpenAI and GLM assumptions would be costly.
-- **Adversarial review**: failure-oriented debugging, race or concurrency analysis, assumption challenge, or a merge gate.
+A role table, skill, project instruction, automation workflow, catalog entry, or escalation recommendation is not an explicit user message. When a pool requires that approval, record the user's authorizing message and its scope before launching. A request to improve routing policy is not permission to exercise restricted routes.
 
-Routine is the default. Model choice does not imply child authority. The parent separately decides whether a child may edit, which tools it receives, whether it needs a worktree, and what validation it must return.
+Assign each child a role: Routine, Throughput, Watcher, Reviewer, Synthesis, or Escalation. Routine includes well-specified implementation. Mark vision or adversarial analysis when needed, but do not turn a model's specialty into a mandatory model assignment.
 
-For high-stakes work, define independent **Standards** and **Spec** axes plus narrower risk axes where needed. Give each required axis independent OpenAI and non-OpenAI coverage. Assign Grok to the highest-risk axis when its trigger applies. Judge findings by evidence, not votes.
+Complete when each planned child has a task contract and an eligible route, or a specific unsatisfied requirement.
 
-Record the role, axis, requested and resolved model, family, provider, account, pool, runtime, and any substitution. Two provider routes from one model family still count as one family.
+## 2. Check the relevant pools
 
-This step is complete when every child has one route class, relevant triggers are marked, high-stakes axes have independent family coverage, and authority is explicit rather than inferred from the model.
+Before substantial delegation, collect or reuse current observations for candidate pools using the caller's usage tool and freshness rules. Record provider, opaque account label, pool, window, used or remaining value and unit, reset time, observation time, source, and uncertainty. Respect every known limiting window, concurrency cap, context budget, and model-specific quota multiplier.
 
-## 2. Check capacity before substantial fanout
+Keep Codex separate from OpenAI API billing; Z.ai coding separate from direct API billing; direct xAI separate from Cursor; Cursor Models separate from Cursor Other Models and paid overage; Kimi Code separate from other Moonshot access; and local inference separate from subscription pools.
 
-Collect one observation for every candidate access pool. Preserve the source-reported capacity state or remaining value. Each observation includes:
+Unknown or stale telemetry permits bounded use of an otherwise authorized route. It does not prove headroom or clear known exhaustion. A model listing proves catalog presence, not authentication, capacity, or permission. API prices, session tokens, and zero-cost displays do not measure remaining subscription allowance.
 
-- `provider`
-- `account`
-- `pool`
-- `window`
-- `resetAt`
-- `observedAt`
-- `source`
+Treat user-reported maintenance or reservation of a local service as unavailability for that work. Do not send review traffic to a model currently under test merely because its endpoint answers. A subscription scheduled for cancellation remains a temporary option only while active; record its end date as unknown when none was supplied and recheck before relying on it.
 
-Also preserve caller-profile concurrency limits, context budgets, and model-specific quota multipliers when supplied. Use an opaque account label, not credentials. Preserve `unknown` rather than inventing a value.
+Do not hard-code transient percentages, maintenance states, or example spending priorities into durable policy. A nearly exhausted pool may still be the preferred pool to consume. Do not switch to a protected pool merely because it has a lower used percentage.
 
-An observation establishes spare capacity only when its source is current under the caller's freshness rule and explicitly reports room. Unknown or stale telemetry permits bounded use of an otherwise authorized route, but does not prove headroom or clear known exhaustion. A model listing proves catalog presence, not authentication, quota, or billing eligibility.
+Absent a caller preference, use the earlier-resetting usable pool among routes with equivalent capability and required family coverage. If resets match, prefer the higher used percentage. An unknown reset does not outrank a known upcoming reset. Reorder after a reset or failure. Observations are not reservations against other sessions' consumption.
 
-Keep distinct pools separate:
+Complete when candidate pools have observations or explicit unknown states, and exclusions distinguish permission, quota, service, and runtime failures.
 
-- OpenAI Codex subscription, direct OpenAI pay-as-you-go, and Cursor-hosted OpenAI models;
-- Z.ai coding subscription, direct Z.ai pay-as-you-go, and Cursor-hosted GLM models;
-- direct xAI access and Cursor Models for Grok, and Cursor Other Models for Fable;
-- local inference resources described by the caller's profile.
+## 3. Choose the least costly capable route
 
-Token counts, API-price estimates, and per-run currency telemetry do not report remaining quota. Shared consumption also means a capacity observation cannot reserve future work.
+These are starting preferences, conditional on steps 1 and 2, not required launches:
 
-When interchangeable routes provide the same required model family and capability from different pools, consume the pool whose current usable quota resets first. Keep assigning new bounded roles there until the source reports exhaustion or a quota error confirms it, then use the next pool. After a reset, refresh all candidate pools and reorder them. If reset times match, drain the pool with the higher used percentage first. A pool with an unknown reset cannot outrank a pool with a known upcoming reset.
+| Work | Starting routes | Escalation condition |
+| --- | --- | --- |
+| Well-specified implementation, investigation, bounded review, ordinary synthesis | `openai-codex/gpt-5.6-luna:max` or `zai/glm-5.3-flash:max` | Concrete complexity, unresolved ambiguity, or insufficient evidence from the first attempt |
+| Independent throughput attempts | Luna `xhigh` or GLM-5.3-Flash `max` | Use Luna `max` when the bounded task needs more reasoning |
+| Watcher | Luna `low` or `medium`, GLM-5.3-Flash, or an available local route | Interpretation across components rather than recognition of named signals |
+| Difficult or high-stakes review | `zai/glm-5.3:max` or `openai-codex/gpt-5.6-sol:high` | Choose the family needed for independence and the pool the caller prefers |
+| Alternative independent reviewer | Caller-authorized Kimi Code, Grok, or local family | Capability and availability fit the review axis |
+| Unresolved hard reasoning or specialist visual work | `openai-codex/gpt-6-astra:high` | Explain why cheaper eligible routes are insufficient |
 
-Schedule required roles before optional breadth. Under pressure, reduce redundant passes and route required work through another authorized, capable pool while preserving its axis and family requirement. Never activate overage, buy credit, upgrade a plan, or enable a different execution runtime to obtain capacity. Report an irreplaceable role as blocked.
+GLM-5.3-Flash is a routine worker and bounded reviewer, not just disposable volume. Luna Max is a routine OpenAI default, not just a throughput exception. Neither a Standards label nor a synthesis step automatically requires Sol. Keep Sol for ambiguous, contested, or high-stakes work that warrants it. Raise Sol to `xhigh` or `max` only after evidence that the preceding effort was insufficient for the same task.
 
-After a quota or local-resource failure, capture the failure evidence and replan work that has not launched.
+Use the caller's exact Kimi Code selector when authorized. Kimi supplies an independent family and subscription pool; missing usage telemetry is unknown capacity, not exclusion. Do not infer its vision support, quota, or retirement date from its name.
 
-This step is complete when every candidate pool has a current observation or explicit unknown state, local resource limits are known or marked unknown, and every substitution or blocked route has a reason.
+A caller-configured local Flash-class model may implement, review, investigate, use supported vision, or watch logs. Obey its tested concurrency and aggregate context limits rather than treating free tokens as unlimited throughput. Local inference does not stop a child's tools from transmitting inputs elsewhere.
 
-## 3. Route the core OpenAI lane
+For watchers, specify the process or log source, healthy signals, anomalies, deadline, and notification condition. Use asynchronous execution when supported. Launch only as much optional breadth as the task can use. Schedule required work before optional breadth. Under quota pressure, reduce redundant passes before consuming a pool the caller wants to preserve.
 
-Use these starting routes:
+Read [`MODEL-PROFILES.csv`](MODEL-PROFILES.csv) and [`BENCHMARK-METHODOLOGY.md`](BENCHMARK-METHODOLOGY.md) when comparing model evidence or revising policy. Benchmark prices and historical access labels do not authorize routes or establish subscription cost.
 
-- **Routine:** `openai-codex/gpt-5.6-sol:high`
-- **Reviewer:** `openai-codex/gpt-5.6-sol:high`
-- **Synthesis:** `openai-codex/gpt-5.6-sol:medium`
-- **Throughput:** `openai-codex/gpt-5.6-luna:xhigh`
-- **Watcher:** `openai-codex/gpt-5.6-luna:low`
+Complete when each child has an exact supported selector, a pool, and a task-based reason for any stronger route.
 
-Use Luna `max` for difficult bounded throughput work when the OpenAI pool has room. Use Luna `medium` instead of `low` when a watcher must interpret behavior across components rather than recognize named signals.
+## 4. Preserve review independence without model lock-in
 
-Sol `xhigh` and `max` are escalation routes. Raise effort only after the preceding level produces concrete evidence that its reasoning was insufficient for the same task. Evidence follows the task across delegations.
+When running Standards and Spec reviews, use different families. The implementer's family must not be the only reviewing family. For high-stakes work, define the required risk axes and independent family coverage before launch. Preserve any explicit review contract; do not silently weaken it to fit capacity.
 
-When an OpenAI route cannot launch, use another authorized capable pool. Record the substitution and preserve required family diversity.
+Grok is useful for adversarial reasoning, concurrency, resource lifetime, and challenging correlated assumptions. It is an option, not a required reviewer. GLM, Kimi, or another capable independent family can perform the same review axis. GLM-5.3 and GLM-5.3-Flash are one family; direct xAI and Cursor Grok are one family despite separate pools.
 
-When comparing models or changing policy, read [`MODEL-PROFILES.csv`](MODEL-PROFILES.csv) and [`BENCHMARK-METHODOLOGY.md`](BENCHMARK-METHODOLOGY.md). Runtime routing follows this file rather than historical access labels in the CSV.
+The standard Grok selectors are `xai/grok-4.6:high` and `cursor/grok-4.6:slow:high`. Verify selectors against the current runtime catalog rather than guessing suffix variations. Before any Cursor launch, read [`CURSOR-SUBAGENTS.md`](CURSOR-SUBAGENTS.md).
 
-This step is complete when every core role has an exact route or recorded substitution and lost family coverage has a replacement or blocked-role report.
+Consolidate completed reviews without rerunning them. The parent may synthesize; launch a separate synthesis child only when the review contract or report volume warrants it. Preserve disagreements and evidence rather than deciding by vote.
 
-## 4. Add inexpensive volume
+Complete when required axes and family coverage have evidence, or the precise missing requirement is reported. An unavailable preferred brand alone is not a missing requirement.
 
-Mix these Throughput and Watcher routes according to capability, quota, local resources, and desired family diversity:
+## 5. Recover launch failures within the permitted contract
 
-- `openai-codex/gpt-5.6-luna:xhigh` for capable inexpensive work, or Luna `max` for harder bounded work.
-- `zai/glm-5.3-flash:max` for high-volume text or vision work. Require evidence for claims because weak results are cheap to discard.
-- The caller-profile local Flash-class route for general implementation, review, vision, investigation, and watching. Local inference is also useful when inputs contain secrets.
+Separate model or pool failures from child tool-profile failures. Inspect the installed delegation contract and executable agents. A missing tool in a reviewer profile does not show the selected model is unavailable. Use an existing compatible read-only role, or a supported profile adjustment within the task's authority, while preserving the review restrictions. Do not claim unsupported per-call tool overrides work.
 
-Treat a capable local Flash-class model as a general-purpose peer of GLM-5.3-Flash, not a privacy-only specialist. Choose child tools from the task. Local inference does not by itself prevent a tool from sending supplied content elsewhere.
+After a quota, authentication, selector, local-resource, or runtime failure, record the evidence and replan only unlaunched or failed work. Retain completed reviews. Reapply steps 1 through 3 to the remaining permitted candidates and substitute without asking the user when the task contract remains satisfied. Record requested and resolved model, family, provider, pool, runtime, and reason.
 
-For local fanout, obey the caller profile's concurrency and aggregate context budget. Prefer tested operating points over the largest technically accepted fanout. For Z.ai, preserve any profile-reported model concurrency and quota multiplier, but launch only as many independent attempts as the task can use.
+Do not switch execution runtimes, activate overage, buy credit, upgrade plans, or cross an approval boundary to recover. Ask only when no permitted capable route can satisfy a required contract, or when the needed remedy itself requires user authority. State what remains blocked, not that the entire task failed because one route did.
 
-A Watcher launch states the process or log source, expected healthy signals, anomalies, deadline, and notification condition. Run it asynchronously. Use Luna `low`, Luna `medium`, GLM-5.3-Flash, or the local Flash-class route according to interpretation difficulty, quota, and data locality.
+Complete when work resumes through an eligible route or a concrete unmet requirement and exhausted alternatives are reported.
 
-This step is complete when each selected volume pool has an assigned launch or explicit exclusion reason, each local launch fits its resource budget, and each watcher has explicit signals and a deadline.
+## 6. Gate restricted escalation before selection
 
-## 5. Add independent families
+Astra and Fable are capability options, not exceptions to permission rules. The caller profile decides whether either may be selected automatically. If the profile requires explicit user-message approval for Cursor API models, Fable remains excluded until that approval exists. Neither difficult work nor another document's recommendation supplies it.
 
-Use `zai/glm-5.3:max` as the default non-OpenAI Reviewer and alternative-candidate route. For high-stakes work, pair it with the OpenAI Reviewer on the same axis. The parent may substitute GLM-5.3-Flash or the local Flash-class family when the role remains within that model's demonstrated capability, but records the change in strength and family.
+When explicitly authorized and supported, the Fable starting selector is `cursor/claude-fable-5-1@300k:medium`. Higher effort needs a specific request. Keep its Cursor Other Models allowance separate from Grok's Cursor Models allowance. Provide primary artifacts and enough context to investigate beyond the parent's hypothesis; use fresh context when the conversation contains irrelevant or provider-restricted material.
 
-Use a caller-authorized Grok route for:
+Complete when any restricted escalation has approval evidence within scope, verified route eligibility, and a task-based reason. Otherwise use an eligible alternative.
 
-- every role marked with the Grok diversification trigger;
-- the highest-risk review axis on high-stakes work;
-- adversarial race, concurrency, resource-lifetime, and merge-safety analysis;
-- a final challenge when correlated assumptions would be costly.
-
-The standard direct route is `xai/grok-4.6:high`. The Cursor Models route is `cursor/grok-4.6:slow:high`, where `:slow` selects the non-Fast Cursor profile. Both selectors request `high` reasoning effort.
-
-Treat direct xAI and Cursor Models as separate capacity pools for the same Grok family. They may replace each other for a Grok role, but they do not provide independent family evidence. Apply the expiry-first rule: drain the non-exhausted Grok pool with the earlier current reset before assigning work to the later-resetting pool. Do not balance toward the less-used pool while earlier-expiring capacity remains.
-
-A successful call proves availability only for that call. After a quota error, refresh both pools and replan unlaunched Grok roles against the remaining capacity.
-
-After multi-family review, route a separate Sol `medium` Synthesis child. It preserves disagreements and route provenance rather than resolving findings by vote.
-
-This step is complete when every required review axis has independent family evidence, each triggered Grok role has a result or blocked-role report, both authorized Grok pools have separate capacity records, and completed multi-family reviews have separate synthesis.
-
-## 6. Escalate with Astra and Fable
-
-The parent may invoke either model automatically when task difficulty or fit justifies it. Escalation does not imply read-only work.
-
-Use `openai-codex/gpt-6-astra:high` for stalled reasoning, independent ideas, and visual, computer-use, or 3D work. Treat its output as another evidence-bearing candidate. The parent decides whether Astra investigates, reviews, or implements.
-
-Use `cursor/claude-fable-5-1@300k:medium` for the hardest unresolved work. Medium is the default and may be selected automatically. Higher Fable effort requires a special caller request. Fable is neither routine review coverage nor a silent fallback for an unavailable pool.
-
-Give Fable adequate working context:
-
-- Use forked context when the current conversation contains relevant evidence and may be shared with the provider.
-- Use fresh context when the conversation is noisy, oversized, or contains material that should not be sent to the provider.
-- Preserve primary artifacts and paths. Let Fable inspect the repository and adjacent causes instead of compressing the task into the parent's current theory.
-
-Keep Fable's Cursor Other Models capacity separate from Grok's Cursor Models capacity. If the pool lacks capacity, report the escalation as unavailable.
-
-Opus and other catalog models have no active route. Catalog presence does not add them to policy.
-
-This step is complete when each escalation records why the model fits, Fable uses the 300K Medium route unless specially requested otherwise, and the child receives enough context and authority for its assigned work.
-
-## 7. Launch Cursor models through Pi
-
-Before launching any `cursor/*` route, read [`CURSOR-SUBAGENTS.md`](CURSOR-SUBAGENTS.md). It gives the exact Pi child shape and distinguishes it from the separate Cursor CLI agents.
-
-This step is complete when each Cursor child uses a normal Pi role plus an exact `cursor/*` model selector, and its result records the resolved provider, model, runtime, and tool contract.
+Check policy changes against [ROUTING-CASES.md](ROUTING-CASES.md).
