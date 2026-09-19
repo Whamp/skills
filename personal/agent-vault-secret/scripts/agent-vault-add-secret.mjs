@@ -47,6 +47,12 @@ const SETTINGS = [
   { key: "ssh_user", env: "AGENT_VAULT_SECRET_SSH_USER", label: "SSH user" },
   { key: "container", env: "AGENT_VAULT_SECRET_CONTAINER", label: "container name" },
   { key: "vault", env: "AGENT_VAULT_SECRET_VAULT", label: "vault name" },
+  {
+    key: "proxy_url",
+    env: "AGENT_VAULT_SECRET_PROXY_URL",
+    label: "proxy address, used by the verification step",
+    optional: true,
+  },
 ];
 
 const USAGE = `agent-vault-add-secret [--key <CREDENTIAL_NAME>] [options]
@@ -58,6 +64,7 @@ const USAGE = `agent-vault-add-secret [--key <CREDENTIAL_NAME>] [options]
   --user <ssh-user>   SSH user
   --container <name>  container name
   --vault <name>      vault to write into
+  --proxy-url <url>   proxy address, used by the verification step
 
 --host, --user, --container, and --vault fall back to the environment, then to
 ${CONFIG_PATH}. See SKILL.md.
@@ -92,6 +99,7 @@ function parseArgs(argv) {
     else if (arg === "--user") opts.ssh_user = take();
     else if (arg === "--container") opts.container = take();
     else if (arg === "--vault") opts.vault = take();
+    else if (arg === "--proxy-url") opts.proxy_url = take();
     else if (arg === "--dry-run") opts.dryRun = true;
     else if (arg === "--check") opts.check = true;
     else if (arg === "--help" || arg === "-h") opts.help = true;
@@ -100,12 +108,13 @@ function parseArgs(argv) {
     else if (arg.startsWith("--user=")) opts.ssh_user = arg.slice(7);
     else if (arg.startsWith("--container=")) opts.container = arg.slice(12);
     else if (arg.startsWith("--vault=")) opts.vault = arg.slice(8);
+    else if (arg.startsWith("--proxy-url=")) opts.proxy_url = arg.slice(12);
     else throw new Error(`unknown argument: ${arg}`);
   }
   return opts;
 }
 
-/** Flag, then environment, then config file. Every setting must resolve. */
+/** Flag, then environment, then config file. Required settings must resolve. */
 function resolveSettings(opts) {
   const config = readConfigFile();
   const missing = [];
@@ -113,7 +122,7 @@ function resolveSettings(opts) {
     const value = opts[setting.key] ?? process.env[setting.env] ?? config[setting.key];
     if (value) {
       opts[setting.key] = value;
-    } else {
+    } else if (!setting.optional) {
       missing.push(setting);
     }
   }
@@ -451,7 +460,8 @@ async function main() {
   }
 
   if (opts.check) {
-    process.stdout.write(`${SETTINGS.map((s) => `${s.key}=${opts[s.key]}`).join("\n")}\n`);
+    const resolved = SETTINGS.filter((s) => opts[s.key]).map((s) => `${s.key}=${opts[s.key]}`);
+    process.stdout.write(`${resolved.join("\n")}\n`);
     return;
   }
 

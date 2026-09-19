@@ -23,6 +23,7 @@ host=""
 ssh_user=""
 container=""
 vault=""
+proxy_url=""
 check=false
 
 config_path="${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config"
@@ -36,6 +37,7 @@ agent-vault-set-secret [CREDENTIAL_NAME] [options]
   --user <ssh-user>   SSH user
   --container <name>  container name
   --vault <name>      vault to write into
+  --proxy-url <url>   proxy address, used by the verification step
   -h, --help          show this help
   --check             print the resolved settings and exit
 
@@ -47,6 +49,7 @@ EOF
 while [ $# -gt 0 ]; do
   case "$1" in
     --vault) vault="${2:?--vault needs a value}"; shift 2 ;;
+    --proxy-url) proxy_url="${2:?--proxy-url needs a value}"; shift 2 ;;
     --host) host="${2:?--host needs a value}"; shift 2 ;;
     --user) ssh_user="${2:?--user needs a value}"; shift 2 ;;
     --container) container="${2:?--container needs a value}"; shift 2 ;;
@@ -76,6 +79,7 @@ host="$(resolve_setting host AGENT_VAULT_SECRET_HOST "$host")"
 ssh_user="$(resolve_setting ssh_user AGENT_VAULT_SECRET_SSH_USER "$ssh_user")"
 container="$(resolve_setting container AGENT_VAULT_SECRET_CONTAINER "$container")"
 vault="$(resolve_setting vault AGENT_VAULT_SECRET_VAULT "$vault")"
+proxy_url="$(resolve_setting proxy_url AGENT_VAULT_SECRET_PROXY_URL "$proxy_url")"
 
 missing=""
 for name in host ssh_user container vault; do
@@ -101,6 +105,9 @@ fi
 if [ "$check" = true ]; then
   printf 'host=%s\nssh_user=%s\ncontainer=%s\nvault=%s\n' \
     "$host" "$ssh_user" "$container" "$vault"
+  if [ -n "$proxy_url" ]; then
+    printf 'proxy_url=%s\n' "$proxy_url"
+  fi
   exit 0
 fi
 
