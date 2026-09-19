@@ -1,0 +1,13 @@
+# Agent Vault instance this host talks to.
+#
+# Copy to ${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config
+# and replace the values. Keep the real file out of any repository.
+#
+# A --host, --user, --container, or --vault flag overrides this file, and so does
+# the matching AGENT_VAULT_SECRET_HOST, AGENT_VAULT_SECRET_SSH_USER,
+# AGENT_VAULT_SECRET_CONTAINER, or AGENT_VAULT_SECRET_VAULT variable.
+
+host=my-vault-host
+ssh_user=root
+container=Agent-Vault
+vault=default
