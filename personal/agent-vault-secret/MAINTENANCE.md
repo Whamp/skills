@@ -5,10 +5,12 @@ update it the same way.
 
 ## Consumer configuration
 
-The skill ships with no host, user, container, or vault values, because those
-belong to the consumer rather than to the skill. Each consumer supplies them in
-`${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config`, which sits outside
-the skill directory so reinstalling the skill cannot clobber it.
+The skill ships with no host, user, container, vault, or proxy values, because
+those belong to the consumer rather than to the skill. Each consumer supplies
+them in `${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config`, which sits
+outside the skill directory so reinstalling the skill cannot clobber it. The
+first four are required; `proxy_url` is optional and only feeds the verification
+step.
 
 Keep consumer values out of this repository. A concrete host, SSH user, container
 name, vault name, proxy address, or secret-store item title is a consumer fact,

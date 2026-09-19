@@ -3,11 +3,15 @@
 # Copy to ${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config
 # and replace the values. Keep the real file out of any repository.
 #
-# A --host, --user, --container, or --vault flag overrides this file, and so does
-# the matching AGENT_VAULT_SECRET_HOST, AGENT_VAULT_SECRET_SSH_USER,
-# AGENT_VAULT_SECRET_CONTAINER, or AGENT_VAULT_SECRET_VAULT variable.
+# A --host, --user, --container, --vault, or --proxy-url flag overrides this file,
+# and so does the matching AGENT_VAULT_SECRET_HOST, AGENT_VAULT_SECRET_SSH_USER,
+# AGENT_VAULT_SECRET_CONTAINER, AGENT_VAULT_SECRET_VAULT, or
+# AGENT_VAULT_SECRET_PROXY_URL variable.
 
 host=my-vault-host
 ssh_user=root
 container=Agent-Vault
 vault=default
+
+# Optional. The proxy's address, used by the verification step in SKILL.md.
+proxy_url=http://10.0.0.5:14322

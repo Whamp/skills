@@ -24,14 +24,19 @@ host=my-vault-host
 ssh_user=root
 container=Agent-Vault
 vault=default
+proxy_url=http://10.0.0.5:14322
 ```
 
 [`config.example`](config.example) is the same file. A `--host`, `--user`,
-`--container`, or `--vault` flag overrides it, and so does the matching
-`AGENT_VAULT_SECRET_HOST`, `AGENT_VAULT_SECRET_SSH_USER`,
-`AGENT_VAULT_SECRET_CONTAINER`, or `AGENT_VAULT_SECRET_VAULT` variable.
+`--container`, `--vault`, or `--proxy-url` flag overrides it, and so does the
+matching `AGENT_VAULT_SECRET_HOST`, `AGENT_VAULT_SECRET_SSH_USER`,
+`AGENT_VAULT_SECRET_CONTAINER`, `AGENT_VAULT_SECRET_VAULT`, or
+`AGENT_VAULT_SECRET_PROXY_URL` variable.
 
-The steps below write `$host`, `$container`, and `$vault` for those values.
+The first four are required. `proxy_url` is optional and only used by step 6.
+
+The steps below write `$host`, `$container`, `$vault`, and `$proxy_url` for those
+values.
 
 Complete when `agent-vault-set-secret --check` prints the four resolved values.
 
@@ -121,15 +126,15 @@ using an agent token that holds the `proxy` role on the vault.
 ssh -o IdentitiesOnly=yes "$host" \
   "docker exec $container agent-vault ca fetch" > /tmp/av-ca.pem
 
-curl -s --proxy "$PROXY_URL" --cacert /tmp/av-ca.pem \
+curl -s --proxy "$proxy_url" --cacert /tmp/av-ca.pem \
   --proxy-header "Proxy-Authorization: Bearer $TOKEN" \
   -X POST "https://api.typesafe.ai/v1/systemone" \
   -H "Content-Type: application/json" \
   -d '{"state":"test","model":"jev-latest","questions":{"q":{"type":"noul","instructions":"Is this a test?"}}}'
 ```
 
-`$PROXY_URL` is the proxy's address, for example `http://10.0.0.5:14322`. `$TOKEN`
-comes from wherever the consumer keeps secrets; retrieve it without printing it.
+`$TOKEN` comes from wherever the consumer keeps secrets; retrieve it without
+printing it.
 
 A `401` means the credential value is wrong. A `403` means the service is
 disabled or the agent lacks proxy access. A `200` means the whole path works.
