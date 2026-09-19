@@ -50,7 +50,9 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`distilling-skills`](productivity/distilling-skills/) — finds, evaluates, and combines related skills into a concentrated replacement.
 - [`first-principles`](productivity/first-principles/) — separates facts, assumptions, constraints, analogies, and unknowns before rebuilding an approach.
 
-The [`personal`](personal/) category is reserved for portable personal workflows and is currently empty.
+### Personal
+
+- [`agent-vault-secret`](personal/agent-vault-secret/) — adds, updates, or rotates an Agent Vault secret while the human supplies the value, so it never enters an agent's context.
 
 ## Source and installation model
 
