@@ -13,12 +13,13 @@
 #
 # Usage:
 #   agent-vault-set-secret OPENAI_API_KEY
+#   agent-vault-set-secret USERNAME PASSWORD
 #   agent-vault-set-secret OPENAI_API_KEY --vault default
 #   agent-vault-set-secret --help
 
 set -euo pipefail
 
-key=""
+keys=()
 host=""
 ssh_user=""
 container=""
@@ -30,9 +31,9 @@ config_path="${XDG_CONFIG_HOME:-$HOME/.config}/agent-vault-secret/config"
 
 usage() {
   cat <<EOF
-agent-vault-set-secret [CREDENTIAL_NAME] [options]
+agent-vault-set-secret [CREDENTIAL_NAME ...] [options]
 
-  CREDENTIAL_NAME     credential name to create or update (prompted if omitted)
+  CREDENTIAL_NAME     credential name to create or update; repeat for a guided sequence
   --host <ssh-host>   SSH host running the vault
   --user <ssh-user>   SSH user
   --container <name>  container name
@@ -56,7 +57,7 @@ while [ $# -gt 0 ]; do
     --check) check=true; shift ;;
     -h|--help) usage; exit 0 ;;
     -*) printf 'unknown option: %s\n\n' "$1" >&2; usage >&2; exit 2 ;;
-    *) key="$1"; shift ;;
+    *) keys+=("$1"); shift ;;
   esac
 done
 
@@ -111,23 +112,8 @@ if [ "$check" = true ]; then
   exit 0
 fi
 
-if [ -z "$key" ]; then
-  printf 'Credential name (e.g. OPENAI_API_KEY): ' >&2
-  read -r key
-fi
-
-# The name is interpolated into a shell command on the remote host, so it must
-# be a plain identifier. Reject anything else rather than escaping it.
-case "$key" in
-  [A-Za-z_]*) ;;
-  *) printf 'credential name must start with a letter or underscore\n' >&2; exit 2 ;;
-esac
-case "$key" in
-  *[!A-Za-z0-9_]*) printf 'credential name may only contain letters, digits, and underscores\n' >&2; exit 2 ;;
-esac
-
-# The vault, container, user, and host go into the same remote command, so they
-# must be plain identifiers or hostnames too.
+# The vault, container, user, and host go into remote shell commands, so they
+# must be plain identifiers or hostnames.
 require_safe_token() {
   local label="$1" value="$2"
   case "$value" in
@@ -144,22 +130,66 @@ require_safe_token "container" "$container"
 require_safe_token "ssh user" "$ssh_user"
 require_safe_token "ssh host" "$host"
 
-printf 'Secret value for %s: ' "$key" >&2
-read -rsp '' value
-printf '\n' >&2
-
-if [ -z "$value" ]; then
-  printf 'empty value — nothing written\n' >&2
-  exit 2
-fi
-
-# `printf` is a shell builtin, so the value never appears in this host's process
-# list; it reaches the remote host on stdin.
-printf '%s\n' "$value" | ssh \
+# Prove the complete route before asking the human for a credential name or
+# secret value. This avoids collecting a secret that cannot be stored.
+preflight_output=""
+if ! preflight_output="$(ssh \
   -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=25 \
   "$ssh_user@$host" \
-  "read -r __v && docker exec $container agent-vault vault credential set --vault $vault \"$key=\$__v\""
+  "docker exec $container agent-vault vault credential list --vault $vault >/dev/null" \
+  2>&1)"
+then
+  printf 'agent-vault-set-secret: Agent Vault preflight failed for %s@%s.\n' \
+    "$ssh_user" "$host" >&2
+  printf 'SSH access, container %s, and vault %s must work before entering a secret.\n' \
+    "$container" "$vault" >&2
+  printf '%.400s\n' "$preflight_output" >&2
+  exit 1
+fi
+unset preflight_output
 
-unset value
+if [ "${#keys[@]}" -eq 0 ]; then
+  printf 'Credential name (e.g. OPENAI_API_KEY): ' >&2
+  read -r key
+  keys+=("$key")
+fi
 
-printf 'Wrote %s to vault %s on %s.\n' "$key" "$vault" "$host" >&2
+# Names are interpolated into a shell command on the remote host, so they must
+# be plain identifiers. Reject anything else rather than escaping it.
+declare -A seen_keys=()
+for key in "${keys[@]}"; do
+  case "$key" in
+    [A-Za-z_]*) ;;
+    *) printf 'credential name must start with a letter or underscore\n' >&2; exit 2 ;;
+  esac
+  case "$key" in
+    *[!A-Za-z0-9_]*) printf 'credential name may only contain letters, digits, and underscores\n' >&2; exit 2 ;;
+  esac
+  if [ -n "${seen_keys[$key]:-}" ]; then
+    printf 'credential name repeated: %s\n' "$key" >&2
+    exit 2
+  fi
+  seen_keys[$key]=1
+done
+unset seen_keys
+
+for key in "${keys[@]}"; do
+  printf 'Secret value for %s: ' "$key" >&2
+  read -rsp '' value
+  printf '\n' >&2
+
+  if [ -z "$value" ]; then
+    printf 'empty value - nothing written for %s\n' "$key" >&2
+    exit 2
+  fi
+
+  # `printf` is a shell builtin, so the value never appears in this host's
+  # process list; it reaches the remote host on stdin.
+  printf '%s\n' "$value" | ssh \
+    -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=25 \
+    "$ssh_user@$host" \
+    "read -r __v && docker exec $container agent-vault vault credential set --vault $vault \"$key=\$__v\""
+
+  unset value
+  printf 'Wrote %s to vault %s on %s.\n' "$key" "$vault" "$host" >&2
+done
