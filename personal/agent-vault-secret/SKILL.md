@@ -40,13 +40,14 @@ values.
 
 Complete when `agent-vault-set-secret --check` prints the four resolved values.
 
-## 2. Agree the credential name
+## 2. Agree the credential names
 
-Ask the human what the credential should be called — conventionally the
-environment variable name the API uses, e.g. `OPENAI_API_KEY`,
-`TYPESAFE_API_KEY`. Uppercase with underscores.
+Ask the human what each credential should be called. Use the environment
+variable names expected by the API when they are known, such as
+`OPENAI_API_KEY`, `CREDITSIGHTS_USERNAME`, or `CREDITSIGHTS_PASSWORD`.
+Use uppercase with underscores.
 
-Complete when the human has confirmed one name.
+Complete when the human has confirmed every name.
 
 ## 3. Ask how the human will supply the value
 
@@ -69,10 +70,28 @@ quick check for whether a window is even possible.
 agent-vault-add-secret --key OPENAI_API_KEY
 ```
 
+Repeat `--key` when one service needs several credentials. One window walks the
+human through the values in order:
+
+```bash
+agent-vault-add-secret \
+  --key CREDITSIGHTS_USERNAME \
+  --key CREDITSIGHTS_PASSWORD
+```
+
+The command checks SSH access, the container, and the vault before opening the
+window. `--dry-run` skips that check so it remains an offline UI exercise.
+
 **Terminal** (the human runs this, not you):
 
 ```bash
 agent-vault-set-secret OPENAI_API_KEY
+```
+
+List several names to receive one hidden prompt per value:
+
+```bash
+agent-vault-set-secret CREDITSIGHTS_USERNAME CREDITSIGHTS_PASSWORD
 ```
 
 **Never run the terminal path yourself.** The value would land in a terminal you
@@ -81,7 +100,7 @@ to prevent. Print the command and let the human run it.
 
 The window path also takes `--dry-run`, which exercises the UI without writing.
 
-Complete when the human confirms they have submitted the value.
+Complete when the human confirms they submitted every named value.
 
 ## 4. Confirm the credential landed
 
@@ -92,7 +111,18 @@ ssh -o IdentitiesOnly=yes "$host" \
   "docker exec $container agent-vault vault credential list"
 ```
 
-Complete when the new key appears in the list.
+Complete when every new key appears in the list.
+
+If either intake command reports an Agent Vault preflight failure, test the SSH
+route without entering a secret:
+
+```bash
+ssh -o BatchMode=yes -o IdentitiesOnly=yes "$ssh_user@$host" true
+```
+
+When that route needs a non-default key, add a matching `Host` entry to
+`~/.ssh/config` with `IdentityFile` and `IdentitiesOnly yes`, then rerun the
+probe. Also check that the configured container is running and the vault exists.
 
 ## 5. Define the service
 
@@ -115,7 +145,13 @@ covers the endpoints in use. Auth types are `bearer`, `basic`, `api-key`,
 `custom`, and `passthrough`; each has matching `--*-key` flags for the credential
 name.
 
-Complete when `vault service list` shows the service enabled against the new key.
+Stored login credentials do not create a working service by themselves. A JSON
+login exchange, OTP, SSO, or refresh-token workflow needs a compatible broker or
+adapter. Do not map such a service to Basic authentication unless its own docs
+say it accepts Basic authentication.
+
+Complete when `vault service list` shows the service enabled against the new key,
+or when an unsupported login exchange is named as the blocker.
 
 ## 6. Verify it actually works
 

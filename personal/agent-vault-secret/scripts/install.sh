@@ -45,6 +45,7 @@ done
 
 for src in \
   "$skill_dir/scripts/agent-vault-add-secret.mjs" \
+  "$skill_dir/scripts/agent-vault-add-secret-core.mjs" \
   "$skill_dir/scripts/agent-vault-set-secret.sh" \
   "$skill_dir/SKILL.md"
 do

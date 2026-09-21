@@ -23,6 +23,12 @@ not a skill fact.
 - `glimpseui` — the window path. The script resolves it from
   `~/.pi/agent/npm/node_modules/glimpseui/src/glimpse.mjs` and two system
   locations.
+- OpenSSH — both intake paths run a noninteractive `credential list` preflight
+  before collecting a value. The configured SSH host must select a usable
+  identity when `IdentitiesOnly=yes` is set.
+- Node's built-in test runner — pure queue, rendering, redaction, and injected
+  process boundaries are tested without opening a real window or using a real
+  vault.
 - Hyprland — the window path floats its own window. Chromium sets the window
   class and title only after mapping, so a Hyprland window rule has nothing to
   match on; the script finds the window and floats it. Off Hyprland the window
@@ -34,6 +40,7 @@ Review when:
 
 - `agent-vault` is upgraded past the reviewed version;
 - `glimpseui` changes its `open()` or message API;
+- OpenSSH changes argument handling used by the preflight;
 - a consumer reports a script failing against a newer interface.
 
 ## Last review: agent-vault 0.39.3, 18 September 2026
