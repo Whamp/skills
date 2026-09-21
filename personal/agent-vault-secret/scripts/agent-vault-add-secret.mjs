@@ -5,8 +5,8 @@
  */
 
 import { execFile } from "node:child_process";
-import { existsSync } from "node:fs";
-import { pathToFileURL } from "node:url";
+import { existsSync, realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import {
@@ -260,6 +260,9 @@ async function main() {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await main();
 }

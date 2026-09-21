@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { EventEmitter } from "node:events";
-import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  chmodSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,6 +37,20 @@ const TEST_SETTINGS = [
   "--vault",
   "default",
 ];
+
+test("graphical command runs when invoked through an installed symlink", () => {
+  const testDirectory = mkdtempSync(join(tmpdir(), "agent-vault-secret-test-"));
+  const testsDirectory = dirname(fileURLToPath(import.meta.url));
+  const script = join(testsDirectory, "..", "scripts", "agent-vault-add-secret.mjs");
+  const command = join(testDirectory, "agent-vault-add-secret");
+  symlinkSync(script, command);
+
+  const result = spawnSync(process.execPath, [command, "--help"], { encoding: "utf8" });
+  rmSync(testDirectory, { recursive: true, force: true });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /agent-vault-add-secret \[--key <CREDENTIAL_NAME> \.\.\.\]/);
+});
 
 test("repeated key flags preserve their declared order", () => {
   const opts = parseAddSecretArgs([
