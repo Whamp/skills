@@ -6,16 +6,16 @@
 
 - Repository: `https://github.com/herdrdev/herdr`
 - Upstream skill: `skills/herdr/SKILL.md`
-- Last-reviewed Herdr release: `v0.8.0`
-- Release commit: `346411fa21afd297f5ed3b3fa56f9e3fbf7654b7`
-- Last-reviewed skill commit: `f6060cf682f69ef8302c25e8924c0b27aef7ae16`
-- Last-reviewed skill blob: `fafea549c0c46b87bac6c7ae4ad22ef7ac635a5e`
-- Versioned-docs commit: `3642e67c7b9c1d8608d72f288e80b410c602e55c`
-- Installed version at review: `herdr 0.8.0`
-- Installed client/server protocol at review: `19`
-- Review date: 3 August 2026
+- Last-reviewed Herdr release: `v0.9.1`
+- Release commit: `065ef9d6a531c49fb8bee7e818ef837065b21ee9`
+- Last-reviewed skill commit: `956f23ff6b72d16fe66169730b76bf565d12d449`
+- Last-reviewed skill blob: `bcb22ba8d7b8259f25fa2bfd76dd5e520fd52fbc`
+- Versioned-docs commit: `956f23ff6b72d16fe66169730b76bf565d12d449`
+- Installed version at review: `herdr 0.9.1`
+- Installed client/server protocol at review: `22`
+- Review date: 26 September 2026
 
-The upstream skill, the skill bundled by `herdr --skill`, and the recorded blob matched at review. The v0.8.0 runtime changed after the upstream skill's last edit, so an unchanged skill blob does not prove that the maintained guidance is current.
+The upstream skill, the skill bundled by `herdr --skill` at v0.9.1, and the release-tag blob all matched the recorded blob. The upstream skill changed with the v0.9.1 release itself, so review the next release against this baseline rather than assuming the bundled skill lags the runtime.
 
 ## Maintained invariant
 
@@ -124,41 +124,37 @@ Review upstream when:
 
 The review is complete when the baseline matches the captured evidence, every accepted behavior is validated against the installed interface, every rejected behavior has a recorded reason, the canonical source is merged with passing CI, and each updated consumer reports the skill current.
 
-## Last review disposition: v0.8.0
+## Last review disposition: v0.9.1
 
 ### Accepted
 
-- Automatic alternate-screen history collection and its passive-read limits → `CLI-REFERENCE.md`.
-- API `truncated` metadata and the CLI text-only boundary → `CLI-REFERENCE.md`.
-- Lifecycle-based prompt waits and their turn-tracking limit → `CLI-REFERENCE.md`.
-- Five-second stalled-prompt detection and timeout precedence → `CLI-REFERENCE.md`.
-- `idle` and `done` seen-state semantics → `CLI-REFERENCE.md`.
-- Herdr's internal text-to-Enter prompt delay → `CLI-REFERENCE.md`.
-- Response capture as part of coding-agent completion → `SKILL.md`.
-- Structured `server_not_running` errors → `CLI-REFERENCE.md`.
-- Ephemeral agent names → `CLI-REFERENCE.md`.
-- Moved-pane ID and inherited-context alias semantics → `CLI-REFERENCE.md`.
-- Bounded retirement and worktree-group close confirmation → `CLI-REFERENCE.md`.
-- Last-tab workspace collapse → `CLI-REFERENCE.md`.
-- `herdr --skill` as installed-version provenance → `MAINTENANCE.md`.
-- Canonical `herdrdev/herdr` repository ownership → `MAINTENANCE.md`.
-- Pinned versioned release documentation → `MAINTENANCE.md`.
-- Client/server protocol capture → `MAINTENANCE.md`.
+- `herdr machine` profiles and `--machine <label-or-id>` CLI forwarding: selector discipline, per-server ID scoping, no local fallback, connection failure does not prove a mutation was not applied → `CLI-REFERENCE.md`.
+- Explicit group intent for closing a primary workspace with worktree workspaces (`workspace close --group`, `workspace_group_close_required`) → `CLI-REFERENCE.md`.
+- `--trust-repository` per-request Git trust rule → `CLI-REFERENCE.md`.
+- `agent start` blocked-startup `agent_not_ready` with retained name → `CLI-REFERENCE.md`.
+- `agent prompt` ordered submission, success-after-write semantics, pre-send `agent_blocked` rejection, observed-activity gate, caller-timeout-includes-submission → `CLI-REFERENCE.md`.
+- `herdr status` feature gating under mixed client/server versions → `CLI-REFERENCE.md`.
+- Named-test-session isolation and the no-host-kill rule → `CLI-REFERENCE.md`.
+- Outside-session control guard, adapted to allow explicit user requests → `SKILL.md`.
+- Per-server ID scoping and `--machine` consistency note → `SKILL.md`.
+- Baseline advanced to v0.9.1: bundled, release, and current upstream skill blobs identical → `MAINTENANCE.md`.
 
 ### Already covered
 
-- Process-owned agent lifecycle → settle and ledger rules in `SKILL.md`.
-- Headless agent-session restoration → persistent-sidecar policy in `SKILL.md`.
-- Background workspace-close focus preservation → focus and ledger rules in `SKILL.md`.
-- Grok and Antigravity integration kinds → installed-help discovery rule in `CLI-REFERENCE.md`.
-- Hidden worktree compatibility `--json` flag → flag-free worktree commands in `CLI-REFERENCE.md`.
+- Alternate-screen history as application-owned collection → existing auto-collection passage in `CLI-REFERENCE.md`.
+- Per-client done-badge divergence → existing `idle`/`done` seen-state text in `CLI-REFERENCE.md`.
+- Do not blindly resubmit after timeout or stall → existing "Prompt consumption remains unproven" in `CLI-REFERENCE.md`.
+- `pane split` caller default (#4123) → caller-resolution rule in `CLI-REFERENCE.md`; native `pane_split` already defaults to the caller's pane.
+- Recent reads include unscrolled output (#3444) → existing read-source guidance in `CLI-REFERENCE.md`.
+- Qwen, Muse, and Letta detection → installed-help discovery rule in `CLI-REFERENCE.md`.
+- Lifecycle subscriptions start with live events (#1270) → API-only ordering feature outside the sidecar workflow.
+- Foreground cwd follows the process-group leader (#3270) → improves existing cwd-preservation guidance; no text change required.
 
 ### Rejected
 
-- `workspace.move_block` and `workspace.reordered` → API-only ordering features outside the sidecar workflow.
-- UI, rendering, and theme changes → no command or lifecycle effect.
-- IME and ConPTY changes → no local Linux command or lifecycle effect.
-- Windows input and process-survival fixes → existing local commands require no syntax change.
-- License change → no operational effect.
-- Upstream explicit-only invocation posture → conflicts with the maintained proactive sidecar policy.
-- Upstream monolithic skill structure → conflicts with the maintained progressive-disclosure shape.
+- UI, rendering, theme, IME, mouse, clipboard, and image changes → no command or lifecycle effect.
+- Windows input, SSH, and installer fixes → no local Linux command or lifecycle effect.
+- Removed `--no-session` mode → never documented here; launches already attach to a background server.
+- 30-second idle terminal-observer disconnect (#3612) → bounded CLI waits unaffected; revisit only if a long-lived observer pattern appears.
+- Upstream explicit-only invocation posture (reaffirmed) → conflicts with the maintained proactive sidecar policy; consumers are model-invoked on all hosts.
+- Upstream monolithic skill structure (reaffirmed) → conflicts with the maintained progressive-disclosure shape.

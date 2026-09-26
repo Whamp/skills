@@ -30,6 +30,17 @@ caller=$(herdr pane current | jq -r '.result.pane.pane_id')
 
 Agent targets are unique live names or pane IDs currently hosting agents. Detected agents may be unnamed; target them by pane ID. Assigned names are cleared when the agent exits, is released, or is replaced, so keep pane IDs in the sidecar ledger. IDs are opaque. Creation responses provide the next target: workspace creation returns a workspace, tab, and root pane; tab creation returns a tab and root pane; pane splitting returns the new pane.
 
+## Control a saved SSH machine
+
+Pane IDs, tab IDs, and live agent names are scoped to one server; two machines can both contain `w1:p1` or an agent named `reviewer`. To work on a saved SSH machine, prefix discovery and every later command with the same selector:
+
+```bash
+herdr --machine <label-or-id> agent list
+herdr --machine <label-or-id> pane list
+```
+
+The selector is an enabled saved profile ID or unique case-sensitive label from `herdr machine list --json`, never an arbitrary SSH hostname. Inherited local IDs and `--current` do not identify remote panes; discover IDs on that machine. Never combine `--machine` with `--session` or `--remote`. Forwarding requires both installations to support it and the remote server to be running; it never installs, starts, or falls back to Local. A connection failure does not prove a mutation was not applied: inspect remote state before retrying. Only add, remove, enable, or disable profiles when the user asks; removing a profile disconnects the client without stopping remote sessions.
+
 ## Create and run a background tab
 
 Create a tab in the caller's workspace, preserve the working directory, and keep focus unchanged:
@@ -77,7 +88,7 @@ Socket/API read results include `truncated`; ordinary `herdr pane read` and `her
 
 ## Start and control an agent
 
-`agent start` needs an existing pane at an interactive shell prompt and returns after the new agent is ready. Settle an existing agent before submitting another turn:
+`agent start` needs an existing pane at an interactive shell prompt and returns after the new agent is ready. If the agent is blocked during startup, it returns `agent_not_ready` immediately while keeping the name available for `agent read` and `agent send-keys`; wait for `idle` before prompting. Settle an existing agent before submitting another turn:
 
 ```bash
 herdr agent start <name> --kind <kind> --pane <pane-id>
@@ -91,18 +102,20 @@ Pass native agent arguments after `--`. `working` is busy and excluded from the 
 
 `agent prompt --wait` matches the first settled state observed after submission, not a specific turn. If the agent was already working, that turn's completion may satisfy the wait.
 
-For a prompt submitted from a non-working state, Herdr requires a lifecycle change within five seconds. Otherwise it returns `agent_prompt_stalled`; a shorter `--timeout` can return `timeout` first. Prompt consumption remains unproven after either error. Herdr supplies its own text-to-Enter delay. Use `herdr agent send-keys <target> esc` or `ctrl+c` for intentional UI control.
+Submission is ordered: prompt text, then encoded Enter, with success reported only after both are written — that does not prove a turn started. An agent already waiting at an approval or question dialog is rejected with `agent_blocked` before any input is sent; inspect and resolve the blocked UI first. For a prompt submitted from a non-working state, Herdr requires observed `working` or `blocked` activity within five seconds. Otherwise it returns `agent_prompt_stalled`; a shorter `--timeout` can return `timeout` first, and the caller timeout includes submission time. Prompt consumption remains unproven after either error. Herdr supplies its own text-to-Enter delay. Use `herdr agent send-keys <target> esc` or `ctrl+c` for intentional UI control.
 
 ## Move and retire sidecars
 
 `pane move` changes focus by default. Pass `--no-focus`, then replace the old target with `.result.move_result.pane.pane_id`. A cross-workspace move can also close an emptied source tab or workspace. The reported `previous_pane_id` resolves only through the moved process's inherited caller context; do not use it as a general target.
 
-Retire an owned sidecar through the foreground process's normal shutdown path, then poll `pane process-info --pane <pane-id>` with a finite deadline until the shell PID is foreground. If the deadline expires, inspect the process and leave the pane open until the user explicitly approves force termination. Refresh the ledger from the resulting layout because closing the last pane or tab can collapse its enclosing tab or workspace. In a worktree group, `pane close` can return `confirmation_required`; keep the pane open until the user explicitly confirms closing the owning workspace or group.
+Retire an owned sidecar through the foreground process's normal shutdown path, then poll `pane process-info --pane <pane-id>` with a finite deadline until the shell PID is foreground. If the deadline expires, inspect the process and leave the pane open until the user explicitly approves force termination. Refresh the ledger from the resulting layout because closing the last pane or tab can collapse its enclosing tab or workspace. In a worktree group, `pane close` can return `confirmation_required`; keep the pane open until the user explicitly confirms closing the owning workspace or group. Closing the primary workspace of a group requires explicit group intent (`workspace close --group`, or `workspace.close` with `close_group: true`); Herdr returns `workspace_group_close_required` otherwise. Never add group intent merely to bypass that error.
 
-For worktree removal, resolve the workspace with `herdr worktree list` and verify its checkout path and branch. Run removal without `--force`. If Herdr reports a dirty checkout, inspect its Git status and obtain an explicit discard decision before force-removing it.
+For worktree removal, resolve the workspace with `herdr worktree list` and verify its checkout path and branch. Run removal without `--force`. Use `--trust-repository` only after the user has verified the repository: it grants per-request Git trust and is not a routine retry for a failed worktree command. If Herdr reports a dirty checkout, inspect its Git status and obtain an explicit discard decision before force-removing it.
 
 ## CLI boundaries
 
 Timeouts bound each wait; they do not prove task failure. Use a documented or previously observed startup or turn bound when available. Otherwise start with 30 seconds, inspect output when it expires, and extend only while output shows active startup or work.
+
+Client and server versions can differ after an update. Check `herdr status` before relying on new server features; a missing method is not permission to stop or upgrade a server. Never kill the main Herdr process — use a named test session for experiments that need an isolated server.
 
 CLI syntax errors exit with status 2. Server errors are JSON on stderr with status 1. `server_not_running` means no live server is available at the selected socket; treat it as a session-level failure, not a pane-local failure.

@@ -11,7 +11,7 @@ Run persistent, observable work as a Herdr **sidecar**, independent of the main 
 
 Before controlling Herdr, check `test "${HERDR_ENV:-}" = 1`. Under `HERDR_ENV=1`, prefer native `herdr_layout`, `herdr_pane`, and `herdr_agent` tools when available. In other sessions, use ordinary execution tools.
 
-Before issuing any Herdr CLI control command, read [`CLI-REFERENCE.md`](CLI-REFERENCE.md).
+Before issuing any Herdr CLI control command, read [`CLI-REFERENCE.md`](CLI-REFERENCE.md). Outside a Herdr session, do not inspect or control the focused Herdr session unless the user explicitly asks.
 
 This step is complete when the available control surface and caller context are known.
 
@@ -48,6 +48,7 @@ This step is complete when `idle` or `done` is paired with a captured response, 
 ## Handoff and safety
 
 - Maintain a ledger of sidecars created or moved, updating each opaque pane ID from mutation responses so targeting remains independent of UI focus.
+- Pane IDs and live agent names are scoped to one server. Control a saved SSH machine by prefixing discovery and every later command with the same `herdr --machine <label-or-id>` selector.
 - Keep useful services and monitors running. At handoff, report each sidecar's pane ID, command, observed state or evidence, and whether it remains active.
 - Retire an owned sidecar through the foreground process's normal shutdown path, wait for the shell to return, then close its pane and refresh the ledger.
 - Keep server and session changes on a live-handoff or confirmed graceful-shutdown path. `herdr update --handoff` attempts to preserve live panes; if handoff is unavailable or fails, obtain explicit confirmation before `herdr server stop` or any action that can end pane processes. Manage the main Herdr process through Herdr lifecycle commands rather than host process kills.
