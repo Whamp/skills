@@ -71,3 +71,13 @@ Domain documentation uses the single-context layout. See `docs/agents/domain.md`
 - A repository-level skills lock is intentionally absent because consumers own installation state.
 - Machine-specific invocation overlays are intentionally absent because they belong to consumer configuration.
 - Release artifacts and per-skill packages are intentionally absent; Git history and consumer lock metadata identify installed revisions.
+
+<!-- lane:protocol -->
+## Context memory
+
+- Before editing a file, read `.lane/memory/<path>/` if it exists, or run `lane why <path>`.
+- Record non-obvious findings with `lane note add <path> -a <anchor> "..."`.
+- Do not edit `.lane/` by hand; landing manages it.
+- Land with `lane merge`, or `lane push` where trunk is protected, then `lane prune` once it merges.
+- Detailed workflow lives in `.agents/skills/lane/SKILL.md`; run `lane install skill` if it is absent.
+<!-- /lane:protocol -->
