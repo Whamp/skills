@@ -32,7 +32,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`fuzzing`](engineering/fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](engineering/herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
 - [`integrate-napkin-agent-skills`](engineering/integrate-napkin-agent-skills/) — initializes Napkin project memory and optionally adds project-local Pi context tools.
-- [`model-routing`](engineering/model-routing/) — selects delegated model portfolios for specialized roles.
+- [`model-routing`](engineering/model-routing/) — applies caller-configured model choices with permission, capacity, and review-independence safeguards.
 - [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
 - [`pastlight-agents-pointer`](engineering/pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
