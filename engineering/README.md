@@ -12,7 +12,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`fuzzing`](fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
 - [`integrate-napkin-agent-skills`](integrate-napkin-agent-skills/) — connects Napkin project memory to agent setup with template selection and optional project-local Pi tools.
-- [`model-routing`](model-routing/) — selects delegated model portfolios for research, implementation, and review roles.
+- [`model-routing`](model-routing/) — applies caller-configured model choices with permission, capacity, and review-independence safeguards.
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
 - [`pastlight-agents-pointer`](pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
