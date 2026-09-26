@@ -21,4 +21,3 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
-- [`worktree-first`](worktree-first/) routes substantive work through Lane where adopted and plain Git worktrees elsewhere.
