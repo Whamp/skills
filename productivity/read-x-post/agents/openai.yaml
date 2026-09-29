@@ -1,0 +1,12 @@
+interface:
+  display_name: Read X Post
+  short_description: Read public X posts without an API key
+  default_prompt: Read this public X/Twitter post and return its author, full text,
+    links, quoted post, and media.
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

@@ -8,3 +8,4 @@ Skills for thinking, planning, writing, research, and personal operating-system 
 - [`clear-writing`](clear-writing/) — writes and revises durable human-facing prose with plain force.
 - [`distilling-skills`](distilling-skills/) — finds, evaluates, and combines agent skills into a concentrated best-of-breed version.
 - [`first-principles`](first-principles/) — runs an interactive first-principles grill for decomposing problems from fundamentals.
+- [`read-x-post`](read-x-post/) — reads public X/Twitter posts without login or an API key.
