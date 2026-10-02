@@ -4,9 +4,9 @@ anchor: '# Model routing'
 created: 2026-09-26T02:40:05Z
 norm: '1'
 sig: 836b1497ebbe1e8e
-body_hash: 184bb67228385358
-raw_hash: e6b89d77417564d0
-vouched: 2026-09-27T05:11:05Z
+body_hash: 9f72bdb7c5159470
+raw_hash: 91f78358e824b85d
+vouched: 2026-10-02T19:24:56Z
 lines: 6-18
 ---
 
