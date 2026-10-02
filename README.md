@@ -36,7 +36,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
 - [`pastlight-agents-pointer`](engineering/pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
-- [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
+- [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — user-only performance engineering within a single binary, with evidence required for each proposed change.
 - [`property-based-testing`](engineering/property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`repo-cleanup`](engineering/repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](engineering/sideshow/) — publishes rich work to a hosted visual review and feedback loop.

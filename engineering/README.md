@@ -16,7 +16,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
 - [`pastlight-agents-pointer`](pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
-- [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — applies gated, evidence-driven performance engineering within a single binary.
+- [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — user-only performance engineering within a single binary, with evidence required for each proposed change.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.

@@ -1,7 +1,8 @@
 ---
 name: perform-like-jeff-and-sanjay
+disable-model-invocation: true
 description: >-
-  Performance engineering for a single binary. Use when designing or reviewing performance-sensitive code, estimating resource costs, diagnosing a measured bottleneck or flat profile, implementing a performance change, or validating a claimed speedup.
+  Evidence-gated performance engineering for a single binary.
 license: Apache-2.0
 ---
 
