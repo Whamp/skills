@@ -1,11 +1,11 @@
 ---
-name: session-recap
+name: remind-me
 description: Recover what we were doing, whether it is finished, and which questions remain open.
 disable-model-invocation: true
 license: MIT
 ---
 
-# Session recap
+# Remind me
 
 Answer the user's reorientation request:
 

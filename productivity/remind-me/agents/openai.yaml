@@ -1,0 +1,6 @@
+interface:
+  display_name: "Remind me"
+  short_description: "Recover the goal, completion state, and open questions"
+  default_prompt: "Use $remind-me to remind me what we were doing here, whether we finished, and what questions remain unresolved."
+policy:
+  allow_implicit_invocation: false

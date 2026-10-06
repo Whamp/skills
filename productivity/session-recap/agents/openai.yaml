@@ -1,6 +1,0 @@
-interface:
-  display_name: "Session recap"
-  short_description: "Recover the goal, completion state, and open questions"
-  default_prompt: "Use $session-recap to remind me what we were doing here, whether we finished, and what questions remain unresolved."
-policy:
-  allow_implicit_invocation: false
