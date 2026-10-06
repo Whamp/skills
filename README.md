@@ -49,6 +49,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`distilling-skills`](productivity/distilling-skills/) — finds, evaluates, and combines related skills into a concentrated replacement.
 - [`first-principles`](productivity/first-principles/) — separates facts, assumptions, constraints, analogies, and unknowns before rebuilding an approach.
 - [`read-x-post`](productivity/read-x-post/) — reads public X/Twitter posts through unauthenticated providers and returns normalized JSON.
+- [`session-recap`](productivity/session-recap/) — user-only recap of the goal, completion state, and unresolved questions.
 
 ### Personal
 

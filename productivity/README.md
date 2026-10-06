@@ -9,3 +9,4 @@ Skills for thinking, planning, writing, research, and personal operating-system 
 - [`distilling-skills`](distilling-skills/) — finds, evaluates, and combines agent skills into a concentrated best-of-breed version.
 - [`first-principles`](first-principles/) — runs an interactive first-principles grill for decomposing problems from fundamentals.
 - [`read-x-post`](read-x-post/) — reads public X/Twitter posts without login or an API key.
+- [`session-recap`](session-recap/) — user-only recap of the goal, completion state, and unresolved questions.
