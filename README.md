@@ -26,6 +26,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 
 - [`ban-type-assertions`](engineering/ban-type-assertions/) — bans TypeScript assertions with oxlint and replaces them safely.
 - [`codegraph`](engineering/codegraph/) — scouts structural code graphs before targeted source reads and changes.
+- [`create-project-bot`](engineering/create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](engineering/docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
 - [`dynamic-workflow-patterns`](engineering/dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
 - [`explain-diff-html`](engineering/explain-diff-html/) — creates interactive HTML explainers for code changes.

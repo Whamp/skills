@@ -6,6 +6,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 
 - [`ban-type-assertions`](ban-type-assertions/) — enables oxlint's assertion ban and replaces TypeScript assertions with compiler-verified alternatives.
 - [`codegraph`](codegraph/) — scouts structural code graphs before targeted source reads, diagnosis, refactoring, and review.
+- [`create-project-bot`](create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
 - [`dynamic-workflow-patterns`](dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
 - [`explain-diff-html`](explain-diff-html/) — creates interactive HTML explainers for code changes.

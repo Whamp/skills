@@ -1,0 +1,6 @@
+interface:
+  display_name: "Create a project bot"
+  short_description: "Create a bot home with durable .bot state"
+  default_prompt: "Use $create-project-bot to create or register a bot in the requested project, using a role-home workspace and .bot profile."
+policy:
+  allow_implicit_invocation: false
