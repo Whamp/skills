@@ -9,13 +9,13 @@ Each skill is an independent directory containing a `SKILL.md` manifest and any 
 List the available skills:
 
 ```bash
-npx skills add Whamp/skills --list
+npx skills add Whamp/skills --full-depth --list
 ```
 
 Install one skill:
 
 ```bash
-npx skills add Whamp/skills --skill testing
+npx skills add Whamp/skills --full-depth --skill testing
 ```
 
 Use `--global` for a user-level installation or the installer's `--agent` option to select specific harnesses.
