@@ -20,6 +20,10 @@ Choose one primary search mechanism for each independently falsifiable risk:
 | **Property-based testing** | A broad generated domain, operation sequence, or schedule can challenge a compact independent oracle. Load `property-based-testing`. |
 | **Fuzzing** | Coverage-guided mutation is useful at a reachable production input seam with a named risk, oracle, supported engine, and bounded budget. Load `fuzzing`. |
 
+Choose the search from the contract and risk, not from installed packages. For
+missing property-testing tooling, follow the library-selection step in
+`property-based-testing`.
+
 A primary search mechanism is not exclusive evidence ownership. Explicit examples
 may still document named boundaries, minimized regressions, or separate risks.
 Every branch returns to this skill's final evidence audit.

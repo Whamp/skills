@@ -1,6 +1,6 @@
 # JavaScript and TypeScript adapter: fast-check
 
-Use the installed fast-check version and the repository's existing test connector. Inspect `package.json`, the lockfile, test setup, and nearby properties before choosing `fc.assert(...)`, a framework connector, or global configuration.
+Inspect `package.json`, the lockfile, test setup, and nearby properties. Reuse the project's fast-check version and test connector when present. For new adoption, follow [library selection](../../SKILL.md#choose-the-library), then add `fast-check` as a development dependency in the package that owns the tests. Direct `fc.assert(...)` calls work with the existing runner; a connector such as `@fast-check/vitest` is optional, not a separate generation engine.
 
 Official reference: [fast-check documentation](https://fast-check.dev/docs/introduction/getting-started/)
 

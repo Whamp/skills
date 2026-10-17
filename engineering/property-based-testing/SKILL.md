@@ -13,6 +13,40 @@ Property-based search challenges a quantified domain for counterexamples. A gree
 - **Review existing property tests** — load [reviewing property tests](references/reviewing-property-tests.md) and the matching framework adapter.
 - **Investigate a failure** — load [triaging counterexamples](references/triaging-counterexamples.md) and the matching framework adapter.
 
+## Choose the library
+
+Use the project's existing suitable property-based testing library. If none is
+available or installed, **ask the user to add or install one**. A missing
+dependency is not a reason to skip property-based testing or switch to examples.
+
+For new adoption, recommend these defaults; they do not require replacing a
+suitable existing library:
+
+| Language | Default | Guidance |
+| --- | --- | --- |
+| Python | Hypothesis | [Hypothesis adapter](references/frameworks/hypothesis.md) |
+| JavaScript or TypeScript | fast-check | [fast-check adapter](references/frameworks/fast-check.md) |
+| Rust | proptest | [proptest adapter](references/frameworks/proptest.md) |
+| Go | `pgregory.net/rapid` | [rapid adapter](references/frameworks/rapid.md) |
+
+For other languages, recommend a suitable library using current official
+documentation; consult [other frameworks](references/frameworks/other-frameworks.md).
+For an existing Java/jqwik setup, use the [jqwik adapter](references/frameworks/jqwik.md).
+
+Check compatibility with the runtime, test runner, license requirements, and
+repository dependency policy. Explain the proposed test dependency and wait for
+approval before adding or installing it, including in external or shared
+projects. If approval is declined or policy prohibits it, report the blocked
+property-testing work and agree on alternative evidence rather than silently
+substituting examples.
+
+After approval, use the project's package manager and test/development
+dependency conventions. Record the dependency in the appropriate manifest and
+lockfile when adding it, and run the properties through the normal test command.
+
+**Complete when:** a suitable library is selected and available, or the missing
+library and approval request or policy blocker are explicit.
+
 ## Process
 
 ### 1. Commit or return
@@ -35,8 +69,7 @@ Commit when generated search covers a broad domain, sequence, or schedule more
 effectively than a small explicit table. Repository-native generators and law
 runners qualify. A tractable finite domain may commit to exhaustive enumeration.
 Return when the meaningful cases are a small table, the oracle would duplicate
-production logic, effects cannot be isolated within budget, or the required
-dependency is unavailable and not authorized.
+production logic, or effects cannot be isolated within budget.
 
 **Complete when:** one concrete outcome is written. A specialist read without a
 Commit or Return outcome is incomplete.
@@ -86,12 +119,9 @@ Budget: <case count or wall-time bound>
 ```
 
 Generate dependent values jointly. Keep small and boundary values reachable.
-Use repository-native generators and the installed framework when available.
-Load only the matching framework adapter for syntax and shrink behavior.
-
-When no property-testing dependency exists, follow repository dependency policy
-and obtain authorization before changing the manifest. A tractable finite domain
-may use exhaustive enumeration; label that evidence as enumeration rather than
+Use the selected library or repository-native generators. Load only the matching
+framework adapter for syntax and shrink behavior. A tractable finite domain may
+use exhaustive enumeration; label that evidence as enumeration rather than
 claiming generative shrinking.
 
 Load [generators and shrinking](references/generators-and-shrinking.md) when the
@@ -99,15 +129,6 @@ domain or shrink strategy remains unclear. Load [stateful and concurrent
 testing](references/stateful-and-concurrent-testing.md) for operation sequences
 or schedules, and [advanced search](references/advanced-search.md) only after
 ordinary generation cannot reach a named risk.
-
-Use the adapter for the repository's installed framework:
-
-- Python/Hypothesis — [Hypothesis adapter](references/frameworks/hypothesis.md)
-- JavaScript or TypeScript/fast-check — [fast-check adapter](references/frameworks/fast-check.md)
-- Rust/proptest — [proptest adapter](references/frameworks/proptest.md)
-- Go/rapid — [rapid adapter](references/frameworks/rapid.md)
-- Java/jqwik — [jqwik adapter](references/frameworks/jqwik.md)
-- Another ecosystem — [other frameworks](references/frameworks/other-frameworks.md)
 
 **Complete when:** the search contract is concrete, the framework or repository
 mechanism is selected, and every intentional domain limit has a reason.

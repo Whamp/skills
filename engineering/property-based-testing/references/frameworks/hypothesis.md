@@ -1,6 +1,6 @@
 # Python adapter: Hypothesis
 
-Use the Hypothesis version, pytest configuration, profiles, and shared strategies already present in the repository. Inspect `pyproject.toml`, the lockfile, `conftest.py`, and nearby tests before adding settings.
+Inspect `pyproject.toml`, the lockfile, `conftest.py`, and nearby tests. Reuse the project's Hypothesis version, pytest configuration, profiles, and shared strategies when present. For new adoption, follow [library selection](../../SKILL.md#choose-the-library), then add Hypothesis to the project's test/development dependencies using its package manager.
 
 Official reference: [Hypothesis documentation](https://hypothesis.readthedocs.io/en/latest/)
 

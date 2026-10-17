@@ -15,7 +15,7 @@ Prefer a property-testing dependency and conventions already present in the repo
 | C++ | RapidCheck | [RapidCheck](https://github.com/emil-e/rapidcheck) |
 | EVM/Solidity | Echidna | [Building Secure Contracts](https://secure-contracts.com/program-analysis/echidna/index.html) |
 
-When no framework is installed, choose only after confirming the repository's runtime, test runner, dependency policy, maintenance expectations, and need for stateful or concurrent search. Present the leverage sentence from the main workflow before changing the manifest.
+Choose a framework compatible with the repository's runtime, test runner, dependency policy, maintenance expectations, and need for stateful or concurrent search. Follow [library selection](../../SKILL.md#choose-the-library) for missing tooling and approval before adoption.
 
 Framework terminology differs:
 

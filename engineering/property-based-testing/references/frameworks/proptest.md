@@ -1,6 +1,8 @@
 # Rust adapter: proptest
 
-Use the proptest version, feature flags, configuration, and regression-file conventions already present in `Cargo.toml`, the lockfile, and nearby tests.
+Inspect `Cargo.toml`, the lockfile, and nearby tests. Reuse the project's proptest version, feature flags, configuration, and regression-file conventions when present. For new adoption, follow [library selection](../../SKILL.md#choose-the-library), then add `proptest` as a dev-dependency in the crate that owns the tests. Properties run through `cargo test`.
+
+Check the selected release against the project's minimum supported Rust version. The [maintainer's status statement](https://github.com/proptest-rs/proptest#status-of-this-crate) describes proptest as near feature-complete and passively maintained; do not infer intensive maintenance from a recent release.
 
 Official reference: [The Proptest Book](https://proptest-rs.github.io/proptest/)
 
@@ -48,7 +50,9 @@ Official reference: [Shrinking basics](https://proptest-rs.github.io/proptest/pr
 
 ## Stateful tests
 
-When the installed proptest ecosystem exposes state-machine support, follow its current command/transition API and the conceptual model in [stateful and concurrent testing](../stateful-and-concurrent-testing.md). Confirm the exact API from the installed version because state-machine surfaces can evolve independently of the core macros.
+For model-based generated operation sequences, consider the separate `proptest-state-machine` crate using [library selection](../../SKILL.md#choose-the-library). Follow its current transition API and the conceptual model in [stateful and concurrent testing](../stateful-and-concurrent-testing.md). Its documented search is sequential; it is not a concurrency scheduler. Confirm the exact API from the selected version because state-machine surfaces can evolve independently of the core macros.
+
+Official reference: [State-machine testing](https://proptest-rs.github.io/proptest/proptest/state-machine.html)
 
 ## Completion criterion
 

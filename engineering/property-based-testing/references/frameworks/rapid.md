@@ -1,6 +1,8 @@
 # Go adapter: rapid
 
-Use the rapid version, test flags, failure-file conventions, and helper generators already present in `go.mod`, the lock data, and nearby tests.
+Inspect `go.mod`, `go.sum`, and nearby tests. Reuse the project's rapid version, test flags, failure-file conventions, and helper generators when present. For new adoption, follow [library selection](../../SKILL.md#choose-the-library), then add `pgregory.net/rapid` in the module that owns the tests and import it from `*_test.go` files. Go has no separate dev-dependency section; record changes in `go.mod` and `go.sum` and run properties through `go test`.
+
+Check the project's license policy: Rapid uses [MPL-2.0](https://github.com/flyingmutant/rapid#license). If it is incompatible, propose another suitable library. Native Go fuzzing is a coverage-guided companion, not an automatic replacement for structured property tests.
 
 Official reference: [rapid package documentation](https://pkg.go.dev/pgregory.net/rapid)
 
