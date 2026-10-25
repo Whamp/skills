@@ -1,5 +1,6 @@
 {
   "lander": {
-    "checks": ["make validate"]
+    "checks": ["make validate"],
+    "push": "origin"
   }
 }

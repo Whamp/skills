@@ -1,6 +1,6 @@
 # Skills project setup
 
-The landing gate runs `make validate` before Ultimate advances the destination branch. No automatic push is configured. Tools are invoked on demand by the Makefile; worktrees need `make`, Git, Bash, `uv`, Node.js and npm on `PATH`, but no application bootstrap, database or server.
+The landing gate runs `make validate` before Ultimate advances the destination branch, then pushes it to `origin`. The repository owner authorizes normal, non-force pushes of verified landings for this repository; this does not authorize releases, deployments or changes to other repositories. Tools are invoked on demand by the Makefile; worktrees need `make`, Git, Bash, `uv`, Node.js and npm on `PATH`, but no application bootstrap, database or server.
 
 For changes coordinated through Ultimate, create a Lane from the coordinator's branch with `lane new <name> --base <coordinator-branch>`. Read path memories, commit, run `lane check`, reconcile notes and `lane merge` into that coordinator branch. Then submit the coordinator through Ultimate for the final checked integration. This keeps Lane's memory handling without landing the same work into `main` twice. Standalone Lane work continues to follow the repository's `AGENTS.md`.
 
