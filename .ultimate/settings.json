@@ -1,0 +1,5 @@
+{
+  "lander": {
+    "checks": ["make validate"]
+  }
+}
