@@ -63,7 +63,7 @@ make validate > "$EVIDENCE_ROOT/quality-gate.log" 2>&1 || status=$?
 printf '%s\n' "$status" > "$EVIDENCE_ROOT/quality-gate.exit.txt"
 ```
 
-Inspect the log with the file-reading tool. A zero exit code proves only what the command actually asserts. In particular, the known baseline discovery check can pass while listing only `lane`: report that gap, not a successful collection-discovery proof. Observe scratch files and Git status where the journey expects side effects. Exercise actual validator/installer commands; mocks do not establish installer behavior. Listing can contact the package registry but must not install skills into a consumer surface.
+Inspect the log with the file-reading tool, including the installer's listed names and the discovery runner's exact-name comparison. Observe scratch files and Git status where the journey expects side effects. Exercise actual validator/installer commands; mocks do not establish installer behavior. Listing can contact the package registry but must not install skills into a consumer surface.
 
 Completion: report each feature ID, command, revision, outcome, limitations and absolute artifact paths. This skill supplies no helper scripts.
 

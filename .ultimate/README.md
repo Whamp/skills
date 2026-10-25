@@ -6,4 +6,4 @@ For changes coordinated through Ultimate, create a Lane from the coordinator's b
 
 Use the project-local [verify-skills skill](skills/verify-skills/SKILL.md) to drive repository validation, canonical installer discovery and safe fixture tests with retained terminal evidence. It is verification tooling, not a published collection skill. It loads when this project's configuration is trusted.
 
-Known baseline limitation: the existing installer-discovery gate can succeed while listing only an installed tooling skill. The verification map requires canonical-name assertions before reporting discovery as verified; a successful `make validate` alone does not establish that claim.
+The installer-discovery step in `make validate` stages only canonical skill content and requires the pinned CLI to list every canonical name exactly once. See the verification map for evidence requirements and the limits of this local-source listing proof; it does not verify remote fetching or consumer installation.

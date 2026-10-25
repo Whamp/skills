@@ -13,4 +13,4 @@ Read [verify-skills](../SKILL.md) for launch, doctor, evidence and cleanup. Run 
 
 Capture the invoked command, output, exit code and revision for each driven entry point. Inspect the resulting names, diagnostics or fixture assertions, not just the final exit code. A journey not driven is unverified. Record failed preconditions in its report and update that feature's Gotchas when they reveal a durable constraint.
 
-The original installer gate passes despite discovering only `lane`. Until its correction is verified, report the contributor gate's exit status separately from published collection discovery. These are distinct claims.
+`make validate` includes exact canonical installer-name assertions. Its captured output can support both the contributor gate and collection-discovery journeys; report each journey's observations and limitations separately.
