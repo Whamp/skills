@@ -1,0 +1,6 @@
+interface:
+  display_name: "Distilling Skills"
+  short_description: "Compare skill sources and integrate useful patterns."
+
+policy:
+  allow_implicit_invocation: false
