@@ -87,19 +87,53 @@ Search outside the repository narrowly. Include a path only when its ownership i
 
 Temporary-directory cleanup is permanent unless the platform provides a trash mechanism. Revalidate that no matching process remains immediately before deletion.
 
+## Space evidence
+
+File size is not deletion savings. On Btrfs, snapshots and reflinks can retain
+extents after removing a worktree. Sparse files, hardlinks, compression, and shared
+dependency stores also change the relationship. A duplicate hash proves equal
+contents, not whether a second physical copy exists or which path is in use.
+
+For leading candidates, collect allocated-block and sharing evidence separately
+from logical size. `btrfs filesystem du -s --raw PATH` reports total, exclusive,
+and set-shared extents; it does not provide a compression-adjusted deletion
+forecast. `compsize -b -x PATH` measures compressed extent cost, including extents
+that other paths may still reference. Existing, consistent qgroup accounting can
+help with whole subvolumes, not arbitrary build directories. Report unavailable
+or stale evidence; do not enable quotas merely to estimate cleanup.
+
+Use `unknown` with a reason and the next read-only check when physical recovery
+cannot be established. Do not promise a worktree's apparent size as recovered
+space. A move to Trash normally yields zero immediate recovery; separately
+approved permanent removal can still leave snapshot-pinned or open-file blocks.
+Measure each affected filesystem before/after without summing overlapping views.
+
+See the [Btrfs filesystem manual](https://btrfs.readthedocs.io/en/latest/btrfs-filesystem.html)
+and [Arch `compsize` manual](https://man.archlinux.org/man/extra/compsize/compsize.8.en).
+
 ## Reporting
 
-Use one row per independently approvable item or homogeneous set. A set is homogeneous only when every member has the same evidence, consequence, recovery path, and action. Expand mixed sets.
+Use one row per independently approvable item or homogeneous set. A set is
+homogeneous only when every member has the same evidence, consequence, recovery
+path, and action. Expand mixed sets.
 
-Recommended report columns:
+| ID | Exact path / action | Apparent bytes | Physical recovery + basis | Class / evidence | Consequence and recovery |
+| --- | --- | ---: | --- | --- | --- |
 
-| ID | Type | Exact path | Apparent size | Class | Evidence | Consequence and recovery |
-| --- | --- | --- | ---: | --- | --- | --- |
+Lead with at most five recommendations. Rank by likely benefit on the pressured
+filesystem, strength of inactivity/recovery evidence, and regeneration cost.
+If only file sizes are known, label the ranking as file-size order, not expected
+savings. Include concrete next-use costs (reinstall, rebuild, download, or lost
+rollback state); leave unmeasured time estimates unknown.
 
-End the audit with:
+End with:
 
-- total recommended apparent size;
-- optional apparent size;
-- dirty, unique, active, and forensic items preserved;
-- unresolved evidence;
-- exact IDs recommended for approval.
+- recommended and optional file-byte totals, labelled non-additive size indicators;
+- dirty, unique, active, primary, and forensic items preserved;
+- unresolved evidence and the smallest check that can resolve each leading item;
+- exact IDs recommended for approval, with permanent versus Trash actions explicit.
+
+If a stopped task has a clean merged worktree, retained recovery refs, and no live
+users, recommend its useful bulk removal rather than withholding a recommendation
+merely because it is a repository. If evidence is incomplete, investigate it;
+repeated tiny cache cleanups are not a substitute for that decision.

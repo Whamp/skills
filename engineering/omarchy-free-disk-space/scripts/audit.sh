@@ -3,9 +3,21 @@
 set -uo pipefail
 export GIT_OPTIONAL_LOCKS=0
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=space-accounting.sh
+source "$SCRIPT_DIR/space-accounting.sh"
+
 MODE="audit"
 MANIFEST_OUT=""
 DISK_HOME=${OMARCHY_DISK_HOME:-$HOME}
+OMARCHY_SOURCE=${OMARCHY_PATH:-}
+if [[ -z $OMARCHY_SOURCE ]]; then
+  if [[ -d /usr/share/omarchy ]]; then
+    OMARCHY_SOURCE=/usr/share/omarchy
+  else
+    OMARCHY_SOURCE="$DISK_HOME/.local/share/omarchy"
+  fi
+fi
 PACMAN_CACHE_OVERRIDE=${OMARCHY_DISK_PACMAN_CACHE:-}
 COREDUMP_DIR=${OMARCHY_DISK_COREDUMP_DIR:-/var/lib/systemd/coredump}
 MANIFEST_MAGIC="omarchy-free-disk-space-manifest-v1"
@@ -17,7 +29,15 @@ declare -a WORKSPACE_ROOTS=()
 declare -a ROW_LABELS=()
 declare -a ROW_COUNTS=()
 declare -a ROW_CURRENT=()
-declare -a ROW_RECLAIM=()
+declare -a ROW_SELECTED=()
+declare -a ROW_RECOVERY=()
+declare -a ITEM_IDS=()
+declare -a ITEM_TARGETS=()
+declare -a ITEM_CLASSES=()
+declare -a ITEM_ACTIONS=()
+declare -a ITEM_SIZES=()
+declare -a ITEM_RECOVERY=()
+declare -a ITEM_CONSEQUENCES=()
 declare -a ROW_SAFETY=()
 declare -a ROW_MECHANISMS=()
 declare -a ROW_CONSEQUENCES=()
@@ -98,7 +118,8 @@ add_report_row() {
   ROW_LABELS+=("$1")
   ROW_COUNTS+=("$2")
   ROW_CURRENT+=("$3")
-  ROW_RECLAIM+=("$4")
+  ROW_SELECTED+=("$4")
+  ROW_RECOVERY+=("${8:-unknown}")
   ROW_SAFETY+=("$5")
   ROW_MECHANISMS+=("$6")
   ROW_CONSEQUENCES+=("$7")
@@ -140,7 +161,10 @@ discover_workspace_roots() {
     canonical=$(realpath -e -- "$candidate" 2>/dev/null || true)
     [[ -n $canonical ]] || continue
     candidate_mount=$(findmnt -T "$canonical" -n -o TARGET 2>/dev/null || true)
-    [[ -z $home_mount || $candidate_mount == "$home_mount" ]] || continue
+    if [[ -n $home_mount && $candidate_mount != "$home_mount" ]]; then
+      append_detail "Workspace excluded (different mount): $(printf '%q' "$canonical") at $candidate_mount"
+      continue
+    fi
     [[ -z ${seen[$canonical]+x} ]] || continue
     seen[$canonical]=1
     accepted+=("$canonical")
@@ -169,18 +193,18 @@ initialize_manifest() {
   trap '[[ -n ${RECORD_FILE:-} ]] && rm -f -- "$RECORD_FILE"; [[ -n ${MANIFEST_TEMP:-} ]] && rm -f -- "$MANIFEST_TEMP"' EXIT
 }
 
+# Inventory audit candidates too; only planning serializes executable records.
 emit_manifest_record() {
-  [[ -n $MANIFEST_OUT ]] || return 0
   local category=$1
   local safety=$2
   local action=$3
   local target=$4
   local original_type=$5
   local size=$6
-  local reclaim=$7
+  local selected_bytes=$7
   local consequence=$8
   local supplied_mtime=${9:-0}
-  local canonical mtime device mount_target item_id prefix
+  local canonical mtime device mount_target item_id prefix decision recovery
 
   if [[ $original_type == "file" || $original_type == "directory" ]]; then
     canonical=$(realpath -e -- "$target" 2>/dev/null || true)
@@ -196,12 +220,32 @@ emit_manifest_record() {
   fi
 
   RECORD_COUNT=$((RECORD_COUNT + 1))
-  [[ $MODE == "quick" ]] && prefix="Q" || prefix="D"
+  case "$MODE" in quick) prefix=Q ;; deep) prefix=D ;; *) prefix=A ;; esac
   printf -v item_id '%s%03d' "$prefix" "$RECORD_COUNT"
-  printf '%s\0' \
-    "$item_id" "$category" "$safety" "$action" "$target" "$original_type" \
-    "$size" "$mtime" "$device" "$mount_target" "$reclaim" "$consequence" >>"$RECORD_FILE"
-  printf '  %s  %-12s %-11s %q\n' "$item_id" "$safety" "$category" "$target"
+  recovery=$(disk_physical_recovery "$action")
+  case "$safety" in
+    safe) decision=Recommended ;;
+    review) decision=Optional ;;
+    high-risk) decision=Keep ;;
+    *) decision=Investigate ;;
+  esac
+  [[ $action != trash-path ]] || decision=Optional
+  if [[ $category == project-artifact ]]; then
+    decision=Investigate
+    consequence="Verify project ownership and runtime use; $consequence"
+  fi
+  ITEM_IDS+=("$item_id")
+  ITEM_TARGETS+=("$target")
+  ITEM_CLASSES+=("$decision")
+  ITEM_ACTIONS+=("$action")
+  ITEM_SIZES+=("$selected_bytes")
+  ITEM_RECOVERY+=("$recovery")
+  ITEM_CONSEQUENCES+=("$consequence")
+  if [[ -n $MANIFEST_OUT ]]; then
+    printf '%s\0' \
+      "$item_id" "$category" "$safety" "$action" "$target" "$original_type" \
+      "$size" "$mtime" "$device" "$mount_target" "$recovery" "$consequence" >>"$RECORD_FILE"
+  fi
 }
 
 finalize_manifest() {
@@ -224,19 +268,27 @@ finalize_manifest() {
 
 audit_filesystem_and_omarchy() {
   local used available total omarchy_version omarchy_channel omarchy_branch omarchy_source
-  read -r total used available < <(df -B1 --output=size,used,avail / 2>/dev/null | awk 'NR==2 {print $1, $2, $3}')
-  total=${total:-unknown}
-  used=${used:-unknown}
-  available=${available:-unknown}
-  add_report_row "Filesystem allocation" "1" "$used" "-" "report-only" \
-    "df + btrfs filesystem usage" "Available: $(human_bytes "$available"); total: $(human_bytes "$total")"
+  local path mount_target fstype
+  declare -A seen_mounts=()
+  for path in / "$DISK_HOME"; do
+    mount_target=$(findmnt -T "$path" -n -o TARGET 2>/dev/null || printf '%s' "$path")
+    [[ -z ${seen_mounts[$mount_target]+x} ]] || continue
+    seen_mounts[$mount_target]=1
+    fstype=$(findmnt -T "$path" -n -o FSTYPE 2>/dev/null || printf 'unknown')
+    read -r total used available < <(df -B1 --output=size,used,avail -- "$path" 2>/dev/null | awk 'NR==2 {print $1, $2, $3}')
+    total=${total:-unknown}
+    used=${used:-unknown}
+    available=${available:-unknown}
+    add_report_row "Filesystem $mount_target" "1" "$used" "-" "report-only" \
+      "df; allocated filesystem bytes ($fstype)" "Available: $(human_bytes "$available"); total: $(human_bytes "$total")"
+  done
 
   omarchy_version=$(omarchy version 2>/dev/null || printf 'not installed')
   omarchy_channel=$(omarchy version channel 2>/dev/null || printf 'unknown')
   omarchy_branch=$(omarchy version branch 2>/dev/null || printf 'unknown')
   append_detail "Omarchy: version=$omarchy_version channel=$omarchy_channel branch=$omarchy_branch"
   append_detail "Kernel: $(uname -r 2>/dev/null || printf 'unknown')"
-  omarchy_source="$DISK_HOME/.local/share/omarchy"
+  omarchy_source=$OMARCHY_SOURCE
   if [[ -r "$omarchy_source/bin/omarchy-update" && -r "$omarchy_source/bin/omarchy-update-perform" ]]; then
     append_detail "Omarchy update source: $(printf '%q' "$omarchy_source")"
     append_detail "Omarchy update pipeline (installed source): snapshot=$(grep -q 'omarchy-snapshot create' "$omarchy_source/bin/omarchy-update" && echo yes || echo no), migrations=$(grep -q 'omarchy-migrate' "$omarchy_source/bin/omarchy-update-perform" && echo yes || echo no), AUR=$(grep -q 'omarchy-update-aur-pkgs' "$omarchy_source/bin/omarchy-update-perform" && echo yes || echo no), orphans=$(grep -q 'omarchy-update-orphan-pkgs' "$omarchy_source/bin/omarchy-update-perform" && echo yes || echo no)"
@@ -248,10 +300,10 @@ audit_filesystem_and_omarchy() {
 audit_btrfs_and_snapper() {
   local root_fstype snapshot_count=0 live_limit="unknown" expected_limit="unknown"
   local snapper_status="permission-limited" migration_status="unknown" snapper_csv cleanup_classes timeline_create="unknown"
-  root_fstype=$(findmnt -n -o FSTYPE / 2>/dev/null || true)
+  root_fstype=$(findmnt -T / -n -o FSTYPE 2>/dev/null || true)
   if [[ $root_fstype != "btrfs" ]]; then
-    add_report_row "Btrfs/Snapper recovery" "0" "0" "unknown" "report-only" \
-      "not applicable" "Root filesystem is ${root_fstype:-unknown}"
+    add_report_row "Root Snapper policy" "unknown" "unknown" "unknown" "report-only" \
+      "Root is ${root_fstype:-unknown}; inspect other Snapper configs separately" "No conclusion about snapshots on home or other mounts"
     return
   fi
 
@@ -259,9 +311,9 @@ audit_btrfs_and_snapper() {
     live_limit=$(awk -F= '$1=="NUMBER_LIMIT" {gsub(/"/,"",$2); print $2}' /etc/snapper/configs/root)
     timeline_create=$(awk -F= '$1=="TIMELINE_CREATE" {gsub(/"/,"",$2); print $2}' /etc/snapper/configs/root)
   fi
-  if [[ -r "$DISK_HOME/.local/share/omarchy/default/snapper/root" ]]; then
+  if [[ -r "$OMARCHY_SOURCE/default/snapper/root" ]]; then
     expected_limit=$(awk -F= '$1=="NUMBER_LIMIT" {gsub(/"/,"",$2); print $2}' \
-      "$DISK_HOME/.local/share/omarchy/default/snapper/root")
+      "$OMARCHY_SOURCE/default/snapper/root")
   fi
   if snapper_csv=$(snapper -c root --csvout list 2>/dev/null); then
     snapshot_count=$(awk -F, 'NR>1 && $1 != "0" {count++} END {print count+0}' <<<"$snapper_csv")
@@ -292,23 +344,36 @@ audit_btrfs_and_snapper() {
   while IFS= read -r line; do append_detail "  $line"; done < <(
     lsblk -e7 -o NAME,TYPE,SIZE,FSTYPE,FSUSE%,MOUNTPOINTS 2>/dev/null
   )
-  append_detail "Snapper configurations:"
-  while IFS= read -r line; do append_detail "  $line"; done < <(
-    snapper list-configs 2>&1
-  )
   append_detail "Snapper timers: timeline=$(systemctl is-enabled snapper-timeline.timer 2>/dev/null || true)/$(systemctl is-active snapper-timeline.timer 2>/dev/null || true), cleanup=$(systemctl is-enabled snapper-cleanup.timer 2>/dev/null || true)/$(systemctl is-active snapper-cleanup.timer 2>/dev/null || true)"
   append_detail "Snapper root policy: NUMBER_LIMIT=$live_limit TIMELINE_CREATE=$timeline_create (an enabled timeline timer does not create timeline snapshots when this setting is no)"
-  append_detail "Btrfs filesystem usage:"
-  while IFS= read -r line; do append_detail "  $line"; done < <(
-    btrfs filesystem usage / 2>&1 | sed -n '1,24p'
-  )
   if [[ $snapper_status == "permission-limited" || $snapper_status == "boot-menu evidence only" ]]; then
     append_detail "Permission-limited snapshot audit; exact manual reads: sudo snapper -c root list; sudo btrfs subvolume list -t /"
   fi
 
   if [[ -e /home/.snapshots || -r /etc/snapper/configs/home || $live_limit != "$expected_limit" ]]; then
-    append_detail "Retention warning: legacy /home snapshot evidence or a live/default limit mismatch exists. Prefer omarchy update and its installed migration before manual repair."
+    append_detail "Retention investigation: legacy /home snapshot evidence or a live/default limit mismatch exists. Check installed migrations and update headroom; updates require separate approval and can consume space."
   fi
+}
+
+audit_btrfs_allocation() {
+  local path mount_target fstype line
+  declare -A seen_mounts=()
+  for path in / "$DISK_HOME"; do
+    fstype=$(findmnt -T "$path" -n -o FSTYPE 2>/dev/null || true)
+    [[ $fstype == btrfs ]] || continue
+    mount_target=$(findmnt -T "$path" -n -o TARGET 2>/dev/null || printf '%s' "$path")
+    [[ -z ${seen_mounts[$mount_target]+x} ]] || continue
+    seen_mounts[$mount_target]=1
+    append_detail "Btrfs filesystem usage at $mount_target:"
+    while IFS= read -r line; do append_detail "  $line"; done < <(
+      btrfs filesystem usage "$mount_target" 2>&1
+    )
+    append_detail "Snapshot-exclusive bytes at $mount_target: unknown; inspect selected paths with scripts/measure.sh, then existing qgroups if relevant."
+  done
+  append_detail "Snapper configurations (including non-root policies):"
+  while IFS= read -r line; do append_detail "  $line"; done < <(
+    snapper list-configs 2>&1
+  )
 }
 
 audit_pacman_cache() {
@@ -382,7 +447,7 @@ audit_aur_cache() {
   fi
   add_report_row "AUR helper build cache" "$count" "$current" "$current" "review" \
     "Review detected $helper build directory; trash exact package caches" \
-    "Sources and compiled packages must be downloaded or rebuilt"
+    "Sources and compiled packages must be downloaded or rebuilt; Trash must be emptied separately" "0"
   [[ -n $build_dir ]] && append_detail "AUR cache: helper=$helper path=$(printf '%q' "$build_dir")"
 }
 
@@ -426,7 +491,7 @@ audit_user_quick_categories() {
       "directory" "$current" "$current" "Thumbnail previews regenerate"
   fi
   add_report_row "Thumbnails" "$count" "$current" "$current" "safe" \
-    "gio trash exact thumbnail directory" "Previews regenerate"
+    "gio trash exact thumbnail directory" "Previews regenerate; no space released until Trash is emptied" "0"
 
   target="$DISK_HOME/.local/share/Trash"
   current=0
@@ -434,10 +499,10 @@ audit_user_quick_categories() {
   if [[ -d $target && ! -L $target ]]; then
     current=$(apparent_size_bytes "$target")
     count=$(count_children "$target/files")
-    [[ $current =~ ^[0-9]+$ ]] && ((current > 0)) && emit_manifest_record "trash" "safe" "empty-home-trash" "$target" \
+    [[ $current =~ ^[0-9]+$ ]] && ((current > 0)) && emit_manifest_record "trash" "review" "empty-home-trash" "$target" \
       "directory" "$current" "$current" "Trashed files become unrecoverable"
   fi
-  add_report_row "Trash" "$count" "$current" "$current" "safe" \
+  add_report_row "Trash" "$count" "$current" "$current" "review" \
     "Purge this home Trash only" "Recovery from Trash is lost"
 
   if command -v flatpak >/dev/null 2>&1; then
@@ -509,36 +574,16 @@ audit_language_caches() {
     "Owning manager prune/clean command" "Upper-bound estimate; future builds/downloads cost time"
 }
 
-classify_build_artifact() {
-  case "$(basename -- "$1")" in
-    .next|.pytest_cache|__pycache__|.turbo)
-      printf 'safe'
-      ;;
-    node_modules|.venv|venv|target|build|dist)
-      printf 'review'
-      ;;
-    *)
-      printf 'report-only'
-      ;;
-  esac
-}
-
 audit_project_artifacts() {
-  local root target safety bytes
-  local safe_count=0 safe_total=0 review_count=0 review_total=0
+  local root target bytes
+  local count=0 total=0
   for root in "${WORKSPACE_ROOTS[@]}"; do
     while IFS= read -r -d '' target; do
-      safety=$(classify_build_artifact "$target")
       bytes=$(apparent_size_bytes "$target")
       [[ $bytes =~ ^[0-9]+$ ]] || bytes=0
-      if [[ $safety == "safe" ]]; then
-        safe_count=$((safe_count + 1))
-        safe_total=$((safe_total + bytes))
-      else
-        review_count=$((review_count + 1))
-        review_total=$((review_total + bytes))
-      fi
-      emit_manifest_record "project-artifact" "$safety" "trash-path" "$target" \
+      count=$((count + 1))
+      total=$((total + bytes))
+      emit_manifest_record "project-artifact" "review" "trash-path" "$target" \
         "directory" "$bytes" "$bytes" "Project reinstall or rebuild required"
     done < <(
       find "$root" -xdev -mindepth 2 -maxdepth 7 -type d \
@@ -548,10 +593,9 @@ audit_project_artifacts() {
            -name build -o -name dist \) -print0 -prune 2>/dev/null
     )
   done
-  add_report_row "Framework build caches" "$safe_count" "$safe_total" "$safe_total" "safe" \
-    "gio trash exact directories" "Rebuild required"
-  add_report_row "Heavy project artifacts" "$review_count" "$review_total" "$review_total" "review" \
-    "gio trash exact directories" "Dependency install or lengthy rebuild required"
+  add_report_row "Project artifacts (unverified)" "$count" "$total" "$total" "review" \
+    "Verify ownership/runtime, then gio trash exact directories" \
+    "Name matches are leads, not proof; rebuild required; empty Trash separately" "0"
 }
 
 audit_git_worktrees() {
@@ -718,7 +762,7 @@ audit_downloads_logs_models_and_apps() {
     done < <(find "$DISK_HOME/Downloads" -xdev -maxdepth 2 -type f -size +"$((LARGE_FILE_BYTES / 1024))"k -print0 2>/dev/null)
   fi
   add_report_row "Large Downloads/installers" "$downloads_count" "$downloads_total" "$downloads_total" "review" \
-    "gio trash each approved file" "May be unique or costly to download again"
+    "gio trash each approved file" "May be unique or costly to download again; Trash must be emptied separately" "0"
 
   for target in "$DISK_HOME/.local/state" "$DISK_HOME/.cache"; do
     [[ -d $target ]] || continue
@@ -773,7 +817,7 @@ audit_orphans_and_kernels() {
   else
     append_detail "Orphan package list: none"
   fi
-  if [[ -x "$DISK_HOME/.local/share/omarchy/bin/omarchy-update-orphan-pkgs" ]]; then
+  if [[ -x "$OMARCHY_SOURCE/bin/omarchy-update-orphan-pkgs" ]]; then
     add_report_row "Orphan packages" "$orphan_count" "unknown" "unknown" "report-only" \
       "Prefer installed omarchy update orphan step" "Package removal is a separate approved maintenance action"
   else
@@ -812,21 +856,51 @@ audit_optional_tool_inventory() {
   fi
 }
 
+print_candidate_decisions() {
+  local group i size action
+  echo "## Decisions (largest reported candidates first within each group)"
+  echo "These are starting classifications, not proof that a project is inactive."
+  echo "A-prefixed audit IDs are not approvals; generate a fresh plan before application."
+  for group in Recommended Optional Keep Investigate; do
+    echo
+    echo "### $group"
+    echo "| ID | Exact target | Candidate bytes, not savings | Physical recovery | Action | Consequence / evidence needed |"
+    echo "| --- | --- | ---: | ---: | --- | --- |"
+    while read -r size i; do
+      [[ ${ITEM_CLASSES[$i]} == "$group" ]] || continue
+      action=${ITEM_ACTIONS[$i]}
+      [[ $action != trash-path ]] || action="Move to Trash"
+      printf '| %s | %q | %s | %s | %s | %s |\n' \
+        "${ITEM_IDS[$i]}" "${ITEM_TARGETS[$i]}" "$(human_bytes "${ITEM_SIZES[$i]}")" \
+        "$(human_bytes "${ITEM_RECOVERY[$i]}")" "$action" "${ITEM_CONSEQUENCES[$i]}"
+    done < <(
+      for ((i = 0; i < ${#ITEM_IDS[@]}; i++)); do
+        size=${ITEM_SIZES[$i]}
+        [[ $size =~ ^[0-9]+$ ]] || size=0
+        printf '%s %s\n' "$size" "$i"
+      done | sort -k1,1nr -k2,2n
+    )
+  done
+}
+
 print_report() {
-  local i current reclaim
+  local i current selected
   echo "# Omarchy disk-space ${MODE} report"
   echo
-  echo "| Category | Items | Current size | Estimated reclaimable | Safety | Mechanism | Consequence |"
-  echo "| --- | ---: | ---: | ---: | --- | --- | --- |"
+  echo "| Category | Items | Reported size | Candidate bytes, not savings | Physical recovery | Safety | Mechanism | Consequence |"
+  echo "| --- | ---: | ---: | ---: | ---: | --- | --- | --- |"
   for ((i = 0; i < ${#ROW_LABELS[@]}; i++)); do
     current=$(human_bytes "${ROW_CURRENT[$i]}")
-    reclaim=$(human_bytes "${ROW_RECLAIM[$i]}")
-    printf '| %s | %s | %s | %s | %s | %s | %s |\n' \
-      "${ROW_LABELS[$i]}" "${ROW_COUNTS[$i]}" "$current" "$reclaim" \
-      "${ROW_SAFETY[$i]}" "${ROW_MECHANISMS[$i]}" "${ROW_CONSEQUENCES[$i]}"
+    selected=$(human_bytes "${ROW_SELECTED[$i]}")
+    printf '| %s | %s | %s | %s | %s | %s | %s | %s |\n' \
+      "${ROW_LABELS[$i]}" "${ROW_COUNTS[$i]}" "$current" "$selected" \
+      "$(human_bytes "${ROW_RECOVERY[$i]}")" "${ROW_SAFETY[$i]}" "${ROW_MECHANISMS[$i]}" "${ROW_CONSEQUENCES[$i]}"
   done
   echo
-  echo "Measurement note: directory values are apparent sizes. Filesystem values are allocated/available bytes. Snapshot-exclusive usage is unknown unless reliable extent or qgroup data is available."
+  echo "Measurement note: directory sizes are apparent; filesystem rows use allocated/available bytes; journal and Docker rows use owner-reported bytes. Candidate totals overlap and are not additive physical savings."
+  echo "Physical recovery is unknown without exclusive/compression evidence and after-action measurement. Moving to Trash normally releases 0 bytes; emptying it needs separate approval."
+  echo
+  print_candidate_decisions
   echo
   echo "## Environment details"
   for i in "${DETAIL_LINES[@]}"; do
@@ -851,13 +925,10 @@ print_report() {
 discover_workspace_roots
 initialize_manifest
 
-if [[ -n $MANIFEST_OUT ]]; then
-  echo "Plan items:"
-fi
-
 audit_filesystem_and_omarchy
 audit_optional_tool_inventory
 audit_btrfs_and_snapper
+audit_btrfs_allocation
 audit_pacman_cache
 audit_aur_cache
 audit_journal_and_coredumps

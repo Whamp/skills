@@ -1,110 +1,88 @@
 ---
 name: omarchy-free-disk-space
-description: Safely audit and reclaim disk space on Omarchy and Arch Linux systems. Use when asked to free up disk space, clean an Omarchy computer, find what is using storage, audit disk usage, clean Arch package caches, or check Snapper disk usage.
+description: Audit Omarchy storage and prepare evidence-backed, individually approved cleanup decisions.
 disable-model-invocation: true
 ---
 
 # Omarchy free disk space
 
-Audit first, approve exact targets second, apply last. Treat free-space recovery as
-forensics: allocated filesystem blocks, apparent file sizes, and snapshot-pinned
-extents are different measurements.
+Recover useful headroom, not a cosmetically clean directory tree. Inventory,
+recommend, approve, apply, then measure. A cleanup request authorizes discovery;
+it does not authorize deletion.
 
-## Run the correct branch
+## 1. Inventory
 
-Set `SKILL_DIR` to this skill directory.
+Set `SKILL_DIR` to this directory. Run `"$SKILL_DIR/scripts/audit.sh" audit`.
+The default branch is read-only and creates no manifest. Add each bounded
+workspace with `--workspace-root "/absolute/path"`; report excluded roots.
 
-- **Audit (default):** run `"$SKILL_DIR/scripts/audit.sh" audit`. This branch is
-  read-only and creates no manifest.
-- **Quick cleanup request:** run
-  `"$SKILL_DIR/scripts/plan.sh" quick`. It discovers low-risk candidates and
-  writes a short-lived manifest.
-- **Deep cleanup request:** run
-  `"$SKILL_DIR/scripts/plan.sh" deep`. It adds developer artifacts, Git,
-  Docker, downloads, kernels, application caches, and model stores.
+Identify the pressured filesystem, root/home mount layout, installed Omarchy
+workflow, snapshot policy, and permission gaps. Distinguish apparent file sizes,
+owner-reported bytes, and filesystem available space. The script's name-matched
+project artifacts are investigation leads, not proof of obsolete development.
 
-Pass each additional workspace as
-`--workspace-root "/absolute/path"` to `audit.sh` or `plan.sh`. Use only
-reasonable roots on the same filesystem; never scan every mounted filesystem.
+**Complete when:** every discovered category has evidence or an explicit unknown,
+and the largest candidates on the pressured filesystem are identified.
 
-## Audit
+## 2. Resolve the useful candidates
 
-Run the audit command and report its table plus:
+Read [cleanup-policy.md](references/cleanup-policy.md) for classification and
+supported actions. For Btrfs, shared storage, sparse files, or a gap between file
+sizes and available space, read
+[space-accounting.md](references/space-accounting.md). Inspect selected paths with:
 
-- filesystem usage before;
-- Omarchy version, channel, update workflow, and migration evidence;
-- Btrfs mounts, allocation, Snapper configs, snapshot evidence, and timers;
-- optional tools that were unavailable or permission-limited;
-- categories intentionally left alone.
+```bash
+"$SKILL_DIR/scripts/measure.sh" "/exact/candidate/path"
+```
 
-Call directory measurements **apparent size**. Call `df` and
-`btrfs filesystem usage` results **allocated/available space**. Never call
-`du` output snapshot-exclusive usage. If Snapper or Btrfs information needs
-elevation, say that the audit is incomplete and provide the exact read-only
-manual command instead of guessing.
+Establish project ownership, reproducibility, runtime use, and rebuild cost.
+For worktrees, inspect dirty/untracked files, Git operations, commit recovery,
+merge/task status, registration, and live users. Age alone proves none of these.
+Investigate a large uncertain item instead of repeatedly clearing tiny caches.
 
-An audit completes when every category in the table has a size or an explicit
-`unknown`, a safety level, a mechanism, and a consequence. It makes no changes.
+**Complete when:** each leading candidate is recommended, optional, keep, or
+investigate, with the evidence and removal consequence stated.
 
-## Plan and approval gate
+## 3. Prepare a decision report
 
-Read [references/cleanup-policy.md](references/cleanup-policy.md) before
-presenting a cleanup plan. Render the plan’s exact item IDs in a concise table.
-Explain that estimates do not add up to guaranteed free-space growth on Btrfs.
+Generate a fresh plan: `"$SKILL_DIR/scripts/plan.sh" quick` for bounded caches,
+or `deep` to include development, Docker, downloads, and recovery-related items.
+Recheck the evidence against its exact IDs. Audit IDs start with `A` and cannot
+be applied; plan IDs start with `Q` or `D`.
 
-Ask for approval naming exact IDs or individually named items. End the
-interaction at that question. Do not apply in the discovery turn. “Clean
-everything” is not sufficient approval.
+Lead with the top recommendations, then separate optional, preserved, and
+unresolved items. Use the policy's decision table. Rank by likely benefit on the
+pressured filesystem, evidence, and regeneration cost; label file-size rankings
+as such. Candidate totals overlap and are not additive physical savings.
 
-The manifest is NUL-delimited, mode `0600`, machine/boot-bound, and expires
-after 15 minutes. Do not edit it, translate it into shell, or execute content
-from it.
+Moving to Trash normally releases **zero** space. Emptying Trash is a separate,
+permanent decision, including any files already there.
 
-## Apply in a later turn
+Ask for exact IDs or individually named items, then end the turn. Apply only in
+a later turn. General permission to clean everything is not item approval.
 
-After explicit approval, run:
+## 4. Apply and verify
+
+After approval, revalidate project/Git/runtime evidence yourself; the executor
+checks filesystem identity and allowlisted actions, not project inactivity.
 
 ```bash
 "$SKILL_DIR/scripts/apply.sh" \
   --manifest "/exact/manifest/path" \
-  --approve "Q001" \
-  --approve "Q004"
+  --approve "D004"
 ```
 
-There is no blanket-approval option. `apply.sh` revalidates type, canonical
-path, symlink components, device, mount, apparent size, and modification time.
-It dispatches only hardcoded actions. A rejected or failed item does not widen
-the remaining approval.
+Manifests expire after 15 minutes. Leave their binary contents unchanged. Add
+`--space-path "/actual/tool/storage"` for a tool-owned store on another mount.
+A rejected item does not widen approval. Use the normal elevation approval flow
+for the exact approved system action, or show its manual command.
 
-If a system action needs elevation, use the harness’s normal approval flow to
-rerun the exact approved action. Otherwise show the exact manual command.
-`omarchy update` is a separate maintenance operation and needs separate
-approval.
+Report each approved ID as removed, moved to Trash, skipped, or failed. Show
+available-space changes per affected filesystem, without attributing concurrent
+writes or delayed Btrfs reclamation to individual items. Keep snapshots and unique
+state report-only under the policy. Updates, new safety snapshots, and changes to
+retention require separate approval; they can consume space or pin artifacts.
 
-After application, report:
-
-- disk space before and after, with the measured change;
-- each approved action and its result;
-- failures and their reasons;
-- data intentionally left alone;
-- snapshot pinning that may delay visible Btrfs reclamation.
-
-## Omarchy and recovery guardrails
-
-- Use `omarchy update`, never a raw Arch upgrade, when updating the system.
-- Prefer the installed Omarchy workflow and migrations over remote branch
-  assumptions.
-- Prefer Snapper cleanup. Keep snapshots, Docker volumes, kernels, model
-  weights, datasets, databases, browser profiles, application state,
-  repositories, worktrees, documents, media, and unfamiliar directories
-  report-only by default.
-- Present direct `btrfs subvolume delete` only as an exceptional repair when
-  Snapper metadata and real subvolumes are demonstrably inconsistent. Require
-  individual confirmation and explain lost rollback points.
-- Inspect Git worktree cleanliness, untracked files, unique/unpushed commits,
-  merge state, and registration before suggesting removal. Never force-delete
-  a branch.
-- Separate Docker containers, images, build cache, and volumes. Never combine
-  volumes into a general prune.
-- Prefer owning cleanup commands. For ordinary files, use `gio trash` when
-  available; otherwise disclose permanent deletion and ask again.
+**Complete when:** every approved ID and preservation promise is accounted for,
+the observed space change and remaining unknowns are clear, and the requested
+headroom is reached or the next meaningful decision is presented.

@@ -3,25 +3,38 @@
 set -uo pipefail
 
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=space-accounting.sh
+source "$SCRIPT_DIR/space-accounting.sh"
+DISK_HOME=${OMARCHY_DISK_HOME:-$HOME}
 MANIFEST_MAGIC="omarchy-free-disk-space-manifest-v1"
 MAX_MANIFEST_AGE=900
 MANIFEST=""
 declare -a APPROVED_IDS=()
 declare -A APPROVED_SET=()
 declare -A SEEN_APPROVED=()
+declare -a SPACE_PATHS=()
+declare -a SPACE_MOUNTS=()
+declare -A SPACE_BEFORE=()
 
 usage() {
-  echo "Usage: apply.sh --manifest PATH --approve ITEM_ID [--approve ITEM_ID ...]" >&2
+  echo "Usage: apply.sh --manifest PATH --approve ITEM_ID [--approve ITEM_ID ...] [--space-path PATH ...]" >&2
 }
 
 while (($#)); do
   case "$1" in
     --manifest)
-      MANIFEST=${2-}
+      (($# >= 2)) && [[ -n $2 ]] || { usage; exit 2; }
+      MANIFEST=$2
       shift 2
       ;;
     --approve)
-      APPROVED_IDS+=("${2-}")
+      (($# >= 2)) && [[ -n $2 ]] || { usage; exit 2; }
+      APPROVED_IDS+=("$2")
+      shift 2
+      ;;
+    --space-path)
+      (($# >= 2)) && [[ -n $2 ]] || { usage; exit 2; }
+      SPACE_PATHS+=("$2")
       shift 2
       ;;
     --all|--approve-all)
@@ -152,8 +165,29 @@ for ((record_index = 0; record_index < record_count; record_index++)); do
   fi
 done
 
-before_available=$(df -B1 --output=avail / 2>/dev/null | awk 'NR==2 {print $1}')
-before_available=${before_available:-unknown}
+remember_filesystem_space() {
+  local path=$1 mount_target
+  mount_target=$(findmnt -T "$path" -n -o TARGET 2>/dev/null) || {
+    printf 'Filesystem measurement unavailable for %q\n' "$path" >&2
+    return
+  }
+  [[ -n $mount_target && -z ${SPACE_BEFORE[$mount_target]+x} ]] || return 0
+  SPACE_MOUNTS+=("$mount_target")
+  SPACE_BEFORE[$mount_target]=$(disk_available_bytes "$mount_target")
+}
+
+SPACE_PATHS+=(/ "$DISK_HOME")
+for path in "${SPACE_PATHS[@]}"; do
+  remember_filesystem_space "$path"
+done
+for ((record_index = 0; record_index < record_count; record_index++)); do
+  base=$((6 + record_index * 12))
+  item_id=${fields[$base]}
+  original_type=${fields[$((base + 5))]}
+  if [[ -n ${APPROVED_SET[$item_id]+x} && $original_type != tool ]]; then
+    remember_filesystem_space "${fields[$((base + 4))]}"
+  fi
+done
 success_count=0
 failure_count=0
 
@@ -307,7 +341,10 @@ run_allowlisted_action() {
   esac
 }
 
-echo "Disk available before: $before_available bytes"
+echo "Disk availability is measured per filesystem, not inferred from removed file sizes."
+for mount_target in "${SPACE_MOUNTS[@]}"; do
+  printf 'Filesystem %s available before: %s bytes\n' "$mount_target" "${SPACE_BEFORE[$mount_target]}"
+done
 
 for ((record_index = 0; record_index < record_count; record_index++)); do
   base=$((6 + record_index * 12))
@@ -327,7 +364,7 @@ for ((record_index = 0; record_index < record_count; record_index++)); do
   [[ -n ${APPROVED_SET[$item_id]+x} ]] || continue
   SEEN_APPROVED[$item_id]=1
   printf '\n[%s] %s (%s): %q\n' "$item_id" "$category" "$safety" "$target"
-  printf 'Estimated reclaimable: %s bytes\n' "$reclaim"
+  printf 'Planned physical recovery: %s bytes\n' "$(disk_physical_recovery "$action")"
   printf 'Consequence: %s\n' "$consequence"
 
   if [[ $safety == "high-risk" || $safety == "report-only" || $action == "none" ||
@@ -362,7 +399,11 @@ for ((record_index = 0; record_index < record_count; record_index++)); do
   fi
 
   if run_allowlisted_action "$action" "$target"; then
-    echo "Result: SUCCEEDED"
+    if [[ $action == trash-path ]]; then
+      echo "Result: MOVED TO TRASH — no immediate space recovery; emptying Trash requires separate approval"
+    else
+      echo "Result: SUCCEEDED — verify the filesystem change below"
+    fi
     success_count=$((success_count + 1))
   else
     status=$?
@@ -378,16 +419,20 @@ for item_id in "${APPROVED_IDS[@]}"; do
   fi
 done
 
-after_available=$(df -B1 --output=avail / 2>/dev/null | awk 'NR==2 {print $1}')
-after_available=${after_available:-unknown}
 echo
-echo "Disk available after: $after_available bytes"
-if [[ $before_available =~ ^[0-9]+$ && $after_available =~ ^[0-9]+$ ]]; then
-  echo "Measured available-space change: $((after_available - before_available)) bytes"
-else
-  echo "Measured available-space change: unknown"
-fi
+for mount_target in "${SPACE_MOUNTS[@]}"; do
+  before_available=${SPACE_BEFORE[$mount_target]}
+  after_available=$(disk_available_bytes "$mount_target")
+  change=unknown
+  if [[ $before_available =~ ^[0-9]+$ && $after_available =~ ^[0-9]+$ ]]; then
+    change=$((after_available - before_available))
+  fi
+  printf 'Filesystem %s: before=%s after=%s change=%s bytes\n' \
+    "$mount_target" "$before_available" "$after_available" "$change"
+done
 echo "Actions succeeded: $success_count; failed/rejected: $failure_count"
-echo "Btrfs note: snapshots may still reference removed extents, and reclamation may be asynchronous."
+echo "Observed changes include concurrent writes; they are not per-item savings or additive file-size totals."
+echo "Tool-owned storage on other mounts is unmeasured unless supplied with --space-path."
+echo "Btrfs note: snapshots may still reference removed extents, open files can retain blocks, and reclamation may be asynchronous."
 
 ((failure_count == 0))

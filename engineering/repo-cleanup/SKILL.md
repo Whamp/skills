@@ -35,7 +35,7 @@ Make no deletions, branch changes, service changes, or database writes during th
    - open, merged, or closed PR evidence when the host and CLI are available;
    - processes whose command or working directory uses the worktree.
 3. Inventory repository-owned artifact roots. Inspect configuration, manifests, symlinks, service definitions, process arguments, and project documentation before classifying databases or generated directories. Enumerate database-like files explicitly; never infer inactivity from an extension or old timestamp alone.
-4. Measure candidate paths individually. Call `du` results **apparent size**. Report filesystem available space separately. On copy-on-write or snapshotting filesystems, state that summed apparent sizes do not predict reclaimed allocated space.
+4. Measure candidate paths individually. Distinguish logical bytes (`du -x -s -B1 --apparent-size`), allocated file blocks (`du -x -s -B1`), and available bytes on each affected filesystem (`df -B1 PATH`). Follow the classification reference's space rules for shared/sparse/snapshotted data. A successful removal or summed directory size is not proof of physical recovery.
 5. Assign stable item IDs and classify each item as:
    - **recommended** — removal is evidenced and recoverability is explicit;
    - **optional** — removable, but retaining it has a plausible purpose;
@@ -46,7 +46,7 @@ Audit completion requires every registered worktree and every discovered databas
 
 ## Approval gate
 
-Present a concise table with item ID, type, exact path, apparent size, classification, evidence, consequence, and recovery path. State separately whether branch refs will be retained.
+Lead with at most five evidence-backed recommendations, then group optional, kept, and unresolved items. Use the classification reference's decision table: exact ID/path/action, file size, physical-recovery estimate and basis, evidence, consequence, and recovery. State separately whether branch refs will be retained. Resolve large uncertain candidates instead of stopping at small cache wins.
 
 Recommend exact IDs. Ask the user to approve those IDs or the uniquely named recommended set, then end the turn. General permission to "clean the repo" is permission to audit, not permission to delete. Never bundle branch deletion with worktree or artifact cleanup.
 
@@ -62,7 +62,7 @@ Apply only the approved IDs. Before each action, revalidate the evidence that ma
 
 A changed or failed precondition rejects that item without widening approval to another item.
 
-Use the owning cleanup command when one exists. Remove worktrees with `git worktree remove` without force and retain branch refs by default. Use permanent file deletion only for approved disposable artifacts after stating that consequence; otherwise prefer the platform trash mechanism. Stop a writer or scheduler only when an approved item requires it, wait for the running operation to settle, and restore the prior service state afterward.
+Use the owning cleanup command when one exists. Remove worktrees with `git worktree remove` without force and retain branch refs by default. State permanent removal and its recovery source before approval. A move to Trash is reversible staging, not space recovery; emptying it needs separate approval covering its existing contents. Stop a writer or scheduler only when an approved item requires it, wait for the running operation to settle, and restore the prior service state afterward.
 
 ## Verify
 
@@ -72,7 +72,7 @@ After application:
 2. Verify every promised branch, tag, or remote recovery ref still exists.
 3. Re-inventory database generations, active pointers, configuration, and preserved forensic or rollback artifacts.
 4. Verify affected services and timers returned to their prior state. Do not start an expensive maintenance job solely as a smoke test. If a normal job starts during verification, let it settle and report its real result.
-5. Measure filesystem usage again and report the observed change without equating apparent bytes removed to physical bytes reclaimed.
-6. Report each approved ID as removed, skipped, or failed, with the reason, plus everything intentionally preserved.
+5. Measure available space again on each affected filesystem. Report the observed change, not a per-item attribution: shared extents, snapshots, open files, delayed reclamation, and concurrent writes affect it. Do not sum repeated views of the same filesystem.
+6. Report each approved ID as removed, moved to Trash, skipped, or failed, with the reason, plus everything intentionally preserved.
 
 Cleanup is complete only when all approved IDs are accounted for, preservation promises are verified, and the repository remains usable.
