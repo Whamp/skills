@@ -25,23 +25,18 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 ### Engineering
 
 - [`ban-type-assertions`](engineering/ban-type-assertions/) — bans TypeScript assertions with oxlint and replaces them safely.
-- [`codegraph`](engineering/codegraph/) — scouts structural code graphs before targeted source reads and changes.
 - [`create-project-bot`](engineering/create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](engineering/docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
-- [`dynamic-workflow-patterns`](engineering/dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
 - [`explain-diff-html`](engineering/explain-diff-html/) — creates interactive HTML explainers for code changes.
 - [`fuzzing`](engineering/fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](engineering/herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
-- [`integrate-napkin-agent-skills`](engineering/integrate-napkin-agent-skills/) — initializes Napkin project memory and optionally adds project-local Pi context tools.
 - [`model-routing`](engineering/model-routing/) — applies caller-configured model choices with permission, capacity, and review-independence safeguards.
 - [`nvidia-cuda-performance`](engineering/nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](engineering/omarchy-free-disk-space/) — safely reclaims disk space on Omarchy and Arch Linux.
-- [`pastlight-agents-pointer`](engineering/pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
 - [`perform-like-jeff-and-sanjay`](engineering/perform-like-jeff-and-sanjay/) — user-only performance engineering within a single binary, with evidence required for each proposed change.
 - [`pr-description`](engineering/pr-description/) — writes short human-facing PR openers with model-attributed details-summary bodies.
 - [`property-based-testing`](engineering/property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`repo-cleanup`](engineering/repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
-- [`sideshow`](engineering/sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](engineering/testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
 
 ### Productivity
