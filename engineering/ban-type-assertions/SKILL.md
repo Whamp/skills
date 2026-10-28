@@ -1,40 +1,20 @@
 ---
 name: ban-type-assertions
-description: "Ban `as` type assertions via the native oxlint `typescript/consistent-type-assertions` rule (`assertionStyle: 'never'`), replacing them with compiler-verified type-safe alternatives. Use when enabling the assertion ban in a project or fixing violations in an existing one."
+description: Enable the native Oxlint assertion ban and replace casts with checked types and boundary validation.
 disable-model-invocation: true
 ---
 
 # Ban Type Assertions
 
-Enable `typescript/consistent-type-assertions` with `assertionStyle: 'never'`
-(**native oxlint, v1.44.0+**) and replace all `as X` / `<T>x` casts with patterns
-the compiler can verify. `as const` is **preserved** — the ban is surgical: it
-targets real casts, not literal narrowing.
+Apply this stricter policy when requested; it is not a claim about every project's defaults. Replace `as T` and `<T>value` with evidence the compiler or a runtime validator checks. Keep `as const`; non-null `!` assertions follow the project's separate policy.
 
-## Core Philosophy
+## 1. Inspect and enable
 
-> Pick the strictly correct path, not the simpler one.
+Read the affected packages, lint/compiler configuration, scripts, schemas and callers. Group cast sites by external-data boundary, internal narrowing, literal construction or library typing gap. Find the existing contract owner, including unexported schemas and duplicate definitions, before creating another contract. Share or export the authoritative definition when needed; preserve the project's module and file-layout rules. For string-union data at a boundary, use a schema plus an enum. Where ST-01 applies, put exported enums in `enums.ts`.
 
-Every `as` assertion is a spot where the developer told the compiler "trust me."
-The goal is to make the compiler *verify* instead. If you replace `as Foo` with a
-type guard that is equally unverified, you have not improved anything — you have
-just moved the assertion.
+Enable this native rule in the existing Oxlint configuration without replacing unrelated settings or weakening test coverage:
 
-## Quick Reference
-
-- Rule: `typescript/consistent-type-assertions`
-- Config: `{ assertionStyle: 'never' }`
-- Enforcement: **native oxlint** (v1.44.0+) — no jsPlugins, no eslint sliver
-  (per the `typescript.md` standard, decision #6). Part of the shared
-  `.oxlintrc.json`.
-
-## Workflow
-
-### 1. Enable the Rule
-
-Add to the project's `.oxlintrc.json` (oxlint flat config):
-
-```jsonc
+```json
 {
   "rules": {
     "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }]
@@ -42,188 +22,41 @@ Add to the project's `.oxlintrc.json` (oxlint flat config):
 }
 ```
 
-Run type-aware: `npx oxlint --type-aware .` (the `oxlint-tsgolint` package drives
-the real TypeScript compiler; needs TypeScript 7.0+).
+The [native rule](https://oxc.rs/docs/guide/usage/linter/rules/typescript/consistent-type-assertions.html) is available from Oxlint 1.44.0. It is syntax-based: no ESLint bridge, custom plugin or type-aware backend is needed for this rule. Retain the project's type-aware gate for its other rules; that mode needs `oxlint-tsgolint`.
 
-### 2. Enumerate Violations
+**Complete when:** the rule runs on the affected source and tests, and the cast inventory identifies each site's contract and data flow.
 
-```bash
-npx oxlint --type-aware . 2>&1 | grep "consistent-type-assertions"
+## 2. Replace casts at their cause
+
+| Site | Replacement and evidence |
+| --- | --- |
+| External JSON, disk, network or IPC input | Parse with the existing schema system, such as Zod. Reuse the actual domain schema and derive its type rather than maintaining a parallel interface or permissive dictionary. Preserve its defaults, limits and unknown-key policy: stripping keys and rejecting them are different contracts. |
+| Internal union or caught error | Use discriminants, exhaustive branches, `in` or `instanceof` to establish the required type. A user-defined predicate is trustworthy only when its checks establish every property and value it claims; checking that one key exists is not validation of a whole request. |
+| Locally constructed value | Let inference work, use a type annotation, or use `satisfies` to check compatibility without asserting it. Keep literal narrowing where it is intentional. |
+| Library or generic mismatch | First try correct generic arguments, a typed boundary or a compiler-checked alternative. A declaration gap is not proof that a cast is necessary. |
+
+At input boundaries, handle malformed syntax as well as schema rejection. Use `safeParse` with an explicit failure branch, or catch parsing failures where the existing error response is built. Preserve error codes, causes and request identifiers; extract an identifier through checked envelope data, not an assertion or optional chaining on an unvalidated value.
+
+When validation exposes invalid test mocks, fix their data. Put repeated valid fixture construction in a typed helper and retain valid overrides; do not loosen the schema or exempt tests to keep old mocks passing.
+
+**Complete when:** replacements preserve successful behavior and error contracts, reject invalid boundary input, and leave no unchecked substitute for the removed cast.
+
+## 3. Verify and account for exceptions
+
+Run the repository's affected-package lint, strict typecheck and tests. Where these are the configured commands:
+
+```sh
+npx oxlint .
+npx tsc --noEmit
+npm test
 ```
 
-Group violations by file and pattern before fixing.
+Use `oxlint --type-aware .` when required by the project's other rules. Check runtime rejection and error responses, schema defaults/key handling, valid fixtures and downstream consumers—not just compilation. Consider Knip for larger projects or monorepos when the project opts into that check.
 
-### 3. Research Before Fixing
+If a cast is genuinely unavoidable, state the established invariant and why the compiler cannot express it. Limit any justified `oxlint-disable-next-line typescript/consistent-type-assertions` to the actual assertion, with the project's required safety rationale. A clean lint result from disabling the rule is not type-safety evidence; broad or test-wide suppression is not a fix.
 
-Before writing any replacement code:
+**Complete when:** affected checks pass, or each blocked check is reported; every remaining cast has a specific justification and scope; and the final report identifies changed contracts, verification results and unresolved risks.
 
-1. **Check for existing zod schemas** — grep for `Schema` alongside the type name
-   across the project.
-2. **Check if schemas exist but aren't exported** — if so, export them rather than
-   creating new ones.
-3. **Check for duplicate types/interfaces** — consolidate into a shared schemas
-   module if found.
-4. **Understand the data flow** — is this a parse boundary (external data), a
-   narrowing site (union type), or a library type gap?
+## Source credit
 
-### 4. Fix Violations Using the Pattern Hierarchy
-
-#### Tier 1: Zod Parsing (for external data boundaries)
-
-Use for any data entering the system from JSON, disk, network, IPC, etc. This
-gives **runtime validation**, not just a type annotation.
-
-```typescript
-// BAD
-const data = JSON.parse(raw) as MyType;
-
-// GOOD
-const data = MySchema.parse(JSON.parse(raw));
-```
-
-Use `safeParse` when you need to handle errors gracefully (e.g., returning an
-error response with context like a request id):
-
-```typescript
-// BAD: throws before you can extract the request id
-const request = RequestSchema.parse(JSON.parse(raw));
-
-// GOOD: safeParse lets you return a proper error
-const parsed = RequestSchema.safeParse(JSON.parse(raw));
-if (!parsed.success) {
-  return errorResponse(rawObj?.id ?? null, INVALID_PARAMS, parsed.error.message);
-}
-const request = parsed.data;
-```
-
-#### Tier 2: Control Flow Narrowing (for union types)
-
-Use `switch`, `in`, `instanceof`, or discriminated unions:
-
-```typescript
-// BAD
-(error as NodeJS.ErrnoException).code
-
-// GOOD
-if (error instanceof Error && 'code' in error) {
-  const code = error.code;
-}
-```
-
-```typescript
-// BAD
-if (METHODS.has(method as Method)) { ... }
-
-// GOOD: switch narrows exhaustively
-switch (method) {
-  case 'foo':
-  case 'bar':
-    return handle(method); // narrowed
-}
-```
-
-#### Tier 3: oxlint-disable with Justification (last resort)
-
-Only for genuinely unavoidable cases (library type gaps, generic parameters that
-can't be inferred). Always explain *why*:
-
-```typescript
-// oxlint-disable-next-line typescript/consistent-type-assertions -- ws library types require a generic parameter
-ws.on('message', handler);
-```
-
-#### Anti-Pattern: Type Guards That Are Disguised Assertions
-
-```typescript
-// NOT an improvement -- checks shape but not content
-function isDaemonRequest(x: unknown): x is DaemonRequest {
-  return typeof x === 'object' && x !== null && 'method' in x;
-}
-```
-
-A zod schema validates values. A type guard like this is an unverified assertion
-with extra steps. Only use type guards when the narrowing logic is truly
-sufficient.
-
-### 5. Use Strict Schemas, Not Permissive Ones
-
-When a schema exists (e.g., `SessionSettingsSchema`), use it strictly rather than
-`z.record(z.unknown())`. This ensures forward compatibility — if fields are
-removed in a migration, stale data gets cleaned on read.
-
-```typescript
-// BAD: accepts anything
-const settings = z.record(z.unknown()).parse(raw);
-
-// GOOD: validates against the real shape
-const settings = SessionSettingsSchema.parse(raw);
-```
-
-### 6. Fix Test Mocks to Match Schemas
-
-Once you replace `as X` with `.parse()`, test mocks that relied on the assertion
-will fail validation. Fix the mocks — do not disable the rule in tests.
-
-Create helper functions to centralize valid test fixtures:
-
-```typescript
-function mockSessionSummary(
-  overrides?: Partial<SessionSummaryEvent>,
-): SessionSummaryEvent {
-  return {
-    type: 'session_start',
-    id: 'test-id',
-    title: 'Test Session',
-    owner: 'test-owner',
-    ...overrides,
-  };
-}
-```
-
-### 7. Parse at the Boundary, Inside Error Handling
-
-Make sure parsing happens where failures produce proper error responses, not
-unhandled exceptions:
-
-```typescript
-// BAD: parse outside try/catch -- if it throws, you lose context
-const request = RequestSchema.parse(data);
-try { handle(request); } catch { ... }
-
-// GOOD: safeParse before try, handle error with context
-const parsed = RequestSchema.safeParse(data);
-if (!parsed.success) {
-  return errorResponse(rawData?.id ?? null, INVALID_PARAMS, parsed.error.message);
-}
-try { handle(parsed.data); } catch { ... }
-```
-
-## Verification
-
-```bash
-npx oxlint --type-aware .   # lint — the native rule fires
-npx tsc --noEmit            # typecheck
-npm test                    # tests — mocks must match schemas
-# knip is opt-in (typescript.md [TS-43]) — run it for larger projects / monorepos
-```
-
-## Reminders
-
-- Exported enums live in `enums.ts` (`@factory/enum-file-organization` /
-  `structure.md` [ST-01]); for string-union data at a boundary, use a schema +
-  enum, not an `as` cast.
-- Prefer fixing mocks over disabling the rule; a scoped `oxlint-disable` is the
-  last-resort escape hatch — never a blanket disable.
-- This rule bans `as X` / `<T>x`; `as const` is unaffected. Non-null `!`
-  assertions are a separate, softer review policy (see `typescript.md` [TS-17]).
-
----
-
-> **Adaptation note (2026-07, decision #11).** Derived from Factory-AI's
-> `ban-type-assertions` skill. Step 1 was rewritten from the original
-> `@typescript-eslint/consistent-type-assertions` in `packages/<name>/.eslintrc.js`
-> to native oxlint (decision #6: no eslint sliver). The original §6 "Promote
-> Shared Schemas to `@factory/common`" (Factory monorepo: subpath `package.json`
-> exports + `no-barrel-files` + repo-root `npm run knip`) was pruned — it does not
-> apply to this consumer stack. The portable core (philosophy, pattern hierarchy,
-> strict schemas, test-mock fixing, parse-at-boundary) is retained.
+Newly written from this skill's maintained Oxlint workflow and the ideas in Factory's [ban-type-assertions](https://github.com/Factory-AI/factory-plugins/tree/master/plugins/typescript/skills/ban-type-assertions). The earlier adaptation replaced Factory's ESLint setup and removed its monorepo-specific instructions; this version retains that distinction without copying its procedure or examples.
