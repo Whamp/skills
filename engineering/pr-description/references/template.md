@@ -1,11 +1,13 @@
 # PR body template
 
-Copy only the contents of this fence into the body file. Fill every placeholder. Remove the optional screenshot or snippet placeholder unless it helps; replace it with a Markdown image or a short fenced CLI output block when it does. The opening paragraph remains first.
+Before filling the opener or choosing an image, video, or snippet, complete the [required clear-writing step](../SKILL.md#workflow).
+
+Copy only the contents of this fence into the body file. Fill every placeholder. Remove the optional image, video, or snippet placeholder unless it helps; replace it with an image, video, or short fenced CLI output block when it does. The opening paragraph remains first.
 
 ```markdown
-{{OPENER: one short paragraph, one or two sentences, problem then result}}
+{{OPENER: one short paragraph, one or two sentences, problem then result; apply clear-writing first}}
 
-{{OPTIONAL_SCREENSHOT_OR_SHORT_CLI_SNIPPET}}
+{{OPTIONAL_IMAGE_VIDEO_OR_SHORT_CLI_SNIPPET}}
 
 <details>
 <summary>{{EXACT_MODEL_AND_EFFORT}}</summary>

@@ -1,5 +1,7 @@
 # Opener examples
 
+Before drafting an opener or choosing an image, video, or snippet, complete the [required clear-writing step](../SKILL.md#workflow).
+
 ## Bad and good drafts
 
 Bad, for a PR already titled "Retry expired sessions":
