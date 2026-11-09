@@ -20,4 +20,4 @@ Complete when the opener stands alone, the optional visual earns its space, the 
 
 ## Source and provenance
 
-Will-authored, materially transformed guidance drawing on Simon Willison's [Hide your slop PR descriptions behind details-summary](https://simonwillison.net/2026/Nov/9/details-summary/), published 9 November 2026. The [examples](references/examples.md) attribute the five supplied excerpts to Simon; the workflow and template are maintained here.
+Will-authored, materially transformed guidance drawing on Simon Willison's [Hide your slop PR descriptions behind `<details><summary>`](https://simonwillison.net/2026/Nov/9/details-summary/), published 9 November 2026. The [examples](references/examples.md) attribute the five supplied excerpts to Simon; the workflow and template are maintained here.
