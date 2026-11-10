@@ -18,6 +18,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
 - [`pastlight-agents-pointer`](pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
 - [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — user-only performance engineering within a single binary, with evidence required for each proposed change.
+- [`pr-description`](pr-description/) — writes short human-facing PR openers with model-attributed details-summary bodies.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
 - [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.
