@@ -1,0 +1,70 @@
+{
+  "targets": [
+    {
+      "id": "itsdangerous",
+      "url": "https://github.com/pallets/itsdangerous.git",
+      "commit": "096c8d42545d3b68ea21a4f890fb2b2d8979c0bd",
+      "module": "src/itsdangerous/timed.py",
+      "test_command": "uv run --no-project --python 3.12 --with pytest==8.3.5 --with freezegun==1.5.1 --with-editable . python -m pytest -q tests",
+      "queries": [
+        {
+          "kind": "literal",
+          "value": "signature expired"
+        },
+        {
+          "kind": "literal",
+          "value": "Signature age"
+        },
+        {
+          "kind": "glob",
+          "value": "*tim*.py"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "expiry",
+          "question": "Find the implementation that rejects a valid signed value because of its age. Explain the age calculation, its units, the exact expiry boundary, and what happens to a future timestamp. Cite implementation paths and line numbers.",
+          "rubric": "TimestampSigner.unsign in src/itsdangerous/timed.py (or its moved implementation). When max_age is not None, age is current timestamp minus signed timestamp, in seconds. age > max_age raises SignatureExpired; equality is accepted. age < 0 also raises SignatureExpired. max_age=None skips both age checks. Cite executable branches, not only docs or tests."
+        },
+        {
+          "id": "fallback",
+          "question": "A log contains 'Signature age 61 > 60 seconds'. Find its source. Does loading that expired value try another fallback signer? Explain the exception path and cite implementation paths and line numbers.",
+          "rubric": "The message comes from TimestampSigner.unsign's age > max_age branch. TimedSerializer.loads immediately re-raises SignatureExpired rather than continuing the signer loop. Other BadSignature errors are retained while trying the next signer. Cite both the throw and the exception handling branches."
+        }
+      ]
+    },
+    {
+      "id": "werkzeug",
+      "url": "https://github.com/pallets/werkzeug.git",
+      "commit": "6389612fd1ee1bd93579eed5026e8fd471d04abd",
+      "module": "src/werkzeug/security.py",
+      "test_command": "uv run --no-project --python 3.12 --with pytest==8.3.5 --with ephemeral-port-reserve==1.1.4 --with-editable . python -m pytest -q tests/test_security.py",
+      "queries": [
+        {
+          "kind": "literal",
+          "value": "untrusted path"
+        },
+        {
+          "kind": "literal",
+          "value": "'pbkdf2' takes 2 arguments."
+        },
+        {
+          "kind": "glob",
+          "value": "*security*.py"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "path",
+          "question": "Find where untrusted path components are joined to a trusted base directory. Explain normalization, rejection conditions, the failure return value, and the empty-base rule. Cite implementation paths and line numbers.",
+          "rubric": "safe_join in src/werkzeug/security.py (or its moved implementation). Nonempty components are normalized with posixpath.normpath. It rejects OS alternate separators, absolute paths, leading /, exactly .., and ../ prefixes, returning None. An empty trusted base becomes . so the first untrusted part cannot become trusted. Accepted parts are joined with posixpath.join. Cite executable code."
+        },
+        {
+          "id": "hash",
+          "question": "A log contains the exact text: 'pbkdf2' takes 2 arguments. Find the throw site and explain what is being counted, the accepted argument forms, and the default algorithm and iteration count at this revision. Cite implementation paths and line numbers.",
+          "rubric": "_hash_internal in src/werkzeug/security.py (or its moved implementation) splits the method on :. The count excludes the pbkdf2 method token. Zero arguments uses sha256 and DEFAULT_PBKDF2_ITERATIONS; one sets the digest but keeps default iterations; two sets digest and integer iterations; more than two raises ValueError with that text. The executable constant is 1,000,000, even though older prose in generate_password_hash says 600000. Cite branches and the constant."
+        }
+      ]
+    }
+  ]
+}
