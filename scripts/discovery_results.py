@@ -31,27 +31,53 @@ def score(run: Path) -> list[dict[str, object]]:
     } != {reader["id"] for reader in readers}:
         raise ValueError("Grades must contain every reader exactly once")
     by_reader = {row["reader"]: row for row in grades}
-    pairs: dict[str, dict[str, Grade]] = {}
+    pairs: dict[tuple[str, str | None], dict[str, Grade]] = {}
     protocol: tuple[object, ...] | None = None
     targets = {target["id"]: target for target in load_suite(run)["targets"]}
     inputs_path = run / "private/inputs.json"
     inputs = json.loads(inputs_path.read_text()) if inputs_path.exists() else {}
     requires_pi = inputs.get("schema_version", 1) >= 2
+    if inputs.get("schema_version", 1) >= 3:
+        expected = {
+            (target["id"], task["id"], arm)
+            for target in targets.values()
+            for task in target["tasks"]
+            for arm in load_suite(run)["arms"]
+        }
+        actual = {
+            (reader["target"], reader.get("task"), reader["arm"]) for reader in readers
+        }
+        if actual != expected or len(actual) != len(readers):
+            raise ValueError(
+                "Readers must cover every selected task and condition exactly once"
+            )
     for reader in readers:
         grade = by_reader[reader["id"]]
         expected_tasks = {task["id"] for task in targets[reader["target"]]["tasks"]}
+        if "task" in reader:
+            if reader["task"] not in expected_tasks:
+                raise ValueError(f"Unknown task: {reader['task']}")
+            expected_tasks = {reader["task"]}
         fingerprint = _verify_reader(run, reader, grade, expected_tasks, requires_pi)
         if fingerprint is not None:
             if protocol is not None and fingerprint != protocol:
                 raise ValueError("Reader profiles do not match across conditions")
             protocol = fingerprint
-        pairs.setdefault(reader["target"], {})[reader["arm"]] = grade
-    return [
-        _compare_conditions(
-            target_id, pair, len(targets[target_id]["tasks"]), requires_pi
+        pairs.setdefault((reader["target"], reader.get("task")), {})[reader["arm"]] = (
+            grade
         )
-        for target_id, pair in sorted(pairs.items())
-    ]
+    reports = []
+    for (target_id, task_id), pair in sorted(pairs.items()):
+        report = _compare_conditions(
+            target_id,
+            pair,
+            1 if task_id else len(targets[target_id]["tasks"]),
+            requires_pi,
+        )
+        if task_id is not None:
+            report["task"] = task_id
+        reports.append(report)
+    return reports
 
 
 def _verify_reader(

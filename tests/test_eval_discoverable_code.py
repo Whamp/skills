@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -167,11 +168,17 @@ class DiscoverabilityEvalTests(unittest.TestCase):
         self,
     ) -> None:
         private = self.workspace / "private"
+        suite = json.loads((private / "suite.json").read_text())
+        suite["arms"] = ["original", "skill"]
+        runner.write_json(private / "suite.json", suite)
+        for reader in self.readers:
+            reader["task"] = "behavior"
+        runner.write_json(private / "readers.json", self.readers)
         (private / "skill.txt").write_text("fixture skill")
         runner.write_json(
             private / "inputs.json",
             {
-                "schema_version": 2,
+                "schema_version": 3,
                 "suite_sha256": hashlib.sha256(
                     (private / "suite.json").read_bytes()
                 ).hexdigest(),
@@ -208,6 +215,12 @@ class DiscoverabilityEvalTests(unittest.TestCase):
             grade.update(commands=1, output_bytes=3, elapsed_seconds=2)
         self.save_grades()
         self.assertTrue(runner.score(self.workspace)[0]["harness_verified"])
+        runner.write_json(private / "readers.json", self.readers[:1])
+        runner.write_json(private / "grades.json", self.grades[:1])
+        with self.assertRaisesRegex(ValueError, "every selected task and condition"):
+            runner.score(self.workspace)
+        runner.write_json(private / "readers.json", self.readers)
+        self.save_grades()
         self.grades[1]["output_bytes"] = 999
         self.save_grades()
         with self.assertRaisesRegex(ValueError, "differs from collected output_bytes"):
@@ -317,7 +330,10 @@ class DiscoverabilityEvalTests(unittest.TestCase):
                         "url": str(source),
                         "commit": commit,
                         "module": "src/behavior.py",
-                        "tasks": [{"id": "task", "question": "HELD_BACK_QUESTION"}],
+                        "tasks": [
+                            {"id": "task", "question": "HELD_BACK_QUESTION"},
+                            {"id": "other", "question": "OTHER_PRIVATE_QUESTION"},
+                        ],
                     }
                 ]
             },
@@ -336,13 +352,66 @@ class DiscoverabilityEvalTests(unittest.TestCase):
             self.assertIn("50 tool calls and 15 minutes", prompt)
         runner.make_readers(run, 0)
         assignments = json.loads((run / "private/readers.json").read_text())
+        self.assertEqual(6, len(assignments))
         self.assertEqual(
             {"original", "generic", "skill"}, {row["arm"] for row in assignments}
         )
         for row in assignments:
             prompt = (run / "readers" / row["id"] / "prompt.txt").read_text()
-            self.assertIn("HELD_BACK_QUESTION", prompt)
+            search_root = re.search(
+                r"Search only the current repository \(([^)]+)\)", prompt
+            )
+            self.assertIsNotNone(search_root)
+            assert search_root is not None
+            found = subprocess.check_output(
+                ["rg", "--files", search_root[1]],
+                cwd=run / "readers" / row["id"] / "repo",
+                text=True,
+            )
+            self.assertIn("src/behavior.py", found)
+            expected = (
+                "HELD_BACK_QUESTION"
+                if row["task"] == "task"
+                else "OTHER_PRIVATE_QUESTION"
+            )
+            other = (
+                "OTHER_PRIVATE_QUESTION"
+                if row["task"] == "task"
+                else "HELD_BACK_QUESTION"
+            )
+            self.assertIn(expected, prompt)
+            self.assertNotIn(other, prompt)
             self.assertNotIn("DISTINCTIVE_SKILL_RULE", prompt)
+        grades = json.loads((run / "private/grades.json").read_text())
+        self.assertTrue(all(len(grade["tasks"]) == 1 for grade in grades))
+
+    def test_separate_questions_are_scored_without_overwriting_each_other(self) -> None:
+        suite = self.workspace / "private/suite.json"
+        data = json.loads(suite.read_text())
+        data["targets"][0]["tasks"].append({"id": "other"})
+        runner.write_json(suite, data)
+        for reader in self.readers:
+            reader["task"] = "behavior"
+        for index, (reader, grade) in enumerate(
+            zip(self.readers[:], self.grades[:]), 3
+        ):
+            other_id = f"r{index:02d}"
+            shutil.copytree(
+                self.workspace / "readers" / reader["id"],
+                self.workspace / "readers" / other_id,
+            )
+            self.readers.append({**reader, "id": other_id, "task": "other"})
+            other_grade = copy.deepcopy(grade)
+            other_grade.update(
+                reader=other_id,
+                tasks={"other": {"correct": True, "reason": "module.py:1"}},
+            )
+            self.grades.append(other_grade)
+        runner.write_json(self.workspace / "private/readers.json", self.readers)
+        self.save_grades()
+        reports = runner.score(self.workspace)
+        self.assertEqual(["behavior", "other"], [row["task"] for row in reports])
+        self.assertTrue(all(row["total_tasks_per_reader"] == 1 for row in reports))
 
     def test_source_change_and_missing_evidence_are_rejected(self) -> None:
         self.save_grades()

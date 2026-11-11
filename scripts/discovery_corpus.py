@@ -10,6 +10,17 @@ import subprocess
 from pathlib import Path
 from typing import NotRequired, TypedDict, cast
 
+SNAPSHOT_IGNORES = {
+    ".git",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    "node_modules",
+    "dist",
+    ".nyc_output",
+}
+
 
 class Query(TypedDict):
     """A search frozen before either rewrite."""
@@ -17,6 +28,7 @@ class Query(TypedDict):
     kind: str
     value: str
     owner: NotRequired[dict[str, str]]
+    task: NotRequired[str]
 
 
 class Task(TypedDict):
@@ -25,6 +37,7 @@ class Task(TypedDict):
     id: str
     question: str
     rubric: str
+    held_out: NotRequired[bool]
 
 
 class Target(TypedDict):
@@ -37,6 +50,7 @@ class Target(TypedDict):
     test_command: str
     queries: list[Query]
     tasks: list[Task]
+    source_globs: NotRequired[list[str]]
 
 
 class Suite(TypedDict):
@@ -44,6 +58,7 @@ class Suite(TypedDict):
 
     targets: list[Target]
     arms: list[str]
+    reader_unit: NotRequired[str]
 
 
 class Reader(TypedDict):
@@ -53,6 +68,7 @@ class Reader(TypedDict):
     target: str
     arm: str
     tree_sha256: str
+    task: NotRequired[str]
 
 
 class TaskGrade(TypedDict):
@@ -99,6 +115,37 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def select_tasks(
+    suite: Suite, task_ids: list[str] | None, *, include_held_out: bool
+) -> None:
+    """Freeze a task subset before writers see any repository."""
+    available = {
+        f"{target['id']}/{task['id']}"
+        for target in suite["targets"]
+        for task in target["tasks"]
+        if include_held_out or not task.get("held_out", False)
+    }
+    selected = set(task_ids) if task_ids else available
+    if not selected or selected - available:
+        raise ValueError(
+            f"Unknown or held-out task selection: {sorted(selected - available)}"
+        )
+    for target in suite["targets"]:
+        target["tasks"] = [
+            task
+            for task in target["tasks"]
+            if f"{target['id']}/{task['id']}" in selected
+        ]
+        task_names = {task["id"] for task in target["tasks"]}
+        target["queries"] = [
+            query
+            for query in target.get("queries", [])
+            if "task" not in query or query["task"] in task_names
+        ]
+    suite["targets"] = [target for target in suite["targets"] if target["tasks"]]
+    suite["reader_unit"] = "task"
+
+
 def load_suite(run: Path) -> Suite:
     """Read the experiment's frozen suite rather than the working source."""
     inputs_path = run / "private/inputs.json"
@@ -122,8 +169,7 @@ def tree_hash(root: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted(root.rglob("*")):
         if path.is_file() and not any(
-            part in {".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
-            for part in path.relative_to(root).parts
+            part in SNAPSHOT_IGNORES for part in path.relative_to(root).parts
         ):
             digest.update(str(path.relative_to(root)).encode() + b"\0")
             digest.update(hashlib.sha256(path.read_bytes()).digest())
@@ -133,7 +179,9 @@ def tree_hash(root: Path) -> str:
 def implementation_spans(
     root: Path, owner: dict[str, str]
 ) -> list[tuple[str, int, int]]:
-    """Resolve a frozen Python symbol or library-call oracle across module moves."""
+    """Resolve Python owners or unique source ranges for other languages."""
+    if "start" in owner:
+        return _anchored_spans(root, owner)
     spans = []
     for path in sorted(root.rglob("*.py")):
         relative = path.relative_to(root)
@@ -158,6 +206,29 @@ def implementation_spans(
                     )
                 )
     return spans
+
+
+def _anchored_spans(root: Path, owner: dict[str, str]) -> list[tuple[str, int, int]]:
+    """Resolve a unique, reviewed source range; ambiguity fails closed."""
+    spans = []
+    for path in sorted(root.glob(owner["glob"])):
+        if not path.is_file() or any(
+            part in SNAPSHOT_IGNORES for part in path.relative_to(root).parts
+        ):
+            continue
+        text = path.read_text()
+        if text.count(owner["start"]) != 1 or text.count(owner["end"]) != 1:
+            continue
+        start, end = text.index(owner["start"]), text.index(owner["end"])
+        if start <= end:
+            spans.append(
+                (
+                    str(path.relative_to(root)),
+                    text.count("\n", 0, start) + 1,
+                    text.count("\n", 0, end) + 1,
+                )
+            )
+    return spans if len(spans) == 1 else []
 
 
 def _python_functions(
