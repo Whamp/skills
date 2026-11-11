@@ -9,15 +9,24 @@
       "queries": [
         {
           "kind": "literal",
-          "value": "signature expired"
+          "value": "signature expired",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          }
         },
         {
           "kind": "literal",
-          "value": "Signature age"
+          "value": "Signature age",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          }
         },
         {
           "kind": "glob",
-          "value": "*tim*.py"
+          "value": "*tim*.py",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          }
         }
       ],
       "tasks": [
@@ -42,15 +51,24 @@
       "queries": [
         {
           "kind": "literal",
-          "value": "untrusted path"
+          "value": "untrusted path",
+          "owner": {
+            "symbol": "safe_join"
+          }
         },
         {
           "kind": "literal",
-          "value": "'pbkdf2' takes 2 arguments."
+          "value": "'pbkdf2' takes 2 arguments.",
+          "owner": {
+            "call": "hashlib.pbkdf2_hmac"
+          }
         },
         {
           "kind": "glob",
-          "value": "*security*.py"
+          "value": "*security*.py",
+          "owner": {
+            "symbol": "safe_join"
+          }
         }
       ],
       "tasks": [

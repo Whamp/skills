@@ -1,178 +1,152 @@
 # Write-discoverable-code eval
 
 Measure whether applying the skill makes existing code easier for a fresh agent
-to find and explain with Bash, literal search, and filename search.
+to find and explain with Bash search. The runner now uses Pi with a verified,
+minimal profile and automatic collection of model-visible output.
 
-Start with **six model sessions**: two writers and four readers. No API keys,
-model SDK, evaluation service, or automatic model calls are required. The runner
-uses Python 3.10+, Git, and ripgrep. Preservation checks also use uv and Python
-3.12. Run the model sessions through a harness you already use.
+With `--generic`, the comparison uses **10 sessions**: four writers and six
+readers across two pinned repositories. Without that flag it uses the original
+six-session smoke test. Only `run-writers` and `run-readers` call models.
 
-## What is measured
+## Requirements
 
-| Measure | Rule |
-| --- | --- |
-| Correctness | All rubric facts and executable-code citations must be correct for a task to pass. |
-| Search effort | Shell tool calls and UTF-8 bytes of stdout plus stderr returned to the reader. Count failed searches too. |
-| Time | Wall seconds from receiving the question to the final answer, rounded up. |
-| Preservation | Existing tests must pass in both versions. Inspect the diff for behavior, API, error-text, and licence changes. |
-| Fixed-query replay | Save full output, returned line count, and bytes for each prewritten literal query or filename glob. |
+- Python 3.10+, Git, ripgrep, Node.js, and a managed Pi installation.
+- Pi with `-ne`, `-ns`, `-np`, `-nc`, `--no-mcp`, and the audit API. Verified with Pi 1.5.2.
+- Linux with working bubblewrap (`bwrap`). Isolation failures stop the run.
+- Existing Pi authentication for the explicitly selected provider and model.
+- uv and Python 3.12 for the existing repository tests.
 
-The scorer reports effort savings only when **both readers answer every task
-correctly**, both versions pass preservation review, and both readers stay
-within 12 shell tool calls and 600 seconds. Correctness failures remain visible.
-Missing evidence or unfinished grades cause an error instead of a score.
+The harness uses the managed Pi installation. It creates an agent directory per
+subject, links only its local `auth.json`, and supplies its own shell settings.
+It does not inherit global settings, custom model definitions, or packages.
+No normal Pi installation or package configuration is changed.
 
-Replay measures retrieval and noise. It does not measure query choice or whether
-the returned lines explain the implementation. A filename hit or fewer returned
-bytes is not an automatic success. Fresh readers supply that evidence.
+## Run the comparison
 
-## 1. Prepare the experiment
-
-Run from this repository's root. Use a new directory outside any checkout so its
-files cannot appear in repository search. Supply the exact skill candidate you
-want to measure; its installed location is not assumed.
+Run from this repository's root. Choose a new run directory outside checkouts.
+The example uses the existing OpenAI subscription route; use only a route
+already authorized for the work. There is no automatic provider or model fallback.
 
 ```bash
 eval_runner="$PWD/scripts/eval_discoverable_code.py"
-eval_run="$(mktemp -d)/discovery"
+eval_run="/absolute/path/to/a/new-run"
 python3 "$eval_runner" prepare "$eval_run" \
-  --skill /absolute/path/to/write-discoverable-code/SKILL.md \
-  --reader-config 'Record exact model, effort, harness version, tools and context limit'
-```
+  --skill /absolute/path/to/write-discoverable-code/SKILL.md --generic
 
-Replace the reader configuration description with actual settings. Keep the same
-model, effort, system instructions, tools, and limits for all four readers. Use
-the same writer settings for both writers and record them in `private/writers.txt`.
-
-The [suite](suite.json) pins ItsDangerous 2.2.0 and Werkzeug 3.1.3 by full commit
-SHA. Each has one small target module and two questions: a behavior question and
-a real error-message question. The questions, queries, and code-based rubrics
-are written before the rewrite. The runner saves the suite and skill bytes and
-their SHA-256 hashes under `private/`.
-
-## 2. Rewrite and check behavior
-
-Start one fresh writer session for each `private/writer-*.txt` prompt. Give each
-writer access only to its assigned checkout and the saved `private/skill.txt`.
-Keep questions, queries, rubrics, and sibling checkouts out of its context.
-Save the writer transcripts under `private/`.
-
-The writer may change the target module and necessary Python imports under
-`src/`, including a module move. Public APIs and error text must stay stable.
-Tests remain unchanged. Review the complete diff and new source files; a passing
-test suite alone cannot prove equivalence. A rewrite that breaks behavior fails
-the experiment rather than becoming a reader speed win.
-
-Run the suite's `test_command` in each original and rewritten checkout. For
-example, this records the exact command, full output, and exit status for all
-four checks:
-
-```bash
-python3 - "$eval_run" <<'PY'
-import json
-import pathlib
-import shlex
-import subprocess
-import sys
-
-run = pathlib.Path(sys.argv[1])
-suite = json.loads((run / 'private/suite.json').read_text())
-failed = False
-for target in suite['targets']:
-    for arm in ('original', 'skill'):
-        log = run / 'private' / f"validation-{target['id']}-{arm}.txt"
-        with log.open('w') as output:
-            output.write(target['test_command'] + '\n')
-            output.flush()
-            result = subprocess.run(
-                shlex.split(target['test_command']),
-                cwd=run / 'private' / arm / target['id'],
-                stdout=output, stderr=subprocess.STDOUT, check=False,
-            )
-            output.write(f'\nexit_code={result.returncode}\n')
-        failed |= result.returncode != 0
-        print(log.name, result.returncode)
-sys.exit(int(failed))
-PY
-```
-
-These commands install pinned test tools in an isolated uv environment. The
-repository commits are fixed; transitive test dependencies are not fully locked.
-Retain resolved package versions if comparing runs on different machines.
-
-## 3. Freeze the reader inputs and replay searches
-
-```bash
+python3 "$eval_runner" run-writers "$eval_run" \
+  --provider openai --model gpt-6.1-sol --thinking medium
+python3 "$eval_runner" validate "$eval_run"
 python3 "$eval_runner" readers "$eval_run" --seed 0
 python3 "$eval_runner" replay "$eval_run"
+python3 "$eval_runner" run-readers "$eval_run" \
+  --provider openai --model gpt-6.1-sol --thinking medium
 ```
 
-`readers` saves full repositories at neutral `readers/rNN/repo` paths, without
-Git history or local test caches. It checks the base commits and rewrite scope,
-saves snapshot hashes, and creates reader prompts. The private assignment key
-maps reader names to repository and treatment. Tracked diffs are also saved;
-new source files are preserved in full in the snapshots. Run this stage once,
-after all source edits. Replay results go to `private/replay.json`.
+Add `--preflight-only` to either model command to inspect all selected subjects
+without calling a model. Add `--only r01` for a reader, or
+`--only generic-itsdangerous` for a writer, to run one subject. A completed session
+is never overwritten; use a new run for another trial.
 
-Run one **fresh, isolated reader session** per `readers/rNN/prompt.txt`, in that
-prompt's directory. Mount only that reader's `repo` and provide the prompt. Use
-an empty harness profile without ambient skills, repository instructions from
-this checkout, memory, or earlier conversation. Directory naming and prompt
-instructions do not enforce isolation; the controller must configure it. Give
-readers the whole repository, including tests and docs, with identical tools and
-exclusions. Keep the skill, rewrite diff, replay output, and treatment labels
-private. Run in the generated order; never reuse one session across arms.
+The [suite](suite.json) pins the repositories by full commit SHA. Preparation
+freezes the skill, questions, queries, rubrics, and condition list, and verifies
+that every search oracle resolves in the baseline. The generic and skill writers
+receive the same task and budget; only the skill writer receives the skill text.
+Neither writer receives the discovery questions. Each writer gets 50 tool calls
+and 15 minutes. Writes are limited to its own checkout; snapshot preparation
+rejects edits outside Python source under `src/` or changes to the original.
 
-Save the final answer to `readers/rNN/answer.txt` and the complete model/tool
-transcript to `readers/rNN/transcript.txt`. The controller records elapsed time,
-shell tool calls, and output bytes from the transcript. Include all reader
-commands, even failed ones and batched shell commands. Each shell tool call
-counts once. Sum the UTF-8 bytes of the stdout and stderr actually returned to
-the model, without JSON envelopes. Record harness output caps and truncation in
-the configuration; output bytes are an effort proxy, not model token usage.
+`validate` runs the frozen existing-test command in every condition and records
+its exit code and source hash. Review each rewrite for API, error-text, and
+behavior preservation too. Tests do not prove equivalence. Finish all edits and
+validation before freezing the reader snapshots.
 
-## 4. Grade and score
+## What the preflight verifies
 
-Grade answers against every fact in `private/suite.json` and the exact reader
-snapshot. Cite the supporting source lines and explain each pass or failure in
-the grade's `reason`. Grade by neutral reader ID before looking at the treatment
-key. This is a manual semantic grade, not a keyword-match judge.
+The runner uses `-ne -ns -np -nc --no-mcp --no-themes --no-approve --no-session`,
+only `bash`, and a fixed system prompt. The sole explicit extension is the
+repository's small [audit extension](pi-audit.mjs). Its inspection command reports
+Pi's actual effective prompt, tool set, model, thinking level, context files,
+skills, and history count. Ambient context, extra tools, and route substitutions
+are rejected. The actual run must match its preflight.
 
-Complete `private/grades.json`, which starts with null grades and metrics:
+Model-issued shell commands run through bubblewrap with only OS binaries and the
+assigned repository available. Reader repositories are mounted read-only;
+writers get a writable checkout. Other experiment directories and authentication
+files are not mounted, and shell commands have no network. The Pi provider
+process retains native access to its configured model service. Preflight probes
+check the working directory, sibling-file isolation, and the reader write block.
 
-- `tasks`: set each `correct` to true or false and write a source-backed `reason`.
-- `commands`, `output_bytes`, `elapsed_seconds`: enter observed nonnegative integers.
-- `preservation_passed`: true only after the test log and diff review pass.
-- `validation_log`: enter the matching log path relative to the run directory.
+Readers get full repositories under neutral names, the same questions, the same
+model settings, and a limit of 12 tool calls and 600 seconds. A fresh process and
+profile is used for every subject. The recorded seed controls condition order.
+
+## Collection and grading
+
+Each subject's `pi/` directory contains:
+
+- `preflight.json`: actual prompt, route, tools, version, audit hash, and scope.
+- `events.jsonl` and `stderr.txt`: raw Pi events and audit output.
+- `execution.json`: exact command, prompt hash, exit code, and elapsed time.
+- `metrics.json` and `answer.txt`: collected measurements and the final answer.
+
+The collector counts final `message_end` tool-result text once. It excludes
+streaming updates, full-output copies, result metadata, and JSON envelopes.
+UTF-8 bytes therefore reflect text actually returned to the model, including
+truncation notices. Failed tool calls count too. Model token usage is recorded
+separately. Missing results, an unsettled or failed run, extra tools, and changed
+runtime profiles prevent collection. Time is process wall time, rounded up for
+the budget gate; it includes Pi startup and provider latency.
+
+`run-readers` automatically fills counts and saves answers and transcripts.
+To rebuild measurements from already captured events:
+
+```bash
+python3 "$eval_runner" collect "$eval_run" --reader r01
+```
+
+Grade answers by neutral reader ID against every rubric fact and executable-code
+citation, before consulting the condition key. Complete `tasks` in
+`private/grades.json` with `correct` and a source-backed `reason`. Set
+`preservation_passed` after reviewing the rewrite, and point `validation_log` to
+its existing test log. Those judgements remain manual; collection does not fill
+them in.
 
 ```bash
 python3 "$eval_runner" score "$eval_run"
 ```
 
-The runner checks evidence presence, task completeness, and unchanged reader
-source. It trusts the controller's semantic grades, transcript counts, and test
-review; it does not parse arbitrary harness transcripts or prove equivalence.
-`private/score.json` shows correct task counts, preservation and budget gates,
-raw effort, and absolute savings for each eligible pair. Negative savings mean
-the rewrite cost more effort. Keep the entire run directory as the receipt.
+Scoring re-collects the raw events and checks the entered metrics, matching
+reader profiles, frozen inputs, unchanged snapshots, and test receipts for the
+exact source. Effort savings require every condition to answer every task
+correctly, preserve behavior, and stay within budget. With the generic condition,
+results include savings against both the original and generic rewrite.
+Older run formats remain readable and are marked `harness_verified: false`.
 
 ## Interpretation and skill changes
 
-This is a smoke test, not statistical evidence of a general gain. A clean pair
-can still show zero improvement or higher search cost. Both targets are Python
-libraries from Pallets. They do not test the skill's branded IDs, capability
-types, or state modeling rules. Two questions in one reader session can share
-context; their order is identical in both arms.
+Each query names its expected implementation through a Python symbol or a
+library call inside its owning function. Replay reports `direct`, `file_only`,
+`indirect`, `miss`, or `oracle_unresolved`, plus direct and other hit counts.
+A match in an exception declaration is not a direct match on the age-check
+implementation. Function and module moves can still resolve; the library-call
+oracle also permits private-function renames. More extensive changes can require
+an explicitly reviewed oracle update in a new suite.
 
-The original-versus-skill comparison includes the effect of doing any rewrite.
-To attribute a gain to the skill itself, add a generic rewrite with the same
-scope and writer budget, then a fresh reader per target: four more sessions.
-Do this after the small experiment shows useful signal.
+Replay is a cheap development check. Fresh readers still measure query choice,
+recovery after misses, and interpretation. Keep correctness first; fewer returned
+bytes from an empty or irrelevant search is not an improvement.
 
-To shorten or improve the skill, change one rule group, prepare a new run, replay
-the frozen queries, and spend fresh-reader sessions on promising candidates.
-Keep these two targets as development cases; validate the final choice on a new
-repository with questions written before its rewrite. More repeated readers
-are needed before treating a small effort change as reliable. Never choose a
-shorter skill solely because it uses fewer tokens when answer correctness falls.
+This remains a small test of two Python libraries from Pallets. It does not test
+branded IDs, capability types, or state modeling. Generic rewrites improve
+attribution, but repeated readers and a held-out target are needed before calling
+small changes reliable. Avoid adding more cases until the existing search
+oracles expose useful differences. Preserve the full run directory as evidence.
+
+## Maintenance
+
+The CLI remains `scripts/eval_discoverable_code.py`. Supporting modules keep
+each part independently checkable:
+
+- `scripts/discovery_pi.py`: clean profiles, sandboxed shells, and raw-event collection.
+- `scripts/discovery_corpus.py`: frozen input types, source hashes, and search oracles.
+- `scripts/discovery_results.py`: validation receipts, profile matching, and scoring.

@@ -4,87 +4,61 @@
 from __future__ import annotations
 
 import argparse
-import fnmatch
 import hashlib
 import json
 import random
 import shutil
 import subprocess
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING or __package__:
+    from scripts import discovery_pi
+    from scripts.discovery_corpus import (
+        Grade,
+        Query,
+        Reader,
+        Suite,
+        TaskGrade,
+        implementation_spans,
+        load_suite,
+        replay,
+        tree_hash,
+        write_json,
+    )
+    from scripts.discovery_results import score, validate_rewrites
+else:
+    import discovery_pi
+    from discovery_corpus import (
+        Grade,
+        Query,
+        Reader,
+        Suite,
+        TaskGrade,
+        implementation_spans,
+        load_suite,
+        replay,
+        tree_hash,
+        write_json,
+    )
+    from discovery_results import score, validate_rewrites
+
+__all__ = [
+    "Grade",
+    "Query",
+    "Reader",
+    "Suite",
+    "TaskGrade",
+    "implementation_spans",
+    "load_suite",
+    "replay",
+    "score",
+    "tree_hash",
+    "validate_rewrites",
+    "write_json",
+]
 
 SUITE_PATH = Path(__file__).parents[1] / "evals/write-discoverable-code/suite.json"
-
-
-class Query(TypedDict):
-    """A search frozen before either rewrite."""
-
-    kind: str
-    value: str
-
-
-class Task(TypedDict):
-    """A reader question and a controller-only correctness oracle."""
-
-    id: str
-    question: str
-    rubric: str
-
-
-class Target(TypedDict):
-    """One pinned repository and bounded rewrite target."""
-
-    id: str
-    url: str
-    commit: str
-    module: str
-    test_command: str
-    queries: list[Query]
-    tasks: list[Task]
-
-
-class Suite(TypedDict):
-    """The frozen experiment inputs."""
-
-    targets: list[Target]
-
-
-class Reader(TypedDict):
-    """Private assignment of a neutral reader name to an experiment arm."""
-
-    id: str
-    target: str
-    arm: str
-    tree_sha256: str
-
-
-class TaskGrade(TypedDict):
-    """Manual, evidence-backed judgement of all facts in a task rubric."""
-
-    correct: bool | None
-    reason: str
-
-
-class Grade(TypedDict):
-    """One reader's manually audited transcript measurements and task grades."""
-
-    reader: str
-    tasks: dict[str, TaskGrade]
-    commands: int | None
-    output_bytes: int | None
-    elapsed_seconds: int | None
-    preservation_passed: bool | None
-    validation_log: str
-
-
-def write_json(path: Path, value: object) -> None:
-    """Write readable experiment evidence."""
-    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
-
-
-def load_suite(run: Path) -> Suite:
-    """Read the experiment's frozen suite rather than the working source."""
-    return cast(Suite, json.loads((run / "private/suite.json").read_text()))
 
 
 def git(repo: Path, *args: str) -> str:
@@ -92,32 +66,28 @@ def git(repo: Path, *args: str) -> str:
     return subprocess.check_output(["git", "-C", str(repo), *args], text=True)
 
 
-def tree_hash(root: Path) -> str:
-    """Hash paths and contents, excluding Git and local test caches."""
-    digest = hashlib.sha256()
-    for path in sorted(root.rglob("*")):
-        if path.is_file() and not any(
-            part in {".git", ".venv", "__pycache__", ".pytest_cache", ".ruff_cache"}
-            for part in path.relative_to(root).parts
-        ):
-            digest.update(str(path.relative_to(root)).encode() + b"\0")
-            digest.update(hashlib.sha256(path.read_bytes()).digest())
-    return digest.hexdigest()
-
-
-def prepare(run: Path, skill: Path, reader_config: str) -> None:
+def prepare(
+    run: Path, skill: Path, reader_config: str, *, include_generic: bool = False
+) -> None:
     """Fetch fixed commits and save separate writer instructions and private inputs."""
     skill_text = skill.read_bytes()
     run.mkdir(parents=True, exist_ok=False)
     private = run / "private"
     private.mkdir()
-    shutil.copyfile(SUITE_PATH, private / "suite.json")
+    suite = cast(Suite, json.loads(SUITE_PATH.read_text()))
+    suite["arms"] = (
+        ["original", "generic", "skill"] if include_generic else ["original", "skill"]
+    )
+    write_json(private / "suite.json", suite)
     (private / "skill.txt").write_bytes(skill_text)
     write_json(
         private / "inputs.json",
         {
             "skill_sha256": hashlib.sha256(skill_text).hexdigest(),
-            "suite_sha256": hashlib.sha256(SUITE_PATH.read_bytes()).hexdigest(),
+            "schema_version": 2,
+            "suite_sha256": hashlib.sha256(
+                (private / "suite.json").read_bytes()
+            ).hexdigest(),
             "reader_config": reader_config,
         },
     )
@@ -128,19 +98,27 @@ def prepare(run: Path, skill: Path, reader_config: str) -> None:
             check=True,
         )
         git(original, "checkout", "--quiet", "--detach", target["commit"])
-        candidate = private / "skill" / target["id"]
-        shutil.copytree(original, candidate)
-        prompt = (
-            f"Work in {candidate}. Read {private / 'skill.txt'} and apply it to "
-            f"{target['module']}. Improve how a fresh reader can find and understand "
-            "its behavior with Bash search. Keep public APIs, behavior, error text, "
-            "licence notices, and existing tests intact. You may change Python source "
-            "under src/, including moves and required import updates. Focus on this "
-            "module; leave unrelated code intact. Read only this checkout and the "
-            "skill file. Do not read sibling experiment files or discovery questions. "
-            "Do not add benchmark answers or keyword lists. Keep the diff uncommitted.\n"
-        )
-        (private / f"writer-{target['id']}.txt").write_text(prompt)
+        for query in target.get("queries", []):
+            if "owner" not in query or not implementation_spans(
+                original, query["owner"]
+            ):
+                raise ValueError(
+                    f"Query has no resolvable baseline implementation: {query}"
+                )
+        for arm in suite["arms"][1:]:
+            candidate = private / arm / target["id"]
+            shutil.copytree(original, candidate)
+            prompt = (
+                f"Improve {target['module']} so a fresh reader can find and understand "
+                "its behavior with Bash search. Keep public APIs, behavior, error text, "
+                "licence notices and existing tests intact. Edit Python source under "
+                "src/ only, including moves and necessary import updates. Focus on this "
+                "module; preserve unrelated code. Use bash for reads and edits. "
+                "You have 50 tool calls and 15 minutes. Keep changes uncommitted.\n"
+            )
+            if arm == "skill":
+                prompt += "\nApply this skill:\n" + skill_text.decode()
+            (private / f"writer-{arm}-{target['id']}.txt").write_text(prompt)
 
 
 def make_readers(run: Path, seed: int) -> None:
@@ -150,7 +128,7 @@ def make_readers(run: Path, seed: int) -> None:
     assignments = [
         (target, arm)
         for target in load_suite(run)["targets"]
-        for arm in ("original", "skill")
+        for arm in load_suite(run).get("arms", ["original", "skill"])
     ]
     random.Random(seed).shuffle(assignments)
     readers: list[Reader] = []
@@ -165,7 +143,7 @@ def make_readers(run: Path, seed: int) -> None:
         ).splitlines()
         if arm == "original" and (changed or untracked):
             raise ValueError(f"Original changed: {source}")
-        if arm == "skill" and any(
+        if arm != "original" and any(
             not (name.startswith("src/") and name.endswith(".py"))
             for name in changed + untracked
         ):
@@ -220,54 +198,6 @@ def make_readers(run: Path, seed: int) -> None:
     write_json(run / "private/grades.json", grades)
 
 
-def replay(root: Path, query: Query) -> dict[str, object]:
-    """Replay a literal search or filename glob without truncating its output."""
-    if query["kind"] == "literal":
-        command = [
-            "rg",
-            "--hidden",
-            "--no-ignore",
-            "--glob",
-            "!.git/**",
-            "--glob",
-            "!.venv/**",
-            "--glob",
-            "!__pycache__/**",
-            "--glob",
-            "!.pytest_cache/**",
-            "--glob",
-            "!.ruff_cache/**",
-            "--line-number",
-            "--no-heading",
-            "--color",
-            "never",
-            "--fixed-strings",
-            "--ignore-case",
-            "--",
-            query["value"],
-            ".",
-        ]
-        result = subprocess.run(command, cwd=root, capture_output=True, check=False)
-        if result.returncode not in (0, 1):
-            raise ValueError(f"Search failed: {result.stderr.decode()}")
-        output = result.stdout.decode()
-    elif query["kind"] == "glob":
-        command = ["filename-glob", query["value"]]
-        output = "".join(
-            str(path.relative_to(root)) + "\n"
-            for path in sorted(root.rglob("*"))
-            if path.is_file() and fnmatch.fnmatch(path.name, query["value"])
-        )
-    else:
-        raise ValueError(f"Unknown search kind: {query['kind']}")
-    return {
-        "command": command,
-        "output": output,
-        "lines": len(output.splitlines()),
-        "output_bytes": len(output.encode()),
-    }
-
-
 def replay_run(run: Path) -> list[dict[str, object]]:
     """Measure frozen queries on the same snapshots that readers receive."""
     readers = cast(list[Reader], json.loads((run / "private/readers.json").read_text()))
@@ -283,99 +213,126 @@ def replay_run(run: Path) -> list[dict[str, object]]:
     ]
 
 
-def score(run: Path) -> list[dict[str, object]]:
-    """Reject incomplete evidence and compare effort only for correct, preserved pairs."""
-    readers = cast(list[Reader], json.loads((run / "private/readers.json").read_text()))
+def pi_config(arguments: argparse.Namespace) -> discovery_pi.PiConfig:
+    """Use the caller's explicit native Pi route for every subject in a batch."""
+    return discovery_pi.PiConfig(
+        arguments.provider, arguments.model, arguments.thinking, arguments.pi
+    )
+
+
+def collect_reader(run: Path, reader_id: str) -> dict[str, object]:
+    """Fill mechanical measurements from raw events while leaving semantic grades open."""
+    folder = run / "readers" / reader_id
+    metrics = discovery_pi.collect(folder / "pi")
+    shutil.copyfile(folder / "pi/answer.txt", folder / "answer.txt")
+    shutil.copyfile(folder / "pi/events.jsonl", folder / "transcript.txt")
     grades = cast(list[Grade], json.loads((run / "private/grades.json").read_text()))
-    if len({row["reader"] for row in grades}) != len(grades) or {
-        row["reader"] for row in grades
-    } != {reader["id"] for reader in readers}:
-        raise ValueError("Grades must contain every reader exactly once")
-    by_reader = {row["reader"]: row for row in grades}
-    pairs: dict[str, dict[str, Grade]] = {}
-    targets = {target["id"]: target for target in load_suite(run)["targets"]}
-    for reader in readers:
-        folder = run / "readers" / reader["id"]
-        if tree_hash(folder / "repo") != reader["tree_sha256"]:
-            raise ValueError(f"Reader source changed: {reader['id']}")
-        for evidence in (folder / "answer.txt", folder / "transcript.txt"):
-            if not evidence.is_file() or not evidence.read_text().strip():
-                raise ValueError(f"Missing evidence: {evidence}")
-        grade = by_reader[reader["id"]]
-        expected_tasks = {task["id"] for task in targets[reader["target"]]["tasks"]}
-        if set(grade["tasks"]) != expected_tasks or any(
-            type(item["correct"]) is not bool or not item["reason"].strip()
-            for item in grade["tasks"].values()
-        ):
-            raise ValueError(f"Incomplete task grades: {reader['id']}")
-        for metric in ("commands", "output_bytes", "elapsed_seconds"):
-            value = grade[metric]
-            if type(value) is not int or value < 0:
-                raise ValueError(f"Missing or invalid {metric}: {reader['id']}")
-        log = run / grade["validation_log"]
-        if (
-            type(grade["preservation_passed"]) is not bool
-            or not log.is_file()
-            or not log.read_text().strip()
-        ):
-            raise ValueError(f"Missing preservation evidence: {reader['id']}")
-        pairs.setdefault(reader["target"], {})[reader["arm"]] = grade
-    report = []
-    for target_id, pair in sorted(pairs.items()):
-        counts = {
-            arm: sum(item["correct"] is True for item in grade["tasks"].values())
-            for arm, grade in pair.items()
-        }
-        budget_compliant = {
-            arm: isinstance(grade["commands"], int)
-            and grade["commands"] <= 12
-            and isinstance(grade["elapsed_seconds"], int)
-            and grade["elapsed_seconds"] <= 600
-            for arm, grade in pair.items()
-        }
-        eligible = all(
-            budget_compliant[arm]
-            and grade["preservation_passed"] is True
-            and counts[arm] == len(grade["tasks"])
-            for arm, grade in pair.items()
-        )
-        row: dict[str, object] = {
-            "target": target_id,
-            "correct_tasks": counts,
-            "total_tasks_per_reader": len(targets[target_id]["tasks"]),
-            "preservation_passed": {
-                arm: grade["preservation_passed"] for arm, grade in pair.items()
-            },
-            "budget_compliant": budget_compliant,
-            "effort_comparison_eligible": eligible,
-        }
-        for metric in ("commands", "output_bytes", "elapsed_seconds"):
-            before, after = pair["original"][metric], pair["skill"][metric]
-            if isinstance(before, int) and isinstance(after, int):
-                row[metric] = {"original": before, "skill": after}
-                row[f"{metric}_saved"] = before - after if eligible else None
-        report.append(row)
-    return report
+    for grade in grades:
+        if grade["reader"] == reader_id:
+            for key in ("commands", "output_bytes", "elapsed_seconds"):
+                grade[key] = cast(int, metrics[key])
+            break
+    else:
+        raise ValueError(f"Unknown reader: {reader_id}")
+    write_json(run / "private/grades.json", grades)
+    return {
+        key: metrics[key] for key in ("commands", "output_bytes", "elapsed_seconds")
+    }
+
+
+def run_pi_subjects(
+    run: Path, arguments: argparse.Namespace
+) -> list[dict[str, object]]:
+    """Run writers or readers in separate audited profiles, in recorded order."""
+    config = pi_config(arguments)
+    jobs = []
+    if arguments.command == "run-writers":
+        suite = load_suite(run)
+        for target in suite["targets"]:
+            for arm in suite.get("arms", ["original", "skill"])[1:]:
+                name = f"{arm}-{target['id']}"
+                if arguments.only and arguments.only != name:
+                    continue
+                jobs.append(
+                    (
+                        name,
+                        run / "private" / arm / target["id"],
+                        run / "private" / f"writer-{name}.txt",
+                        run / "private" / f"pi-writer-{name}",
+                    )
+                )
+    else:
+        for folder in sorted((run / "readers").iterdir()):
+            if arguments.only and arguments.only != folder.name:
+                continue
+            jobs.append(
+                (folder.name, folder / "repo", folder / "prompt.txt", folder / "pi")
+            )
+    if not jobs:
+        raise ValueError("No matching benchmark subjects")
+    results = []
+    for name, repo, prompt, folder in jobs:
+        writable = arguments.command == "run-writers"
+        if arguments.preflight_only:
+            discovery_pi.preflight(folder, repo, config, writable=writable)
+            result: dict[str, object] = {"subject": name, "preflight": "passed"}
+        else:
+            discovery_pi.run_session(
+                folder, repo, prompt.read_text(), config, writable=writable
+            )
+            result = {"subject": name, "status": "complete"}
+            if not writable:
+                result.update(collect_reader(run, name))
+        results.append(result)
+        print(json.dumps(result), flush=True)
+    return results
 
 
 def main() -> None:
-    """Run one explicit experiment stage; no model calls are made."""
+    """Run an explicit experiment stage; only run-writers/readers call models."""
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("prepare", "readers", "replay", "score"):
+    for name in (
+        "prepare",
+        "readers",
+        "replay",
+        "score",
+        "validate",
+        "run-writers",
+        "run-readers",
+        "collect",
+    ):
         command = commands.add_parser(name)
         command.add_argument("run", type=Path)
         if name == "prepare":
             command.add_argument("--skill", type=Path, required=True)
-            command.add_argument("--reader-config", required=True)
+            command.add_argument(
+                "--reader-config", default="Pi effective profile verified at runtime"
+            )
+            command.add_argument("--generic", action="store_true")
         if name == "readers":
             command.add_argument("--seed", type=int, default=0)
+        if name in ("run-writers", "run-readers"):
+            command.add_argument("--provider", required=True)
+            command.add_argument("--model", required=True)
+            command.add_argument("--thinking", default="medium")
+            command.add_argument("--pi", default="pi")
+            command.add_argument("--only")
+            command.add_argument("--preflight-only", action="store_true")
+        if name == "collect":
+            command.add_argument("--reader", required=True)
     args = parser.parse_args()
     run = args.run.resolve()
     if args.command == "prepare":
-        prepare(run, args.skill, args.reader_config)
+        prepare(run, args.skill, args.reader_config, include_generic=args.generic)
     elif args.command == "readers":
         make_readers(run, args.seed)
+    elif args.command in ("run-writers", "run-readers"):
+        run_pi_subjects(run, args)
+    elif args.command == "collect":
+        print(json.dumps(collect_reader(run, args.reader), indent=2))
+    elif args.command == "validate":
+        print(json.dumps(validate_rewrites(run), indent=2))
     else:
         value = replay_run(run) if args.command == "replay" else score(run)
         write_json(run / "private" / f"{args.command}.json", value)

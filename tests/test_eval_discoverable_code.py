@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+import copy
+import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from scripts import eval_discoverable_code as runner
+from tests.test_discovery_pi import completed_events, profile_fixture
 
 
 class DiscoverabilityEvalTests(unittest.TestCase):
@@ -121,6 +126,223 @@ class DiscoverabilityEvalTests(unittest.TestCase):
         self.save_grades()
         with self.assertRaisesRegex(ValueError, "Missing or invalid output_bytes"):
             runner.score(self.workspace)
+
+    def test_generic_rewrite_gets_its_own_comparison(self) -> None:
+        shutil.copytree(self.workspace / "readers/r01", self.workspace / "readers/r03")
+        generic_reader: runner.Reader = {
+            **self.readers[0],
+            "id": "r03",
+            "arm": "generic",
+        }
+        self.readers.append(generic_reader)
+        generic_grade = copy.deepcopy(self.grades[0])
+        generic_grade.update(reader="r03", commands=6, output_bytes=800)
+        self.grades.append(generic_grade)
+        runner.write_json(self.workspace / "private/readers.json", self.readers)
+        self.save_grades()
+        report = runner.score(self.workspace)[0]
+        self.assertEqual(3, report["commands_saved_vs_generic"])
+        self.assertEqual(400, report["output_bytes_saved_vs_generic"])
+        self.assertEqual({"original": 8, "skill": 3, "generic": 6}, report["commands"])
+
+    def test_new_run_cannot_score_without_verified_pi_evidence(self) -> None:
+        (self.workspace / "private/skill.txt").write_text("fixture skill")
+        runner.write_json(
+            self.workspace / "private/inputs.json",
+            {
+                "schema_version": 2,
+                "suite_sha256": hashlib.sha256(
+                    (self.workspace / "private/suite.json").read_bytes()
+                ).hexdigest(),
+                "skill_sha256": hashlib.sha256(
+                    (self.workspace / "private/skill.txt").read_bytes()
+                ).hexdigest(),
+            },
+        )
+        self.save_grades()
+        with self.assertRaises(FileNotFoundError):
+            runner.score(self.workspace)
+
+    def test_verified_score_checks_raw_metrics_model_route_and_tested_source(
+        self,
+    ) -> None:
+        private = self.workspace / "private"
+        (private / "skill.txt").write_text("fixture skill")
+        runner.write_json(
+            private / "inputs.json",
+            {
+                "schema_version": 2,
+                "suite_sha256": hashlib.sha256(
+                    (private / "suite.json").read_bytes()
+                ).hexdigest(),
+                "skill_sha256": hashlib.sha256(
+                    (private / "skill.txt").read_bytes()
+                ).hexdigest(),
+            },
+        )
+        for reader, grade in zip(self.readers, self.grades):
+            folder = self.workspace / "readers" / reader["id"] / "pi"
+            folder.mkdir()
+            profile = profile_fixture(folder.parent / "repo")
+            runner.write_json(
+                folder / "preflight.json",
+                {
+                    "profile": profile,
+                    "pi_version": "fixture-1",
+                    "audit_sha256": "known-audit",
+                },
+            )
+            (folder / "stderr.txt").write_text(
+                json.dumps({**profile, "type": "eval_profile"}) + "\n"
+            )
+            runner.write_json(
+                folder / "execution.json", {"exit_code": 0, "elapsed_seconds": 1.2}
+            )
+            (folder / "events.jsonl").write_text(
+                "\n".join(json.dumps(event) for event in completed_events()) + "\n"
+            )
+            runner.write_json(
+                private / f"validation-example-{reader['arm']}.json",
+                {"exit_code": 0, "source_sha256": reader["tree_sha256"]},
+            )
+            grade.update(commands=1, output_bytes=3, elapsed_seconds=2)
+        self.save_grades()
+        self.assertTrue(runner.score(self.workspace)[0]["harness_verified"])
+        self.grades[1]["output_bytes"] = 999
+        self.save_grades()
+        with self.assertRaisesRegex(ValueError, "differs from collected output_bytes"):
+            runner.score(self.workspace)
+        self.grades[1]["output_bytes"] = 3
+        self.save_grades()
+        second = self.workspace / "readers/r02/pi"
+        receipt = json.loads((second / "preflight.json").read_text())
+        receipt["profile"]["model"] = "another-model"
+        runner.write_json(second / "preflight.json", receipt)
+        (second / "stderr.txt").write_text(
+            json.dumps({**receipt["profile"], "type": "eval_profile"}) + "\n"
+        )
+        with self.assertRaisesRegex(ValueError, "Reader profiles do not match"):
+            runner.score(self.workspace)
+        receipt["profile"]["model"] = "gpt-6.1-sol"
+        runner.write_json(second / "preflight.json", receipt)
+        (second / "stderr.txt").write_text(
+            json.dumps({**receipt["profile"], "type": "eval_profile"}) + "\n"
+        )
+        runner.write_json(
+            private / "validation-example-skill.json",
+            {"exit_code": 0, "source_sha256": "different-source"},
+        )
+        with self.assertRaisesRegex(ValueError, "tested different source"):
+            runner.score(self.workspace)
+
+    def test_search_landing_distinguishes_implementation_from_exception_comment(
+        self,
+    ) -> None:
+        root = self.workspace / "readers/r01/repo"
+        (root / "exc.py").write_text("# Signature expired\n")
+        module = root / "moved_signing.py"
+        module.write_text(
+            "class TimestampSigner:\n    def unsign(self):\n        return 0\n"
+        )
+        query: runner.Query = {
+            "kind": "literal",
+            "value": "signature expired",
+            "owner": {"symbol": "TimestampSigner.unsign"},
+        }
+        indirect = runner.replay(root, query)
+        assert indirect["landing"] is not None
+        self.assertEqual("indirect", indirect["landing"]["status"])
+        self.assertFalse(indirect["landing"]["implementation_file_hit"])
+        module.write_text(
+            'class TimestampSigner:\n    def unsign(self):\n        """Signature expired checks."""\n        return 0\n'
+        )
+        direct = runner.replay(root, query)
+        assert direct["landing"] is not None
+        self.assertEqual("direct", direct["landing"]["status"])
+        self.assertEqual(1, direct["landing"]["direct_hits"])
+        self.assertEqual(1, direct["landing"]["other_hits"])
+        miss = runner.replay(root, {**query, "value": "does not exist"})
+        assert miss["landing"] is not None
+        self.assertEqual("miss", miss["landing"]["status"])
+
+    def test_call_oracle_survives_private_function_and_module_renames(self) -> None:
+        root = self.workspace / "readers/r01/repo"
+        (root / "password_derivation.py").write_text(
+            'def derive_password():\n    raise ValueError("bad parameters")\n    hashlib.pbkdf2_hmac("sha256")\n'
+        )
+        result = runner.replay(
+            root,
+            {
+                "kind": "literal",
+                "value": "bad parameters",
+                "owner": {"call": "hashlib.pbkdf2_hmac"},
+            },
+        )
+        assert result["landing"] is not None
+        self.assertEqual("direct", result["landing"]["status"])
+
+    def test_prepare_and_freeze_keep_generic_writer_free_of_skill_and_questions(
+        self,
+    ) -> None:
+        source = self.workspace / "source"
+        source.mkdir()
+        (source / "src").mkdir()
+        (source / "src/behavior.py").write_text("def behavior(): return 42\n")
+        subprocess.run(["git", "init", "--quiet", str(source)], check=True)
+        subprocess.run(["git", "-C", str(source), "add", "."], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                str(source),
+                "-c",
+                "user.name=Fixture",
+                "-c",
+                "user.email=fixture@example.invalid",
+                "commit",
+                "--quiet",
+                "-m",
+                "fixture",
+            ],
+            check=True,
+        )
+        commit = runner.git(source, "rev-parse", "HEAD").strip()
+        suite = self.workspace / "suite.json"
+        runner.write_json(
+            suite,
+            {
+                "targets": [
+                    {
+                        "id": "fixture",
+                        "url": str(source),
+                        "commit": commit,
+                        "module": "src/behavior.py",
+                        "tasks": [{"id": "task", "question": "HELD_BACK_QUESTION"}],
+                    }
+                ]
+            },
+        )
+        skill = self.workspace / "skill.txt"
+        skill.write_text("DISTINCTIVE_SKILL_RULE")
+        run = self.workspace / "new-run"
+        with patch.object(runner, "SUITE_PATH", suite):
+            runner.prepare(run, skill, "fixture", include_generic=True)
+        generic = (run / "private/writer-generic-fixture.txt").read_text()
+        applied = (run / "private/writer-skill-fixture.txt").read_text()
+        self.assertNotIn("DISTINCTIVE_SKILL_RULE", generic)
+        self.assertIn("DISTINCTIVE_SKILL_RULE", applied)
+        for prompt in (generic, applied):
+            self.assertNotIn("HELD_BACK_QUESTION", prompt)
+            self.assertIn("50 tool calls and 15 minutes", prompt)
+        runner.make_readers(run, 0)
+        assignments = json.loads((run / "private/readers.json").read_text())
+        self.assertEqual(
+            {"original", "generic", "skill"}, {row["arm"] for row in assignments}
+        )
+        for row in assignments:
+            prompt = (run / "readers" / row["id"] / "prompt.txt").read_text()
+            self.assertIn("HELD_BACK_QUESTION", prompt)
+            self.assertNotIn("DISTINCTIVE_SKILL_RULE", prompt)
 
     def test_source_change_and_missing_evidence_are_rejected(self) -> None:
         self.save_grades()
