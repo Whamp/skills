@@ -1,0 +1,216 @@
+{
+  "targets": [
+    {
+      "id": "itsdangerous",
+      "url": "https://github.com/pallets/itsdangerous.git",
+      "commit": "096c8d42545d3b68ea21a4f890fb2b2d8979c0bd",
+      "module": "src/itsdangerous/timed.py",
+      "test_command": "uv run --no-project --python 3.12 --with pytest==8.3.5 --with freezegun==1.5.1 --with-editable . python -m pytest -q tests",
+      "queries": [
+        {
+          "kind": "literal",
+          "value": "signature expired",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          },
+          "task": "expiry"
+        },
+        {
+          "kind": "literal",
+          "value": "Signature age",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          },
+          "task": "fallback"
+        },
+        {
+          "kind": "glob",
+          "value": "*tim*.py",
+          "owner": {
+            "symbol": "TimestampSigner.unsign"
+          },
+          "task": "expiry"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "expiry",
+          "question": "A correctly signed value is rejected when its timestamp is ahead of the server clock. Find the implementation responsible. Explain how age is calculated, its units, when an old value is rejected, and when age checks are disabled. Cite executable code with paths and line numbers.",
+          "rubric": "TimestampSigner.unsign in src/itsdangerous/timed.py (or its moved implementation). When max_age is not None, age is current timestamp minus signed timestamp, in seconds. age > max_age raises SignatureExpired; equality is accepted. age < 0 also raises SignatureExpired. max_age=None skips both age checks. Cite executable branches, not only docs or tests."
+        },
+        {
+          "id": "fallback",
+          "question": "Loading an expired signed value is configured with fallback signers. Find the code that decides whether another signer is tried. Contrast expiry with a signature mismatch and trace the throw and handling sites. Cite executable code with paths and line numbers.",
+          "rubric": "The message comes from TimestampSigner.unsign's age > max_age branch. TimedSerializer.loads immediately re-raises SignatureExpired rather than continuing the signer loop. Other BadSignature errors are retained while trying the next signer. Cite both the throw and the exception handling branches."
+        }
+      ]
+    },
+    {
+      "id": "werkzeug",
+      "url": "https://github.com/pallets/werkzeug.git",
+      "commit": "6389612fd1ee1bd93579eed5026e8fd471d04abd",
+      "module": "src/werkzeug/security.py",
+      "test_command": "uv run --no-project --python 3.12 --with pytest==8.3.5 --with ephemeral-port-reserve==1.1.4 --with-editable . python -m pytest -q tests/test_security.py",
+      "queries": [
+        {
+          "kind": "literal",
+          "value": "untrusted path",
+          "owner": {
+            "symbol": "safe_join"
+          },
+          "task": "path"
+        },
+        {
+          "kind": "literal",
+          "value": "'pbkdf2' takes 2 arguments.",
+          "owner": {
+            "call": "hashlib.pbkdf2_hmac"
+          },
+          "task": "hash"
+        },
+        {
+          "kind": "glob",
+          "value": "*security*.py",
+          "owner": {
+            "symbol": "safe_join"
+          },
+          "task": "path"
+        }
+      ],
+      "tasks": [
+        {
+          "id": "path",
+          "question": "A caller joins a user-supplied filename to a base directory and sometimes gets None. Find the implementation. Explain which inputs are rejected, how normalization affects the checks, and what an empty base means. Cite executable code with paths and line numbers.",
+          "rubric": "safe_join in src/werkzeug/security.py (or its moved implementation). Nonempty components are normalized with posixpath.normpath. It rejects OS alternate separators, absolute paths, leading /, exactly .., and ../ prefixes, returning None. An empty trusted base becomes . so the first untrusted part cannot become trusted. Accepted parts are joined with posixpath.join. Cite executable code."
+        },
+        {
+          "id": "hash",
+          "question": "A log contains the exact text: 'pbkdf2' takes 2 arguments. Find the throw site and explain what is being counted, the accepted argument forms, and the default algorithm and iteration count at this revision. Cite implementation paths and line numbers.",
+          "rubric": "_hash_internal in src/werkzeug/security.py (or its moved implementation) splits the method on :. The count excludes the pbkdf2 method token. Zero arguments uses sha256 and DEFAULT_PBKDF2_ITERATIONS; one sets the digest but keeps default iterations; two sets digest and integer iterations; more than two raises ValueError with that text. The executable constant is 1,000,000, even though older prose in generate_password_hash says 600000. Cite branches and the constant."
+        }
+      ]
+    },
+    {
+      "id": "cockatiel",
+      "url": "https://github.com/connor4312/cockatiel.git",
+      "commit": "32a70686ef3470f6c94c1325fbc7982d582b8432",
+      "module": "src/RetryPolicy.ts and src/backoff/ExponentialBackoff*.ts, including their retry factory in src/Policy.ts",
+      "source_globs": [
+        "src/*.ts",
+        "src/**/*.ts"
+      ],
+      "test_command": "bash -c 'npm ci --ignore-scripts && npm exec -- tsc && npm run test:unit'",
+      "queries": [
+        {
+          "task": "delay",
+          "kind": "literal",
+          "value": "retry delay",
+          "owner": {
+            "glob": "src/**/*.ts",
+            "start": "export const noJitterGenerator:",
+            "end": "  attempts + 1,"
+          }
+        },
+        {
+          "task": "delay",
+          "kind": "glob",
+          "value": "*Backoff*.ts",
+          "owner": {
+            "glob": "src/**/*.ts",
+            "start": "export const noJitterGenerator:",
+            "end": "  attempts + 1,"
+          }
+        },
+        {
+          "task": "defaults",
+          "kind": "literal",
+          "value": "maxAttempts",
+          "owner": {
+            "glob": "src/**/*.ts",
+            "start": "export function retry(",
+            "end": "maxAttempts: opts.maxAttempts ?? Infinity"
+          }
+        }
+      ],
+      "tasks": [
+        {
+          "id": "delay",
+          "question": "Find how retry delays are calculated when jitter is disabled. With an initial delay of 100 milliseconds and a maximum of 250 milliseconds, what are the first four delays? Does changing the exponent option to 3 change that sequence at this revision? Trace the implementation and cite executable code with paths and line numbers.",
+          "rubric": "ExponentialBackoff.next creates an instance and advances it; instance.next calls options.generator with its state and options. noJitterGenerator in src/backoff/ExponentialBackoffGenerators.ts uses min(maxDelay, initialDelay * 2 ** attempts), starting attempts at 0 and incrementing it. Sequence 100, 200, 250, 250 milliseconds. The no-jitter generator uses literal 2, not options.exponent, so exponent=3 has no effect. Cite generator and instance advancement, not just option docs or tests."
+        },
+        {
+          "id": "defaults",
+          "question": "An operation keeps being retried after every handled failure even though no retry limit or delay was supplied. Find where those defaults come from and where the stop decision uses them. If the retry limit is set to 2, how many total invocations are allowed? Cite executable code with paths and line numbers.",
+          "rubric": "retry factory in src/Policy.ts uses opts.maxAttempts ?? Infinity and opts.backoff || new ConstantBackoff(0). RetryPolicy.execute also supplies ConstantBackoff(0) if needed; ConstantBackoff.next supplies duration 0. Loop retries begins at 0, invokes once before testing !signal.aborted && retries < maxAttempts. With maxAttempts=2, allows original plus two retries (three total) for handled failures, absent cancellation. Success returns immediately. Cite default factory, constant-backoff duration, and execute branch."
+        }
+      ]
+    },
+    {
+      "id": "p-queue",
+      "url": "https://github.com/sindresorhus/p-queue.git",
+      "commit": "70dd11f35ae1853f002e017f3ed06a2497715d99",
+      "module": "source/index.ts and its scheduling helpers in source/priority-queue.ts and source/lower-bound.ts",
+      "source_globs": [
+        "source/*.ts",
+        "source/**/*.ts"
+      ],
+      "test_command": "bash -c 'npm install --ignore-scripts --no-package-lock && npm exec -- ava --concurrency=1 && npm run build'",
+      "queries": [
+        {
+          "task": "events",
+          "kind": "literal",
+          "value": "this.emit('completed', result)",
+          "owner": {
+            "glob": "source/**/*.ts",
+            "start": "async add<TaskResultType>(function_: Task<TaskResultType>, options: Partial<EnqueueOptionsType> = {})",
+            "end": "\n\t\t\tthis.emit('add');"
+          }
+        },
+        {
+          "task": "events",
+          "kind": "literal",
+          "value": "completed",
+          "owner": {
+            "glob": "source/**/*.ts",
+            "start": "async add<TaskResultType>(function_: Task<TaskResultType>, options: Partial<EnqueueOptionsType> = {})",
+            "end": "\n\t\t\tthis.emit('add');"
+          }
+        },
+        {
+          "task": "priority",
+          "kind": "literal",
+          "value": "lowerBound",
+          "owner": {
+            "glob": "source/**/*.ts",
+            "start": "export default function lowerBound",
+            "end": "\n\treturn first;"
+          }
+        },
+        {
+          "task": "priority",
+          "kind": "glob",
+          "value": "*priority*.ts",
+          "owner": {
+            "glob": "source/**/*.ts",
+            "start": "export default function lowerBound",
+            "end": "\n\treturn first;"
+          }
+        }
+      ],
+      "tasks": [
+        {
+          "id": "events",
+          "held_out": true,
+          "question": "Find where the queue emits the 'completed' event and identify its payload. Does a task timeout emit 'completed', emit 'error', or neither when throwOnTimeout is false? Trace how the queue releases the running slot in that case. Cite executable code with paths and line numbers.",
+          "rubric": "PQueue.add enqueued callback awaits operation, resolves its result, then emits completed with result. pTimeout wraps operation when options.timeout is truthy. TimeoutError with !options.throwOnTimeout resolves undefined and returns from catch before error emission, so neither completed nor error is emitted. finally calls #next, which decrements #pending, tries starting another task, and emits next. Cite successful branch, TimeoutError catch, finally and #next executable bodies in source/index.ts (or moved implementation). Do not equate Promise resolution with synchronous execution of a caller's .then callback."
+        },
+        {
+          "id": "priority",
+          "held_out": true,
+          "question": "Three waiting jobs were added in order A, B, C with priorities 2, 2, 1. Find what determines their run order when the queue is resumed with concurrency 1. Explain how insertion preserves equal-priority order and trace the helper used when insertion cannot append. Cite executable code with paths and line numbers.",
+          "rubric": "Default PriorityQueue stores jobs ordered by descending priority, so A, B, C. enqueue defaults priority to 0; pushes when empty or last priority >= new priority. Otherwise uses lowerBound with comparator b.priority - a.priority; lowerBound advances first past comparisons <= 0, giving an insertion point after equal priorities. splice inserts there. dequeue shifts first element and returns run. PQueue #tryToStartAnother checks pause and concurrency/interval allowance, dequeues and calls job. Cite enqueue, lowerBound loop, dequeue and scheduling branch, not only tests/docs."
+        }
+      ]
+    }
+  ]
+}

@@ -75,6 +75,10 @@ make validate
 
 The check runs validator tests, audits manifests and local reference links, lints Markdown, and verifies that the standard skills installer discovers the collection.
 
+## Evaluations
+
+- [Write-discoverable-code](evals/write-discoverable-code/README.md) compares code discovery in original and skill-rewritten repositories, with fixed search replay and fresh-reader correctness checks.
+
 ## License
 
 MIT unless a skill includes its own license or states different terms in its frontmatter.
