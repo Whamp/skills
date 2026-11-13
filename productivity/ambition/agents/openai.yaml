@@ -1,0 +1,6 @@
+interface:
+  display_name: "Ambition"
+  short_description: "Rewrite a request into a more ambitious, grounded version"
+  default_prompt: "Use $ambition to rewrite this request into a more ambitious version before any work starts."
+policy:
+  allow_implicit_invocation: false
