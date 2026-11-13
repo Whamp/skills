@@ -4,6 +4,7 @@ Skills for thinking, planning, writing, research, and personal operating-system 
 
 ## Skills
 
+- [`ambition`](ambition/) — user-only rewrite of a task, plan request, or subagent brief into a more ambitious, grounded version.
 - [`bro`](bro/) — restates the previous response in plain, concise language for a cold reader.
 - [`clear-writing`](clear-writing/) — writes and revises durable human-facing prose with plain force.
 - [`distilling-skills`](distilling-skills/) — finds, evaluates, and combines agent skills into a concentrated best-of-breed version.
