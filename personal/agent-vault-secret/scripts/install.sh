@@ -6,9 +6,9 @@
 #
 #   npx skills add Whamp/skills --global --skill agent-vault-secret --yes
 #
-# This script adds the two commands. On this host they become symlinks into the
-# installed skill directory, so there is one copy of each script. A remote host
-# gets a copy of the whole skill directory, because a symlink cannot cross hosts.
+# This script adds the three commands as symlinks into the installed skill
+# directory, so there is one copy of each script. A remote host first gets a
+# copy of the whole skill directory, because a symlink cannot cross hosts.
 #
 # Usage:
 #   scripts/install.sh                  # this host
@@ -47,6 +47,7 @@ for src in \
   "$skill_dir/scripts/agent-vault-add-secret.mjs" \
   "$skill_dir/scripts/agent-vault-add-secret-core.mjs" \
   "$skill_dir/scripts/agent-vault-set-secret.sh" \
+  "$skill_dir/scripts/agent-vault-request-secret.mjs" \
   "$skill_dir/SKILL.md"
 do
   [ -f "$src" ] || { printf 'missing source file: %s\n' "$src" >&2; exit 1; }
@@ -56,6 +57,7 @@ where="${target_host:-this host}"
 printf 'Installing Agent Vault secret commands on %s from %s\n' "$where" "$skill_dir"
 printf '  ~/.local/bin/agent-vault-add-secret\n'
 printf '  ~/.local/bin/agent-vault-set-secret\n'
+printf '  ~/.local/bin/agent-vault-request-secret\n'
 [ -n "$target_host" ] && printf '  ~/.agents/skills/%s/ (copy)\n' "$skill_name"
 
 if [ "$dry_run" = true ]; then
@@ -69,10 +71,11 @@ if [ -n "$target_host" ]; then
 
   mkdir -p "$stage/.agents/skills" "$stage/.local/bin"
   cp -a "$skill_dir" "$stage/.agents/skills/$skill_name"
-  install -m 755 "$skill_dir/scripts/agent-vault-add-secret.mjs" \
-    "$stage/.local/bin/agent-vault-add-secret"
-  install -m 755 "$skill_dir/scripts/agent-vault-set-secret.sh" \
-    "$stage/.local/bin/agent-vault-set-secret"
+  # Relative links, so the Node commands still find their helper module.
+  remote_scripts="../../.agents/skills/$skill_name/scripts"
+  ln -s "$remote_scripts/agent-vault-add-secret.mjs" "$stage/.local/bin/agent-vault-add-secret"
+  ln -s "$remote_scripts/agent-vault-set-secret.sh" "$stage/.local/bin/agent-vault-set-secret"
+  ln -s "$remote_scripts/agent-vault-request-secret.mjs" "$stage/.local/bin/agent-vault-request-secret"
 
   tar -C "$stage" -czf - . | ssh \
     -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=25 \
@@ -82,8 +85,9 @@ else
   mkdir -p "$bin_dir"
   ln -sfn "$skill_dir/scripts/agent-vault-add-secret.mjs" "$bin_dir/agent-vault-add-secret"
   ln -sfn "$skill_dir/scripts/agent-vault-set-secret.sh" "$bin_dir/agent-vault-set-secret"
+  ln -sfn "$skill_dir/scripts/agent-vault-request-secret.mjs" "$bin_dir/agent-vault-request-secret"
 fi
 
 printf '\nInstalled. Verify on %s with:\n' "$where"
-printf '  command -v agent-vault-add-secret agent-vault-set-secret\n'
+printf '  command -v agent-vault-add-secret agent-vault-set-secret agent-vault-request-secret\n'
 printf '  agent-vault-set-secret --check\n'

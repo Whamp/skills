@@ -375,3 +375,54 @@ test("terminal intake preflight fails before either interactive prompt", () => {
   assert.doesNotMatch(result.stderr, /Secret value/);
   assert.doesNotMatch(result.stderr, /this-must-not-be-read/);
 });
+
+test("terminal intake stores a value redirected from a file without exposing it", () => {
+  const testDirectory = mkdtempSync(join(tmpdir(), "agent-vault-secret-test-"));
+  const fakeSsh = join(testDirectory, "ssh");
+  const sshLog = join(testDirectory, "ssh.log");
+  const stdinLog = join(testDirectory, "stdin.log");
+  const valueFile = join(testDirectory, "secret");
+  // Like real SSH, the fake reads standard input unless `-n` is passed.
+  writeFileSync(
+    fakeSsh,
+    [
+      "#!/usr/bin/env bash",
+      "printf '%s\\n' \"$*\" >> \"$SSH_LOG\"",
+      "case \" $* \" in",
+      "  *' -n '*) exit 0 ;;",
+      "esac",
+      "cat >> \"$STDIN_LOG\"",
+      "",
+    ].join("\n"),
+  );
+  chmodSync(fakeSsh, 0o755);
+  writeFileSync(valueFile, "file-held-secret\n");
+
+  const testsDirectory = dirname(fileURLToPath(import.meta.url));
+  const script = join(testsDirectory, "..", "scripts", "agent-vault-set-secret.sh");
+  const result = spawnSync(
+    "bash",
+    ["-c", 'bash "$0" API_TOKEN "$@" < "$VALUE_FILE"', script, ...TEST_SETTINGS],
+    {
+      encoding: "utf8",
+      env: {
+        ...process.env,
+        PATH: `${testDirectory}:${process.env.PATH}`,
+        SSH_LOG: sshLog,
+        STDIN_LOG: stdinLog,
+        VALUE_FILE: valueFile,
+      },
+    },
+  );
+  const calls = readFileSync(sshLog, "utf8").trim().split("\n");
+  const sentOnStdin = readFileSync(stdinLog, "utf8");
+  rmSync(testDirectory, { recursive: true, force: true });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(calls.length, 2);
+  assert.match(calls[0], /credential list --vault default/);
+  assert.match(calls[1], /credential set --vault default "API_TOKEN=\$__v"/);
+  assert.equal(sentOnStdin, "file-held-secret\n");
+  assert.doesNotMatch(calls.join("\n"), /file-held-secret/);
+  assert.doesNotMatch(result.stdout + result.stderr, /file-held-secret/);
+});

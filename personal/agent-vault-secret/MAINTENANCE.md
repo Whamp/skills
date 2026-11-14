@@ -19,7 +19,8 @@ not a skill fact.
 ## Interfaces this depends on
 
 - `agent-vault` — `vault credential set`, `vault service add`, `agent rotate`,
-  `ca fetch`. Last reviewed against 0.39.3.
+  `ca fetch`, `vault token`, `vault proposal create -f - --json`, and the
+  `Status:` line of `vault proposal show`. Last reviewed against 0.39.3.
 - `glimpseui` — the window path. The script resolves it from
   `~/.pi/agent/npm/node_modules/glimpseui/src/glimpse.mjs` and two system
   locations.
@@ -55,3 +56,13 @@ Verified against the installed CLI:
 - `agent rotate` needs the owner session, which is already present on the vault
   host.
 - `ca fetch` writes the proxy root CA used by the verification step.
+
+## Review: agent-vault 0.39.3, 14 November 2026
+
+- `vault proposal create` refuses the owner session ("Session requires vault
+  scope"). `agent-vault-request-secret` mints a five-minute vault-scoped session
+  with `vault token --ttl 300` inside the container and uses it there.
+- `proposal create --json` returns `id`, `status`, `vault`, and `approval_url`.
+  The link's token is read-only; submitting values requires a login.
+- `proposal show` has no JSON output. The wait loop reads its `Status:` line
+  after removing colour codes, and fails loudly if that line disappears.
