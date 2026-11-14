@@ -1,6 +1,6 @@
 ---
 name: agent-vault-secret
-description: Add, update, or rotate a secret in Agent Vault with the human supplying the value, so it never enters an agent's context. Use when asked to add a credential to Agent Vault, give an agent access to a new API, or rotate an exposed agent token.
+description: Store a secret in Agent Vault while the human supplies the value, so it never enters your context. Use when the human wants to give you a password, API key, or token; when a task needs a credential you do not have; or when an exposed agent token needs rotating.
 ---
 
 # Add a secret to Agent Vault
@@ -10,8 +10,12 @@ to outbound requests, so the agent calls an API through the proxy without ever
 holding the key.
 
 The value must never enter your context. You supply the credential *name*; the
-human supplies the *value*. Never ask for, echo, or accept the secret in chat,
-and never read it back with `credential get`.
+human supplies the *value* through one of the intake paths in step 3. Ask for
+values only through those paths, and read back only credential names.
+
+If the human pastes a secret into chat anyway, it is already exposed. Say so,
+store it through an intake path anyway, and recommend that they rotate it at the
+provider.
 
 ## 1. Configure the instance
 
@@ -38,69 +42,99 @@ The first four are required. `proxy_url` is optional and only used by step 6.
 The steps below write `$host`, `$container`, `$vault`, and `$proxy_url` for those
 values.
 
+If the commands are missing, run [`scripts/install.sh`](scripts/install.sh). If
+this host cannot reach the vault host over SSH, run every command in this skill
+on a host that can, through SSH. A redirected file still travels on standard
+input: `ssh that-host agent-vault-set-secret NAME < "$secret_file"`.
+
 Complete when `agent-vault-set-secret --check` prints the four resolved values.
 
 ## 2. Agree the credential names
 
-Ask the human what each credential should be called. Use the environment
-variable names expected by the API when they are known, such as
+Propose a name for each credential and confirm it with the human. Use the
+environment variable names expected by the API when they are known, such as
 `OPENAI_API_KEY`, `CREDITSIGHTS_USERNAME`, or `CREDITSIGHTS_PASSWORD`.
 Use uppercase with underscores.
 
 Complete when the human has confirmed every name.
 
-## 3. Ask how the human will supply the value
+## 3. Collect the value
 
-Two intake paths. Ask which one, unless the situation already settles it — then
-say which you are using and why.
+Use the first path that fits. Tell the human which path you chose and what they
+will see.
 
-| Path | Use when | What happens |
+| Path | Use when | Who runs the command |
 | --- | --- | --- |
-| **Window** | You run on a host with a graphical session the human is sitting at. | A native window opens on that screen. They paste the value there. |
-| **Terminal** | Anywhere else: a laptop at a TTY, a remote host, an SSH session, no display. | You print a command. They run it in their own terminal and type the value at a hidden prompt. |
+| **Secret prompt** | Your harness has a tool that collects a secret into a file you never read, such as T3 Code's `request_secret` with `delivery: "file"`. | You |
+| **Approval link** | You can run commands, and the human has a browser that can reach the vault. Works from a phone. | You |
+| **Window** | You run on the machine where the human sits at a graphical session. | You |
+| **Terminal** | The human prefers it, or none of the paths above fits. | The human |
 
-The window draws on the screen of the machine running *you*, not the machine the
-human is looking at. Over a remote session it opens on the wrong screen, so use
-the terminal path. `[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]` on your host is a
-quick check for whether a window is even possible.
+If you cannot run commands at all, as in a chat-only app, hand the task to an
+agent that can, or give the human the terminal command below.
 
-**Window** (you run this; it blocks until they finish):
-
-```bash
-agent-vault-add-secret --key OPENAI_API_KEY
-```
-
-Repeat `--key` when one service needs several credentials. One window walks the
-human through the values in order:
+**Secret prompt.** Request one value per credential name through the harness
+tool. Redirect the delivered file into the terminal command, so the value goes
+from the file to the vault over SSH, then delete the file:
 
 ```bash
-agent-vault-add-secret \
-  --key CREDITSIGHTS_USERNAME \
-  --key CREDITSIGHTS_PASSWORD
+agent-vault-set-secret OPENAI_API_KEY < "$secret_file"
+rm -f "$secret_file"
 ```
 
-The command checks SSH access, the container, and the vault before opening the
-window. `--dry-run` skips that check so it remains an offline UI exercise.
+Keep `$secret_file` out of every other command, including `cat`.
 
-**Terminal** (the human runs this, not you):
+**Approval link.** Create a proposal with one empty slot per credential. Add a
+description so the human knows which value to paste:
 
 ```bash
-agent-vault-set-secret OPENAI_API_KEY
+agent-vault-request-secret \
+  --key 'CREDITSIGHTS_USERNAME=CreditSights login email' \
+  --key 'CREDITSIGHTS_PASSWORD=CreditSights password' \
+  --message 'Store the CreditSights login for the research agent'
 ```
 
-List several names to receive one hidden prompt per value:
+Give the human the printed approval link. They open it, sign in to Agent Vault,
+enter each value, and approve. Then wait for the result:
+
+```bash
+agent-vault-request-secret --wait 14
+```
+
+It exits `0` when the proposal is applied, `1` when it is rejected or expired,
+and `3` when it is still pending after `--timeout` seconds (default 1800).
+Approving a slot for a name that already exists replaces the stored value; that
+is how this path rotates a credential. To request a service and its credentials
+in one approval, write the proposal JSON described in step 5 and pass it with
+`--file`.
+
+**Window.** A native window opens on the screen of the machine running *you*.
+Over a remote session it opens on the wrong screen.
+`[ -n "${WAYLAND_DISPLAY:-}${DISPLAY:-}" ]` shows whether a window is possible.
+Repeat `--key` for several values; one window walks through them in order:
+
+```bash
+agent-vault-add-secret --key CREDITSIGHTS_USERNAME --key CREDITSIGHTS_PASSWORD
+```
+
+`--dry-run` exercises the window without connecting to the vault.
+
+**Terminal.** Print this command for the human to run in their own terminal. It
+asks for each value at a hidden prompt:
 
 ```bash
 agent-vault-set-secret CREDITSIGHTS_USERNAME CREDITSIGHTS_PASSWORD
 ```
 
-**Never run the terminal path yourself.** The value would land in a terminal you
-can read, and from there in your context — the whole thing this workflow exists
-to prevent. Print the command and let the human run it.
+Run it yourself only with standard input redirected from a secret file, as in
+the secret prompt path. Run interactively, the value would appear in a terminal
+you read.
 
-The window path also takes `--dry-run`, which exercises the UI without writing.
+Every path checks SSH access, the container, and the vault before it asks for a
+value.
 
-Complete when the human confirms they submitted every named value.
+Complete when the command reports success for every name, the proposal is
+applied, or the human confirms they submitted every value.
 
 ## 4. Confirm the credential landed
 
@@ -144,6 +178,28 @@ path-scoped form (`api.example.com/v1/*`). Prefer the narrowest path scope that
 covers the endpoints in use. Auth types are `bearer`, `basic`, `api-key`,
 `custom`, and `passthrough`; each has matching `--*-key` flags for the credential
 name.
+
+To have the human approve the service and its credential slots together, put
+both in one proposal file and pass it to `agent-vault-request-secret --file`:
+
+```json
+{
+  "services": [{
+    "name": "typesafe-api",
+    "host": "api.typesafe.ai/v1/*",
+    "auth": {"type": "bearer", "token": "TYPESAFE_API_KEY"}
+  }],
+  "credentials": [{
+    "action": "set",
+    "key": "TYPESAFE_API_KEY",
+    "description": "Typesafe API key"
+  }],
+  "message": "Typesafe API access for the extraction agent"
+}
+```
+
+When the credential is already stored, leave it out of `credentials`: a slot asks
+for the value again and replaces the stored one on approval.
 
 Stored login credentials do not create a working service by themselves. A JSON
 login exchange, OTP, SSO, or refresh-token workflow needs a compatible broker or
@@ -213,6 +269,8 @@ proxied request with it returns `200`.
   single-user.
 - Shared agent tokens are readable by anything that can reach the secret store.
   Rotate with `agent rotate` if one is exposed.
-- `scripts/install.sh` puts both commands on this host's PATH, or on another host
-  with `--host <ssh-host>`. Re-run it after moving the skill.
+- `scripts/install.sh` puts the three commands on this host's PATH, or on another
+  host with `--host <ssh-host>`. Re-run it after moving the skill.
+- The approval link carries a read-only token. Submitting values on the page
+  requires an Agent Vault login, so sharing the link with the human is safe.
 - Maintenance and the interfaces this depends on: [`MAINTENANCE.md`](MAINTENANCE.md).

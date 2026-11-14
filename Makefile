@@ -12,6 +12,7 @@ test:
 	uvx ruff@$(RUFF_VERSION) format --check $(PYTHON_PATHS)
 	uvx ty@$(TY_VERSION) check $(PYTHON_PATHS)
 	node --check evals/write-discoverable-code/pi-audit.mjs
+	node --test 'personal/agent-vault-secret/tests/*.test.mjs'
 	bash engineering/omarchy-free-disk-space/tests/run.sh
 
 validate: test

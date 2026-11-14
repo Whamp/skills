@@ -133,7 +133,8 @@ require_safe_token "ssh host" "$host"
 # Prove the complete route before asking the human for a credential name or
 # secret value. This avoids collecting a secret that cannot be stored.
 preflight_output=""
-if ! preflight_output="$(ssh \
+# `-n` keeps SSH from reading standard input, which may hold the secret value.
+if ! preflight_output="$(ssh -n \
   -o BatchMode=yes -o IdentitiesOnly=yes -o ConnectTimeout=25 \
   "$ssh_user@$host" \
   "docker exec $container agent-vault vault credential list --vault $vault >/dev/null" \
