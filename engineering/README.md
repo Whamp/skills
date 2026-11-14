@@ -5,21 +5,16 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 ## Skills
 
 - [`ban-type-assertions`](ban-type-assertions/) — enables oxlint's assertion ban and replaces TypeScript assertions with compiler-verified alternatives.
-- [`codegraph`](codegraph/) — scouts structural code graphs before targeted source reads, diagnosis, refactoring, and review.
 - [`create-project-bot`](create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
-- [`dynamic-workflow-patterns`](dynamic-workflow-patterns/) — selects and structures multi-agent workflow patterns for decomposable work.
 - [`explain-diff-html`](explain-diff-html/) — creates interactive HTML explainers for code changes.
 - [`fuzzing`](fuzzing/) — designs and operates coverage-guided fuzzing campaigns for Rust, C/C++, and Go.
 - [`herdr`](herdr/) — operates persistent sidecar agents and observable terminal work through Herdr.
-- [`integrate-napkin-agent-skills`](integrate-napkin-agent-skills/) — connects Napkin project memory to agent setup with template selection and optional project-local Pi tools.
 - [`model-routing`](model-routing/) — applies caller-configured model choices with permission, capacity, and review-independence safeguards.
 - [`nvidia-cuda-performance`](nvidia-cuda-performance/) — applies gated CUDA performance engineering with RTX 3090/SM86, LLM inference, and intra-host multi-GPU branches.
 - [`omarchy-free-disk-space`](omarchy-free-disk-space/) — safely audits and reclaims disk space on Omarchy and Arch Linux.
-- [`pastlight-agents-pointer`](pastlight-agents-pointer/) — adds a concise Pastlight tool pointer to a project's AGENTS.md.
 - [`perform-like-jeff-and-sanjay`](perform-like-jeff-and-sanjay/) — user-only performance engineering within a single binary, with evidence required for each proposed change.
 - [`pr-description`](pr-description/) — writes short human-facing PR openers with model-attributed details-summary bodies.
 - [`property-based-testing`](property-based-testing/) — designs, reviews, and operates counterexample-searching tests for broad domains, independent oracles, stateful APIs, and concurrent schedules.
 - [`repo-cleanup`](repo-cleanup/) — audits and safely removes obsolete worktrees, temporary artifacts, and inactive development databases.
-- [`sideshow`](sideshow/) — publishes rich work to a hosted visual review and feedback loop.
 - [`testing`](testing/) — selects discriminating test evidence and routes browser, boundary, language, property, fuzzing, and maintenance branches.
