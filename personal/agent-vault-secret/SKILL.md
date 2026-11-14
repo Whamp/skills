@@ -42,12 +42,17 @@ The first four are required. `proxy_url` is optional and only used by step 6.
 The steps below write `$host`, `$container`, `$vault`, and `$proxy_url` for those
 values.
 
+If the commands are missing, run [`scripts/install.sh`](scripts/install.sh). If
+this host cannot reach the vault host over SSH, run every command in this skill
+on a host that can, through SSH. A redirected file still travels on standard
+input: `ssh that-host agent-vault-set-secret NAME < "$secret_file"`.
+
 Complete when `agent-vault-set-secret --check` prints the four resolved values.
 
 ## 2. Agree the credential names
 
-Ask the human what each credential should be called. Use the environment
-variable names expected by the API when they are known, such as
+Propose a name for each credential and confirm it with the human. Use the
+environment variable names expected by the API when they are known, such as
 `OPENAI_API_KEY`, `CREDITSIGHTS_USERNAME`, or `CREDITSIGHTS_PASSWORD`.
 Use uppercase with underscores.
 
