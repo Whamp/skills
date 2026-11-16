@@ -48,6 +48,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 - [`first-principles`](productivity/first-principles/) — separates facts, assumptions, constraints, analogies, and unknowns before rebuilding an approach.
 - [`read-x-post`](productivity/read-x-post/) — reads public X/Twitter posts through unauthenticated providers and returns normalized JSON.
 - [`remind-me`](productivity/remind-me/) — user-only recap of the goal, completion state, and unresolved questions.
+- [`word-web`](productivity/word-web/) — downloads and reviews shared Microsoft Word documents, with verified browser and comment workflows.
 
 ### Personal
 
