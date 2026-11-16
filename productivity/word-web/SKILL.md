@@ -24,7 +24,8 @@ A link that opens one document does not establish access to the owner's drive.
 - **Comments or requested edits:** read [browser review](references/review.md).
 - **Capability exploration:** read [the tested operations](references/capabilities.md)
   first, then test only the operations relevant to the user's workflow. Use a
-  disposable copy for write tests; preserve the original.
+  disposable copy for body-edit tests. Follow the review branch for an authorized
+  comment-only test on the original.
 
 **Done:** the requested result is verified from the current file or browser state.
 A visible control alone is not proof that its action succeeds.

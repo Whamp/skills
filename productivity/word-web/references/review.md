@@ -36,14 +36,16 @@ available export, or the difference between UI, cloud save and export is explici
 
 ## Probe capabilities
 
-Use an identified disposable document for write tests. A useful small probe adds
+Use an identified disposable document for body-edit tests. For a user-authorized
+comment-only test on the supplied document, keep the wording intact, label the
+test thread, and remove only that thread after verification. A useful copy probe adds
 a unique text marker, posts a comment on it, replies, checks the anchor after
 reload, and exercises resolution/reopening only when those operations matter.
 Export before and after to test what survives into DOCX. Remove only the test
 material and verify cleanup. Preserve the original document and sharing policy.
 
-If a copy cannot be created or written, retain the exact failure and keep write
-operations unverified. A local synthetic OOXML example can test extraction logic;
+If a copy cannot be created or written, retain the exact failure and keep the
+unexercised operations unverified. A local synthetic OOXML example can test extraction logic;
 it cannot establish that the cloud comment or save operation works.
 
 **Done:** every tested operation has an observed outcome and cleanup result;
