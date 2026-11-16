@@ -11,3 +11,4 @@ Skills for thinking, planning, writing, research, and personal operating-system 
 - [`first-principles`](first-principles/) — runs an interactive first-principles grill for decomposing problems from fundamentals.
 - [`read-x-post`](read-x-post/) — reads public X/Twitter posts without login or an API key.
 - [`remind-me`](remind-me/) — user-only recap of the goal, completion state, and unresolved questions.
+- [`word-web`](word-web/) — downloads and reviews shared Microsoft Word documents, with verified browser and comment workflows.
