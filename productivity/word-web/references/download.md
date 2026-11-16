@@ -30,7 +30,9 @@ also be offered; verify the actual exported content before claiming coverage.
 
 ## Inspect the checkpoint
 
-Preserve the original bytes and SHA-256 before deriving text or editing. Use the
+Copy the completed browser download to a durable task path before closing its
+tab: browser-managed download paths disappeared when the test tab closed.
+Preserve those original bytes and SHA-256 before deriving text or editing. Use the
 available Word-document tooling rather than rebuilding its package unnecessarily.
 The useful parts are:
 
@@ -43,6 +45,11 @@ The useful parts are:
 | Insertions/deletions | `w:ins`, `w:del` and `w:delText` |
 | Thread or resolution metadata | Additional comments/people parts and relationships when present |
 | Headers, footers and other text | Their related package parts; body paragraphs alone are incomplete |
+
+A live posted comment and reply survived reload in the recorded test while a
+fresh direct DOCX download still had no comment parts or anchors. For review,
+inspect the live pane even when the package reports zero comments; the direct
+file route is not proof of complete cloud-comment coverage.
 
 Read the comment and its anchored passage together. A paragraph-only extractor
 can miss tables; a clean text export can hide tracked deletions. An absent
