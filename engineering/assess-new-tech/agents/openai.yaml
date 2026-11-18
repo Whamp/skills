@@ -1,0 +1,6 @@
+interface:
+  display_name: "Assess New Tech"
+  short_description: "Grade a new technology with a proof-of-concept draft PR"
+  default_prompt: "Use $assess-new-tech to assess this technology against our codebase."
+policy:
+  allow_implicit_invocation: false

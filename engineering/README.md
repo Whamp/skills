@@ -4,6 +4,7 @@ Skills for software, systems, debugging, automation, infrastructure, and technic
 
 ## Skills
 
+- [`assess-new-tech`](assess-new-tech/) — user-only assessment of a new technology through a proof-of-concept draft PR, six graded criteria, and a recommendation.
 - [`ban-type-assertions`](ban-type-assertions/) — enables oxlint's assertion ban and replaces TypeScript assertions with compiler-verified alternatives.
 - [`create-project-bot`](create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.

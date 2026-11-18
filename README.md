@@ -24,6 +24,7 @@ Use `--global` for a user-level installation or the installer's `--agent` option
 
 ### Engineering
 
+- [`assess-new-tech`](engineering/assess-new-tech/) — user-only assessment of a new technology through a proof-of-concept draft PR, six graded criteria, and a recommendation.
 - [`ban-type-assertions`](engineering/ban-type-assertions/) — bans TypeScript assertions with oxlint and replaces them safely.
 - [`create-project-bot`](engineering/create-project-bot/) — user-only creation or registration of project-local bots with durable `.bot/` state and verified startup.
 - [`docs-to-types`](engineering/docs-to-types/) — converts approved domain decisions into typed architecture before business behavior is implemented.
