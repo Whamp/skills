@@ -66,3 +66,9 @@ Verified against the installed CLI:
   The link's token is read-only; submitting values requires a login.
 - `proposal show` has no JSON output. The wait loop reads its `Status:` line
   after removing colour codes, and fails loudly if that line disappears.
+
+## Review: agent-vault 0.39.3, 17 November 2026
+
+- `agent rotate` prints the new token. `--token-only` reduces the output to the
+  raw token, so the skill pipes it into the consumer's secret store. This was
+  read from the command's help text; no live rotation was run.
