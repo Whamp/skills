@@ -13,6 +13,16 @@ The value must never enter your context. You supply the credential *name*; the
 human supplies the *value* through one of the intake paths in step 3. Ask for
 values only through those paths, and read back only credential names.
 
+Three things here can look like a secret. Only two of them are:
+
+- A **credential** is the real key or password for a target service. It is
+  stored in Agent Vault and is secret.
+- A **placeholder** is a fake value, such as `__openai_api_key__`, that a client
+  sends in place of a credential. The proxy replaces it. It is not secret.
+- An **agent token** is the string an agent presents to the proxy to identify
+  itself. It is secret, because it lets its holder use every service that agent
+  can reach.
+
 If the human pastes a secret into chat anyway, it is already exposed. Say so,
 store it through an intake path anyway, and recommend that they rotate it at the
 provider.
@@ -60,8 +70,8 @@ Complete when the human has confirmed every name.
 
 ## 3. Collect the value
 
-Use the first path that fits. Tell the human which path you chose and what they
-will see.
+Use the first path that fits. The harness you run in decides this, not the
+model you are. Tell the human which path you chose and what they will see.
 
 | Path | Use when | Who runs the command |
 | --- | --- | --- |
@@ -214,6 +224,11 @@ or when an unsupported login exchange is named as the blocker.
 Listing keys proves nothing about the value. Make a real call through the proxy,
 using an agent token that holds the `proxy` role on the vault.
 
+If this host has a launcher that supplies the agent token and the proxy
+settings, put the launcher in front of a plain `curl` to the service. Then you
+never handle the token, and you can skip the certificate and proxy options
+below. Without a launcher, set them by hand:
+
 ```bash
 ssh -o IdentitiesOnly=yes "$host" \
   "docker exec $container agent-vault ca fetch" > /tmp/av-ca.pem
@@ -229,34 +244,39 @@ curl -s --proxy "$proxy_url" --cacert /tmp/av-ca.pem \
 printing it.
 
 A `401` means the credential value is wrong. A `403` means the service is
-disabled or the agent lacks proxy access. A `200` means the whole path works.
+disabled or the agent lacks proxy access. A `200` means the request reached the
+service with a credential attached. Read the response body too: some services
+return `200` with an error inside it.
 
-Delete `/tmp/av-ca.pem` afterwards. Complete when the call returns `200`, or when
-a non-`200` has a stated cause.
+Delete `/tmp/av-ca.pem` afterwards if you fetched it. Complete when the call
+returns `200` with a body that shows success, or when a failure has a stated
+cause.
 
 ## Rotating an exposed agent token
 
-Two different things get called "a token" here, and only one of them is this.
-
-The **agent token** is the string an agent presents to Agent Vault so the proxy
-knows which agent is calling. It is a password for the proxy and nothing more. It
-is not the upstream API key, and Agent Vault has no way to mint or change a key
-at a provider — only that provider can. To replace an upstream key, get a new one
-from the provider and store it as a credential (step 2).
+The agent token is a password for the proxy and nothing more. It is not a
+credential for a target service, and Agent Vault has no way to mint or change a
+key at a provider — only that provider can. To replace a credential, get a new
+one from the provider and store it (step 2).
 
 `agent rotate` rotates the agent token and invalidates the old one immediately —
 use it when a token has leaked into a log, a transcript, or a shared context. It
 needs the owner session, which is already logged in on the vault host, so no
 separate login is required.
 
+`agent rotate` prints the new token. Printed into your terminal, the new token
+is exposed again. Pipe it straight into the place where the consumer keeps
+secrets. `--token-only` makes the output the raw token and nothing else:
+
 ```bash
 ssh -o IdentitiesOnly=yes "$host" \
-  "docker exec $container agent-vault agent rotate my-agent"
+  "docker exec $container agent-vault agent rotate my-agent --token-only" \
+  | my-secret-store-command
 ```
 
-Add `--token-only` to print just the raw token for scripting. Rotating a token
-does not change credential values, services, or roles — only the string that
-agent authenticates with.
+Every copy of the old token stops working at once, so update every place that
+holds one. Rotating a token does not change credential values, services, or
+roles — only the string that agent authenticates with.
 
 Complete when the new token is stored wherever the consumer keeps secrets and a
 proxied request with it returns `200`.
