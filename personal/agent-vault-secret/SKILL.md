@@ -88,8 +88,7 @@ tool. Redirect the delivered file into the terminal command, so the value goes
 from the file to the vault over SSH, then delete the file:
 
 ```bash
-agent-vault-set-secret OPENAI_API_KEY < "$secret_file"
-rm -f "$secret_file"
+agent-vault-set-secret OPENAI_API_KEY < "$secret_file" && rm -- "$secret_file"
 ```
 
 Keep `$secret_file` out of every other command, including `cat`.
