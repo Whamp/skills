@@ -10,6 +10,19 @@
 4. **Pure deterministic `window.renderAt(t)`:** given any timestamp `t` in `[0, total_duration_s]`, compute the exact visual state for `t` from scratch (never accumulate state across calls, because `--keyframes` jumps directly to arbitrary timestamps!).
 5. **No CSS wall-clock animations:** omit CSS `transition` and `@keyframes` on animated stage elements. Drive every opacity, `transform`, SVG `stroke-dashoffset`, bar width, and chart clip directly from `t` inside `renderAt(t)`.
 
+## Bundled layout helpers (`stage_helpers.js`)
+
+`build_narration.py` copies `assets/stage_helpers.js` into `<out-dir>/stage_helpers.js` (and `render_video.py` also serves it as a fallback at `/stage_helpers.js`). Include `<script src="./stage_helpers.js"></script>` in `scene.html` to access `window.PaperStage`:
+
+- **Timing & math:** `clamp`, `lerp`, `easeOutCubic`, `easeInOutCubic`, `timeSpan`, `makeBeatClock(timeline)`, `revealStroke(el, p)`, `renderLatex(el, tex)`.
+- **Auto-measuring SVG primitives:**
+  - `svgEl(tag, attrs, parent)` — creates an SVG element in the SVG namespace.
+  - `drawSpine(parent, items, opts)` — lays out 2–4 centered top spine pills inside the safe margin with measured widths and verdict slots; update per beat via `spine.setState(i, { status, verdict })`.
+  - `drawBarChart(parent, config)` — auto-measures label and value columns via `getBBox()` so bars never collide with labels; drive via `chart.setProgress(p)` and morph in place across ablations via `chart.morphValues(nextValues, p, nextDisplayValues)`.
+  - `drawLineChart(parent, config)` — plots vector scaling/training curves with axes, ticks, `stroke-dashoffset` draw-on (`chart.setProgress(p)`), and vertically de-collided end labels.
+  - `placeBadgeRightOf(anchorEl, text, opts)` — positions a pill badge to the right of `anchorEl.getBBox()` clamped within the right safe margin.
+  - `fitLabelInBox(textEl, boxRect, opts)` — shrinks an SVG label font size if needed so it fits cleanly inside its container rect.
+
 ## Minimal `scene.html` skeleton
 
 ```html
@@ -20,6 +33,7 @@
   <title>Paper Explainer</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="./stage_helpers.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -54,49 +68,20 @@
     <span id="time-label">0.00s</span>
   </div>
   <script>
-    // ---- Pure deterministic helpers ----
-    const clamp = (v, lo = 0, hi = 1) => Math.max(lo, Math.min(hi, v));
-    const lerp = (a, b, p) => a + (b - a) * p;
-    const easeOut = (p) => 1 - Math.pow(1 - clamp(p), 3);
-    const easeInOut = (p) => {
-      const x = clamp(p);
-      return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
-    };
-    const span = (t, t0, t1, ease = easeOut) => ease(clamp((t - t0) / Math.max(1e-4, t1 - t0)));
-
-    // Beat lookup helper: returns { start, audioEnd, end, dur }
-    let B = {};
-    let TOTAL = 10;
-
-    function beatProgress(id, t, startFrac = 0, endFrac = 0.5, ease = easeOut) {
-      const b = B[id];
-      const dur = Math.max(0.2, b.audio_end_s - b.start_s);
-      return span(t, b.start_s + dur * startFrac, b.start_s + dur * endFrac, ease);
-    }
-
-    function revealStroke(el, p) {
-      const len = Number(el.dataset.len || (el.dataset.len = String(el.getTotalLength())));
-      el.style.strokeDasharray = String(len);
-      el.style.strokeDashoffset = String(len * (1 - clamp(p)));
-    }
-
-    function renderMath(el, tex) {
-      if (window.katex) {
-        window.katex.render(tex, el, { displayMode: true, throwOnError: false });
-      } else {
-        el.textContent = tex;
-      }
-    }
+    const S = window.PaperStage;
+    let clock = null;
 
     // ---- Scene construction and per-frame update ----
     function buildScene(timeline) {
-      B = Object.fromEntries(timeline.beats.map((b) => [b.id, b]));
-      TOTAL = timeline.total_duration_s;
-      // Build SVG elements and pre-render KaTeX nodes once here.
+      clock = S.makeBeatClock(timeline);
+      const canvas = document.getElementById("canvas");
+      // Build SVG actors with S.drawSpine / S.drawBarChart / S.drawLineChart and pre-render KaTeX with S.renderLatex.
+      void canvas;
     }
 
     window.renderAt = function renderAt(t) {
-      // Compute every opacity, transform, bar width, and stroke reveal purely from t and B.
+      // Compute every opacity, transform, bar width, and stroke reveal purely from t and clock.
+      void t;
     };
 
     window.__SCENE_READY__ = (async () => {
@@ -112,12 +97,12 @@
         const label = document.getElementById("time-label");
         const btn = document.getElementById("play-btn");
         bar.style.display = "flex";
-        scrub.max = String(TOTAL);
+        scrub.max = String(clock.totalDuration);
         let cur = 0, playing = false, lastTs = 0;
         const paint = (sec) => {
-          cur = clamp(sec, 0, TOTAL);
+          cur = S.clamp(sec, 0, clock.totalDuration);
           scrub.value = String(cur);
-          label.textContent = `${cur.toFixed(2)}s / ${TOTAL.toFixed(2)}s`;
+          label.textContent = `${cur.toFixed(2)}s / ${clock.totalDuration.toFixed(2)}s`;
           window.renderAt(cur);
         };
         scrub.addEventListener("input", () => { playing = false; btn.textContent = "Play"; paint(Number(scrub.value)); });
@@ -131,7 +116,7 @@
           if (!playing) return;
           const dt = (now - lastTs) / 1000;
           lastTs = now;
-          if (cur + dt >= TOTAL) { paint(TOTAL); playing = false; btn.textContent = "Play"; return; }
+          if (cur + dt >= clock.totalDuration) { paint(clock.totalDuration); playing = false; btn.textContent = "Play"; return; }
           paint(cur + dt);
           requestAnimationFrame(tick);
         }
@@ -141,6 +126,14 @@
 </body>
 </html>
 ```
+
+## Automated keyframe layout audit
+
+`render_video.py --keyframes` audits every beat keyframe after calling `window.renderAt(t)`:
+
+- **KaTeX integrity:** fails if `.math-node` exists while `window.katex` is missing, if any visible `.math-node` lacks a rendered `.katex` child, or if `.katex-error` is present. Always load `katex.min.js` synchronously (never with `defer`).
+- **Safe margins:** flags any visible SVG `<text>` or `.math-node` outside `x ∈ [72, 1848]`, `y ∈ [56, 1024]`.
+- **Collisions:** flags overlapping visible text/math boxes and text crossing the border of sibling `<rect>` or `<polygon>` elements. Add `data-audit-ignore="true"` only on intentionally decorative shapes (such as shaded plot regions or background tracks).
 
 ## KaTeX offline fallback
 
