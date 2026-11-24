@@ -176,7 +176,11 @@ unset seen_keys
 
 for key in "${keys[@]}"; do
   printf 'Secret value for %s: ' "$key" >&2
-  read -rsp '' value
+  # Redirected secret files (e.g. T3 request_secret) may omit a trailing newline;
+  # `read` exits 1 at EOF even after populating `value`, so guard under `set -e`
+  # and let the empty-value check below handle genuinely empty input.
+  value=""
+  read -rsp '' value || true
   printf '\n' >&2
 
   if [ -z "$value" ]; then
