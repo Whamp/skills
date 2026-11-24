@@ -4,7 +4,7 @@ MARKDOWNLINT_VERSION := 0.23.2
 RUFF_VERSION := 0.16.0
 SKILLS_CLI_VERSION := 1.5.22
 TY_VERSION := 0.0.69
-PYTHON_PATHS := scripts tests engineering/herdr
+PYTHON_PATHS := scripts tests engineering/herdr productivity/paper-to-video/scripts
 
 test:
 	uv run python -m unittest discover -s tests -v

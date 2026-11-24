@@ -1,0 +1,133 @@
+---
+name: paper-to-video
+description: Turn a research paper (arXiv URL/ID, PDF, or paper note) into a concise 3Blue1Brown-style animated explainer video with synchronized voiceover, visual math, and verified data plots. Use when asked to make a 3Blue1Brown video, animated explainer video, or narrated visual summary of a paper.
+license: MIT
+---
+
+# Paper to Video
+
+Produce a crisp, 2-minute 3Blue1Brown-style animated explainer video (1920×1080 MP4) with synchronized voiceover from a research paper. Build audio first so every visual transition locks to measured speech timestamps, inspect every beat's keyframe before full rendering, and show only verified paper claims and numbers.
+
+**Inputs.** One paper source: an arXiv URL or ID, a local PDF, or an existing paper note that links to the primary paper. Optional: target duration (default ~2 minutes), audience depth, voice, or output directory (default outside any source repo, e.g. `/tmp/paper-to-video-<slug>/`).
+
+## Steps
+
+### 1. Read the primary paper and isolate the spine
+
+Read the actual paper, not just an abstract or social post. For an arXiv paper, prefer arXiv HTML (`https://arxiv.org/html/<id>`) or source over PDF extraction when available so equations and tables stay exact; otherwise extract text with `pdftotext` and inspect key figures directly. When starting from an existing paper note, read both the note (for critical caveats and focus) and the primary paper (for exact equations, axes, and numbers).
+
+Extract and write down a brief working sheet (in the output directory, not in chat):
+
+- **Thesis:** the paper's core claim in one plain sentence.
+- **Citation:** exact authors, year, and arXiv ID or venue (`Author et al. Year · arXiv:XXXX.XXXXX`).
+- **Visual spine:** 2–4 questions, hypotheses, or components that stay visible across the video as verdicts fill in.
+- **Verified facts:** every equation, metric, baseline, model scale, compute budget, and figure value you plan to display, each traced to its table, figure, or section. Include any material caveat that qualifies the headline result.
+
+Never invent numbers, baselines, or claims. If a figure lacks exact printed numbers and cannot be read reliably, state the qualitative trend rather than fabricating decimals.
+
+**Done when** you have the thesis, citation, 2–4 spine items, and a verified fact sheet with zero unverified numbers.
+
+### 2. Draft the beat script (`beats.json`)
+
+Write a tight spoken script aimed at ~90–150 seconds (~210–350 words at ~140 wpm) unless the user asked for a different length. Start straight into the concrete mechanism on second 0 — skip greetings, channel intros, and throat-clearing.
+
+Split the script into 10–18 **beats** in `<out-dir>/beats.json`:
+
+```json
+{
+  "title": "Short Paper Title",
+  "citation": "Author et al. 2026 · arXiv:XXXX.XXXXX",
+  "voice": "en-GB-RyanNeural",
+  "beats": [
+    {
+      "id": "hook",
+      "text": "One clear spoken sentence introducing the concrete mechanism.",
+      "pause_after_s": 0.35,
+      "visual_cue": "What enters, morphs, or highlights during this beat"
+    }
+  ]
+}
+```
+
+Keep each beat to one spoken thought (roughly 10–30 words) paired with one visual move. Use `pause_after_s` of `0.25–0.45` between connected sentences and `0.60–0.85` at act boundaries. Validate structure and pacing with:
+
+```bash
+python3 scripts/build_narration.py <out-dir>/beats.json --out-dir <out-dir> --dry-run
+```
+
+Resolve `scripts/build_narration.py` relative to this `SKILL.md`.
+
+**Done when** `--dry-run` passes, total estimated duration fits the target window, and every quantitative claim in `beats.json` matches step 1.
+
+### 3. Build audio first (`timeline.json` and `narration.m4a`)
+
+Synthesize the voiceover and measure exact beat timestamps before writing any animation timing:
+
+```bash
+python3 scripts/build_narration.py <out-dir>/beats.json --out-dir <out-dir>
+```
+
+- Uses `edge-tts` by default (falls back to `uvx --from edge-tts edge-tts` when not on `PATH`).
+- Pass `--audio-dir <dir>` to assemble pre-generated audio clips (`<beat-id>.mp3`/`.wav`/`.m4a`) from another TTS engine or human recording.
+- Pass `--silent` only when offline or when the user asks for a silent subtitled video; burn `subtitles.srt` during step 6.
+
+Inspect the emitted `timeline.json` summary (`total_duration_s`, per-beat `start_s` / `audio_end_s` / `end_s`, and `wpm`). If pacing runs too long or short, tighten `beats.json` and rebuild audio before animating.
+
+**Done when** `<out-dir>/timeline.json`, `<out-dir>/subtitles.vtt`, and `<out-dir>/narration.m4a` (unless `--silent`) exist and total duration matches the target pacing.
+
+### 4. Author the deterministic scene (`scene.html`)
+
+Read [visual grammar](references/visual-grammar.md) and [scene API](references/scene-api.md) before authoring `<out-dir>/scene.html`.
+
+- Only switch to [the Manim branch](references/manim-branch.md) when the user explicitly requests Manim and `manim`, `pdflatex`, and `dvisvgm` are installed.
+
+Build `<out-dir>/scene.html` as a self-contained 1920×1080 dark-canvas animation driven exclusively by `window.renderAt(t)` and `window.__TIMELINE__`:
+
+- Keep the persistent **spine** bar visible across acts so the viewer tracks which hypotheses or components are optional, key, or disproved.
+- Morph persistent diagrams across beats instead of cutting between unrelated slides.
+- Pair every mechanism change with the paper's measured data (bar charts, scaling curves, or latency deltas) with labeled axes, units, and baselines.
+- Render equations with KaTeX and color-code key symbols to match the diagram.
+- Drive every animated property from `t` inside `renderAt(t)`; omit CSS `transition` and `@keyframes` so frame stepping is deterministic.
+
+**Done when** `<out-dir>/scene.html` covers every beat in `timeline.json` from `0` to `total_duration_s` and supports `?preview=1` interactive scrubbing.
+
+### 5. Run the keyframe check before full rendering
+
+Capture one settled 1920×1080 PNG per beat plus a combined contact sheet:
+
+```bash
+uv run --with playwright python3 scripts/render_video.py <out-dir>/scene.html \
+  --timeline <out-dir>/timeline.json \
+  --keyframes \
+  --keyframes-dir <out-dir>/keyframes
+```
+
+Inspect `<out-dir>/keyframes/contact_sheet.png` and individual beat PNGs for complex math or charts. Check every beat against this list:
+
+- Zero overlapping text, colliding labels, or clipped equations.
+- Every element sits inside the 72 px outer safe margin.
+- Labels and axis numbers stay legible at chat playback width (`>= 24 px` labels, `>= 28 px` math).
+- Math equations rendered cleanly (no raw `\sum` or broken KaTeX markup).
+- Every displayed number, unit, baseline, and citation matches step 1.
+- Visual continuity holds from beat to beat (persistent spine updates, smooth morphing).
+
+Fix every defect in `scene.html` and re-run `--keyframes` until all beats pass.
+
+**Done when** every beat keyframe has been visually inspected and passes with zero layout, typography, math, or data defects.
+
+### 6. Render and verify the final MP4
+
+Render the full 1920×1080 H.264 MP4 muxed with `narration.m4a`:
+
+```bash
+uv run --with playwright python3 scripts/render_video.py <out-dir>/scene.html \
+  --timeline <out-dir>/timeline.json \
+  --audio <out-dir>/narration.m4a \
+  --out <out-dir>/<slug>.mp4
+```
+
+Add `--burn-subtitles <out-dir>/subtitles.srt` when rendering a `--silent` video or when the user asks for burned-in captions.
+
+Confirm the script's JSON output reports `"ok": true`, video dimensions `1920x1080`, and video/audio duration agreement within `0.2s`. Present the final MP4 directly in the reply (embedded when the interface supports video, plus its absolute file path), along with the paper citation, duration, and the interactive `scene.html?preview=1` path.
+
+**Done when** the rendered MP4 passes `ffprobe` verification and has been presented to the user with its citation and artifact paths.

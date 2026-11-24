@@ -1,0 +1,13 @@
+interface:
+  display_name: Paper to Video
+  short_description: Turn a research paper into a 3Blue1Brown-style explainer video
+  default_prompt: Turn this research paper into a concise 2-minute 3Blue1Brown-style
+    animated explainer video with synchronized voiceover, visual math, and verified
+    data plots.
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
