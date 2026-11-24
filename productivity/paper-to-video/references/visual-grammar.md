@@ -27,7 +27,7 @@ Reserve red/coral (`#F87171`) strictly for failure markers or regressions. Never
 
 ## Persistent visual spine
 
-Place 2–4 compact pills across the top band (`y = 44..116`) representing the paper's decomposition, hypotheses, or claims:
+Place 2–4 compact pills across the top band (`y = 56..124`, inside the outer safe margin) representing the paper's decomposition, hypotheses, or claims:
 
 - Start neutral (subtle white/gray border).
 - Highlight the currently tested pill with `#4DA6FF` border and subtle glow.
@@ -39,9 +39,10 @@ Keeping the spine visible across Acts 2–4 gives the viewer an effortless map o
 
 Treat the stage as one continuous mathematical whiteboard:
 
-- Keep shared actors on stage and move, scale, or transform them between beats (e.g., an input grid splits into patches, one patch flattens into a token vector, the backbone expands into its layer stack, one layer zooms open into its block diagram).
+- Keep shared SVG actors mounted across adjacent acts and interpolate their `transform`, box sizes, stroke reveals, or bar widths continuously from `t` instead of cross-fading to black between every beat.
+- Reuse concrete structural transforms when advancing the argument: morph a 1-stage U-Net into a 2-stage nested hierarchy by expanding the middle block; expand a backbone rectangle into its layer stack; slide the active architecture left while growing its scaling curve or bar chart right; morph shared benchmark bars in place with `PaperStage.drawBarChart(...).morphValues(...)` when switching ablations or datasets.
 - When testing an ablation, transform the affected box in place while revealing the resulting bar or curve right beside or beneath it.
-- Avoid bullet-list slides, prose paragraphs, or hard cuts to unrelated layouts.
+- Keep fade-outs strictly for retiring completed sub-panels when entering a genuinely new visual mode, leaving the spine and at least one anchor actor on screen to carry the eye.
 
 ## Four-act 2-minute narrative arc
 
@@ -57,7 +58,7 @@ Treat the stage as one continuous mathematical whiteboard:
 Viewers often watch inside a chat pane or on a phone. Size every label for small playback windows:
 
 - Font stack: `Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif` for labels; KaTeX Computer Modern for math.
-- Opening title: `44–52 px`, bold (`700`), centered at top (`y = 70`).
+- Opening title: `44–52 px`, bold (`700`), centered at top (baseline `y = 96..104` so ascenders stay inside `y >= 56`).
 - Section / chart titles: `28–34 px`, semibold (`600`).
 - Diagram labels & axis values: `24–28 px`, medium (`500`). Never smaller than `20 px` except minor footnotes/citations (`20–22 px`).
 - Equations: `32–44 px` rendered via KaTeX; color-code key terms (`\color{#4DA6FF}{...}`) to match their diagram counterpart.

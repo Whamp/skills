@@ -20,6 +20,9 @@ DEFAULT_PAUSE_S = 0.35
 DEFAULT_WPM = 140.0
 BEAT_ID_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 AUDIO_EXTENSIONS = (".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac")
+STAGE_HELPERS_ASSET = (
+    Path(__file__).resolve().parent.parent / "assets" / "stage_helpers.js"
+)
 
 
 @dataclass(frozen=True)
@@ -34,11 +37,23 @@ class BeatInput:
     voice: str
     rate: str
     pitch: str
+    spoken_text: str = ""
+    subtitle_text: str = ""
     explicit_duration_s: float | None = None
 
     @property
+    def effective_spoken_text(self) -> str:
+        """Return text sent to TTS (spoken_text override if set, else text)."""
+        return self.spoken_text or self.text
+
+    @property
+    def effective_subtitle_text(self) -> str:
+        """Return text written to VTT/SRT subtitles (subtitle_text if set, else text)."""
+        return self.subtitle_text or self.text
+
+    @property
     def word_count(self) -> int:
-        return len(self.text.split())
+        return len(self.effective_spoken_text.split())
 
 
 @dataclass(frozen=True)
@@ -104,6 +119,9 @@ def parse_beats_file(
         if not text:
             raise ValueError(f"beat {beat_id!r} requires non-empty 'text'")
 
+        spoken_text = _parse_optional_text_override(item, "spoken_text", beat_id)
+        subtitle_text = _parse_optional_text_override(item, "subtitle_text", beat_id)
+
         pause_raw = item.get("pause_after_s", DEFAULT_PAUSE_S)
         try:
             pause_after_s = float(pause_raw)
@@ -133,6 +151,8 @@ def parse_beats_file(
                 voice=str(item.get("voice") or script_voice).strip(),
                 rate=str(item.get("rate") or script_rate).strip(),
                 pitch=str(item.get("pitch") or script_pitch).strip(),
+                spoken_text=spoken_text,
+                subtitle_text=subtitle_text,
                 explicit_duration_s=explicit_duration,
             )
         )
@@ -145,6 +165,18 @@ def parse_beats_file(
         pitch=script_pitch,
         beats=tuple(beats),
     )
+
+
+def _parse_optional_text_override(
+    item: dict[str, Any], field: str, beat_id: str
+) -> str:
+    raw = item.get(field)
+    if raw is None:
+        return ""
+    cleaned = " ".join(str(raw).split())
+    if not cleaned:
+        raise ValueError(f"beat {beat_id!r} {field} must be non-empty when provided")
+    return cleaned
 
 
 def estimate_beat_duration(beat: BeatInput, wpm: float = DEFAULT_WPM) -> float:
@@ -185,21 +217,24 @@ def build_timeline_payload(
         total_words += beat.word_count
         total_spoken_s += audio_dur
 
-        timeline_beats.append(
-            {
-                "index": beat.index,
-                "id": beat.beat_id,
-                "text": beat.text,
-                "visual_cue": beat.visual_cue,
-                "word_count": beat.word_count,
-                "start_s": start_s,
-                "audio_end_s": audio_end_s,
-                "end_s": end_s,
-                "audio_duration_s": audio_dur,
-                "pause_after_s": beat.pause_after_s,
-                "duration_s": duration_s,
-            }
-        )
+        beat_entry: dict[str, Any] = {
+            "index": beat.index,
+            "id": beat.beat_id,
+            "text": beat.text,
+            "visual_cue": beat.visual_cue,
+            "word_count": beat.word_count,
+            "start_s": start_s,
+            "audio_end_s": audio_end_s,
+            "end_s": end_s,
+            "audio_duration_s": audio_dur,
+            "pause_after_s": beat.pause_after_s,
+            "duration_s": duration_s,
+        }
+        if beat.effective_spoken_text != beat.text:
+            beat_entry["spoken_text"] = beat.effective_spoken_text
+        if beat.effective_subtitle_text != beat.text:
+            beat_entry["subtitle_text"] = beat.effective_subtitle_text
+        timeline_beats.append(beat_entry)
 
     total_duration_s = round(cursor, 3)
     wpm = round((total_words / total_spoken_s) * 60.0, 1) if total_spoken_s > 0 else 0.0
@@ -240,7 +275,7 @@ def format_vtt(timeline: dict[str, Any]) -> str:
         start = _format_timestamp(beat["start_s"], decimal_sep=".")
         end = _format_timestamp(beat["audio_end_s"], decimal_sep=".")
         lines.append(f"{start} --> {end}")
-        lines.append(beat["text"])
+        lines.append(str(beat.get("subtitle_text") or beat["text"]))
         lines.append("")
     return "\n".join(lines)
 
@@ -254,7 +289,7 @@ def format_srt(timeline: dict[str, Any]) -> str:
         end = _format_timestamp(beat["audio_end_s"], decimal_sep=",")
         lines.append(str(beat["index"]))
         lines.append(f"{start} --> {end}")
-        lines.append(beat["text"])
+        lines.append(str(beat.get("subtitle_text") or beat["text"]))
         lines.append("")
     return "\n".join(lines)
 
@@ -301,14 +336,14 @@ def probe_audio_duration(path: Path) -> float:
     return float(result.stdout.strip())
 
 
-def synthesize_edge_tts_clip(
+def build_edge_tts_command(
     edge_cmd: list[str],
     beat: BeatInput,
     output_path: Path,
-) -> None:
-    """Synthesize one beat clip via edge-tts."""
+) -> list[str]:
+    """Construct the edge-tts CLI command using the beat's effective spoken text."""
 
-    cmd = [
+    return [
         *edge_cmd,
         "--voice",
         beat.voice,
@@ -317,15 +352,36 @@ def synthesize_edge_tts_clip(
         "--pitch",
         beat.pitch,
         "--text",
-        beat.text,
+        beat.effective_spoken_text,
         "--write-media",
         str(output_path),
     ]
+
+
+def synthesize_edge_tts_clip(
+    edge_cmd: list[str],
+    beat: BeatInput,
+    output_path: Path,
+) -> None:
+    """Synthesize one beat clip via edge-tts."""
+
+    cmd = build_edge_tts_command(edge_cmd, beat, output_path)
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0 or not output_path.exists():
         raise RuntimeError(
             f"edge-tts failed on beat {beat.beat_id!r} (exit {result.returncode}): {result.stderr.strip()}"
         )
+
+
+def copy_stage_helpers(out_dir: Path) -> Path | None:
+    """Copy bundled stage_helpers.js into out_dir if absent."""
+
+    if not STAGE_HELPERS_ASSET.is_file():
+        return None
+    dest = out_dir / STAGE_HELPERS_ASSET.name
+    if not dest.exists():
+        shutil.copy2(STAGE_HELPERS_ASSET, dest)
+    return dest
 
 
 def locate_external_clip(audio_dir: Path, beat: BeatInput) -> Path:
@@ -404,9 +460,9 @@ def collect_pacing_warnings(script: ScriptInput, total_duration_s: float) -> lis
             warnings.append(
                 f"beat {beat.beat_id!r} has {beat.word_count} words; split beats over ~35 words for tighter animation cues"
             )
-    if total_duration_s > 180:
+    if total_duration_s > 150:
         warnings.append(
-            f"total duration is {total_duration_s:.1f}s (> 3 minutes); tighten the script unless a longer video was requested"
+            f"total duration is {total_duration_s:.1f}s (> 2.5 minutes); tighten toward 100-130s unless a longer video was requested"
         )
     return warnings
 
@@ -549,6 +605,7 @@ def main(argv: list[str] | None = None) -> int:
     timeline_path.write_text(json.dumps(timeline, indent=2) + "\n", encoding="utf-8")
     vtt_path.write_text(format_vtt(timeline), encoding="utf-8")
     srt_path.write_text(format_srt(timeline), encoding="utf-8")
+    stage_helpers_path = copy_stage_helpers(args.out_dir)
 
     warnings = collect_pacing_warnings(script, timeline["total_duration_s"])
     for warning in warnings:
@@ -569,6 +626,9 @@ def main(argv: list[str] | None = None) -> int:
                 else None,
                 "subtitles_vtt": str(vtt_path.resolve()),
                 "subtitles_srt": str(srt_path.resolve()),
+                "stage_helpers": str(stage_helpers_path.resolve())
+                if stage_helpers_path
+                else None,
                 "warnings": warnings,
             },
             indent=2,
